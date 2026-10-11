@@ -97,6 +97,12 @@ describe('gifle rapide', () => {
     expect(frozen).toBeLessThanOrEqual(st(MOVES.quick.hitstunMs) + st(MOVES.quick.hitstopMs) + 1);
   });
 
+  it('accroupi + Gifle : on se relève pour donner la gifle rapide', () => {
+    const s = step(createFightStarted('bernard', 'lola'), press('bas', 'gifle'), none);
+    expect(s.f[0].move).toBe('quick');
+    expect(s.f[0].stance).toBe('stand');
+  });
+
   it('interrompt la charge d’une grosse gifle', () => {
     let s = close();
     s = run(s, 10, none, press('grosseGifle')).s;
@@ -110,14 +116,7 @@ describe('gifle rapide', () => {
   });
 });
 
-describe('gifle accroupie et gifle aérienne', () => {
-  it('la gifle accroupie touche un adversaire accroupi', () => {
-    const { ev, s } = run(close(), 30, press('bas', 'gifle'), press('bas'));
-    expect(hitsOf(ev)).toHaveLength(1);
-    expect(hitsOf(ev)[0].move).toBe('crouch');
-    expect(s.f[1].hp).toBeLessThan(MATCH.hp * HP);
-  });
-
+describe('gifle aérienne', () => {
   it('la gifle aérienne touche un adversaire accroupi, une seule fois par saut', () => {
     let s = close('lola', 'bernard', 110);
     const ev: FightEvent[] = [];
@@ -411,5 +410,104 @@ describe('appui gardé en mémoire', () => {
     s = step(s, press('gifle'), none);
     const r = run(s, 60);
     expect(r.ev.filter((e) => e.t === 'swing')).toHaveLength(0);
+  });
+});
+
+describe('coup de pied', () => {
+  it('debout : plus lent et plus long que la gifle rapide, il touche bas', () => {
+    expect(MOVES.kick.startupMs).toBeGreaterThan(MOVES.quick.startupMs);
+    expect(MOVES.kick.box.x1).toBeGreaterThan(MOVES.quick.box.x1);
+    const { ev, s } = run(close(), 30, press('pied'));
+    const [hit] = hitsOf(ev);
+    expect(hit.move).toBe('kick');
+    expect(actionOf(step(close(), press('pied'), none).f[0])).toBe('kick');
+    expect(s.f[1].hp).toBe(MATCH.hp * HP - hit.dmg);
+  });
+
+  it('touche un adversaire accroupi, là où la gifle rapide passe au-dessus', () => {
+    expect(hitsOf(run(close(), 40, press('gifle'), press('bas')).ev)).toHaveLength(0);
+    expect(hitsOf(run(close(), 40, press('pied'), press('bas')).ev)).toHaveLength(1);
+  });
+
+  it('accroupi : c’est la balayette, qui passe sous une gifle rapide', () => {
+    const s = step(close(), press('bas', 'pied'), none);
+    expect(s.f[0].move).toBe('sweep');
+    expect(actionOf(s.f[0])).toBe('crouchKick');
+    // Balayette contre gifle rapide lancées ensemble : seule la balayette touche.
+    const { ev } = run(close('bernard', 'bernard'), 40, press('bas', 'pied'), press('gifle'));
+    expect(hitsOf(ev).map((h) => h.move)).toEqual(['sweep']);
+  });
+
+  it('on peut sauter par-dessus', () => {
+    let s = close();
+    const ev: FightEvent[] = [];
+    // Lola saute sur place ; le coup de pied part quand elle est en haut.
+    s = step(s, none, press('haut'));
+    for (let i = 0; i < 6; i++) s = step(s, none, none);
+    for (let i = 0; i < 20; i++) {
+      s = step(s, press('pied'), none);
+      ev.push(...s.ev);
+    }
+    expect(hitsOf(ev)).toHaveLength(0);
+  });
+
+  it('n’existe pas en l’air', () => {
+    let s = step(createFightStarted('bernard', 'lola'), press('haut'), none);
+    s = run(s, 10, press('pied')).s;
+    expect(s.f[0].mode).toBe('free');
+  });
+});
+
+describe('garde haute et garde basse', () => {
+  it('Garde seule : garde haute. Garde + bas : garde basse. On peut changer sans lâcher', () => {
+    let s = run(createFightStarted('bernard', 'lola'), 3, press('garde')).s;
+    expect(actionOf(s.f[0])).toBe('guard');
+    s = run(s, 3, press('garde', 'bas')).s;
+    expect(s.f[0].mode).toBe('guard');
+    expect(actionOf(s.f[0])).toBe('guardLow');
+    s = run(s, 3, press('garde')).s;
+    expect(actionOf(s.f[0])).toBe('guard');
+  });
+
+  it('la garde haute arrête la gifle, pas le coup de pied', () => {
+    const slap = hitsOf(run(close(), 30, press('gifle'), press('garde')).ev)[0];
+    expect(slap).toMatchObject({ blocked: true, wrongGuard: false });
+    const kick = hitsOf(run(close(), 30, press('pied'), press('garde')).ev)[0];
+    expect(kick).toMatchObject({ blocked: false, wrongGuard: true });
+    // Mauvaise garde : le coup passe en entier.
+    expect(kick.dmg).toBe(Math.round((MOVES.kick.damage * HP * Math.round(GABARITS.rapide.resistance * 100)) / 100));
+  });
+
+  it('la garde basse arrête le coup de pied et la balayette, pas la gifle', () => {
+    for (const keys of [['pied'], ['bas', 'pied']] as const) {
+      const kick = hitsOf(run(close(), 30, press(...keys), press('garde', 'bas')).ev)[0];
+      expect(kick).toMatchObject({ blocked: true, wrongGuard: false });
+      expect(kick.dmg).toBe(Math.round(MOVES[keys.length === 2 ? 'sweep' : 'kick'].damage * HP * GUARD.chipRatio));
+    }
+    // En garde basse, la tête reste à portée : la gifle rapide touche (alors qu'elle rate un adversaire simplement accroupi).
+    const slap = hitsOf(run(close(), 30, press('gifle'), press('garde', 'bas')).ev)[0];
+    expect(slap).toMatchObject({ blocked: false, wrongGuard: true });
+  });
+
+  it('la gifle aérienne est haute : la garde basse ne l’arrête pas', () => {
+    const jumpIn = (guard: InputFrame) => {
+      let s = close('lola', 'bernard', 110);
+      const ev: FightEvent[] = [];
+      s = step(s, press('haut', 'droite'), guard);
+      for (let i = 0; i < 50; i++) {
+        s = step(s, i === 3 ? press('gifle') : none, guard);
+        ev.push(...s.ev);
+      }
+      return hitsOf(ev)[0];
+    };
+    expect(jumpIn(press('garde'))).toMatchObject({ blocked: true });
+    expect(jumpIn(press('garde', 'bas'))).toMatchObject({ blocked: false, wrongGuard: true });
+  });
+
+  it('après un blocage, on reste en garde à la hauteur du stick', () => {
+    let s = close();
+    for (let i = 0; i < 40; i++) s = step(s, i === 0 ? press('pied') : none, press('garde', 'bas'));
+    expect(s.f[1].mode).toBe('guard');
+    expect(actionOf(s.f[1])).toBe('guardLow');
   });
 });

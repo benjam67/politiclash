@@ -19,7 +19,7 @@ const STICK = { radius: 78, knob: 34, dead: 20, up: 38, down: 34 };
 
 /**
  * Contrôles tactiles : stick virtuel sur la moitié gauche (il se place sous le pouce),
- * trois boutons à droite. Les boutons sont lus en continu : on peut glisser de l'un à l'autre.
+ * quatre boutons à droite. Garde basse : GARDE en tenant le stick vers le bas. Les boutons sont lus en continu : on peut glisser de l'un à l'autre.
  */
 export class TouchControls implements InputSource {
   private base: Phaser.GameObjects.Arc;
@@ -46,7 +46,8 @@ export class TouchControls implements InputSource {
     };
     mk('gifle', 'GIFLE', COLORS.yellow, 66, 22);
     mk('grosseGifle', 'GROSSE\nGIFLE', COLORS.pink, 56, 16);
-    mk('garde', 'GARDE', COLORS.cyan, 56, 18);
+    mk('garde', 'GARDE', COLORS.cyan, 54, 18);
+    mk('pied', 'PIED', COLORS.cream, 56, 20);
 
     scene.input.on(Phaser.Input.Events.POINTER_DOWN, this.onDown, this);
     scene.input.on(Phaser.Input.Events.POINTER_UP, this.onUp, this);
@@ -64,11 +65,13 @@ export class TouchControls implements InputSource {
     const bottom = height - safe.bottom;
     this.rest = { x: 150 + side, y: bottom - 135 };
     if (this.stickId < 0) this.origin = { ...this.rest };
-    const [slap, big, guard] = this.btns;
+    // En arc autour du pouce droit : GIFLE dans le coin, PIED à sa gauche, GARDE au-dessus, GROSSE GIFLE en diagonale.
+    const [slap, big, guard, kick] = this.btns;
     const right = width - side;
-    Object.assign(slap, { x: right - 100, y: bottom - 95 });
-    Object.assign(big, { x: right - 235, y: bottom - 78 });
-    Object.assign(guard, { x: right - 88, y: bottom - 228 });
+    Object.assign(slap, { x: right - 96, y: bottom - 92 });
+    Object.assign(kick, { x: right - 234, y: bottom - 74 });
+    Object.assign(guard, { x: right - 84, y: bottom - 228 });
+    Object.assign(big, { x: right - 212, y: bottom - 198 });
     for (const b of this.btns) {
       b.circle.setPosition(b.x, b.y);
       b.label.setPosition(b.x, b.y);

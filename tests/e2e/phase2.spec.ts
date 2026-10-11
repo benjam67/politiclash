@@ -17,7 +17,7 @@ interface S {
   p2: P;
   hits: number;
   guardBreaks: number;
-  lastHit: null | { move: string; dmg: number; crit: boolean; blocked: boolean; knockdown: boolean; guardBreak: boolean };
+  lastHit: null | { move: string; dmg: number; crit: boolean; blocked: boolean; wrongGuard: boolean; knockdown: boolean; guardBreak: boolean };
   timeLeft: number;
 }
 const state = (page: Page) => page.evaluate(() => window.__slap!.state as unknown as S);
@@ -45,8 +45,8 @@ test.describe('phase 2 : coups, garde, rounds', () => {
     await page.keyboard.up('KeyJ');
     const s = await state(page);
     expect(s.lastHit).toMatchObject({ move: 'quick', blocked: false, crit: false });
-    // 5 dégâts × 1,13 (résistance du gabarit rapide), arrondi au dixième.
-    expect(s.p2.hp).toBeCloseTo(100 - 5.7, 5);
+    // 5 dégâts × 1,05 (résistance du gabarit rapide), arrondi au dixième.
+    expect(s.p2.hp).toBeCloseTo(100 - 5.3, 5);
     await waitState(page, `s.p2.mode === 'free' && s.p1.mode === 'free'`);
     const f = await fx(page);
     expect(f.flashes).toBe(1);
@@ -80,7 +80,7 @@ test.describe('phase 2 : coups, garde, rounds', () => {
     await freezeWhen(page, `s.hits === 1`);
     const s = await state(page);
     expect(s.lastHit).toMatchObject({ move: 'big', crit: true, knockdown: true, blocked: false });
-    expect(s.lastHit!.dmg / 10).toBeGreaterThan(24);
+    expect(s.lastHit!.dmg / 10).toBeGreaterThan(23);
     // L'adversaire est mis à terre dès l'impact.
     expect(s.p2.action).toBe('down');
     await page.screenshot({ path: `${SHOTS}/phase2-impact-critique.png` });
@@ -143,6 +143,59 @@ test.describe('phase 2 : coups, garde, rounds', () => {
     await waitState(page, `s.p1.action === 'guard'`);
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     await waitState(page, `s.p1.mode === 'free'`);
+  });
+
+  test('coup de pied et garde basse, au tactile', async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto(IDLE);
+    await waitReady(page, 'Fight');
+    const cdp = await page.context().newCDPSession(page);
+    const touch = (type: 'touchStart' | 'touchMove' | 'touchEnd', pts: { x: number; y: number; id: number }[]) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts });
+    const kick = await cssPoint(page, 'sc.touch.btns[3]');
+    const guard = await cssPoint(page, 'sc.touch.btns[2]');
+
+    // Le bouton PIED donne un coup de pied ; l'adversaire, en garde haute, le prend quand même.
+    await approach(page, { garde: true });
+    await touch('touchStart', [{ ...kick, id: 1 }]);
+    await freezeWhen(page, `s.hits === 1`);
+    const s = await state(page);
+    expect(s.lastHit).toMatchObject({ move: 'kick', blocked: false, wrongGuard: true });
+    await page.screenshot({ path: `${SHOTS}/phase4b-coup-de-pied.png` });
+    await resume(page);
+    await touch('touchEnd', []);
+    await waitState(page, `s.p1.mode === 'free'`);
+
+    // GARDE seule : garde haute. GARDE + stick vers le bas : garde basse.
+    await touch('touchStart', [{ ...guard, id: 1 }]);
+    await waitState(page, `s.p1.action === 'guard'`);
+    const o = { x: 150, y: 290 };
+    await touch('touchStart', [
+      { ...guard, id: 1 },
+      { ...o, id: 2 },
+    ]);
+    await touch('touchMove', [
+      { ...guard, id: 1 },
+      { x: o.x, y: o.y + 45, id: 2 },
+    ]);
+    await waitState(page, `s.p1.action === 'guardLow'`);
+    await page.screenshot({ path: `${SHOTS}/phase4b-garde-basse.png` });
+    await touch('touchEnd', []);
+    await waitState(page, `s.p1.mode === 'free'`);
+    await expectNoErrors(errors);
+  });
+
+  test('au clavier : I donne un coup de pied, bas + I une balayette', async ({ page }) => {
+    await page.goto(IDLE);
+    await waitReady(page, 'Fight');
+    await page.keyboard.down('KeyI');
+    await waitState(page, `s.p1.action === 'kick'`);
+    await page.keyboard.up('KeyI');
+    await waitState(page, `s.p1.mode === 'free'`);
+    await page.keyboard.down('ArrowDown');
+    await page.keyboard.down('KeyI');
+    await waitState(page, `s.p1.action === 'crouchKick'`);
+    await page.keyboard.up('KeyI');
+    await page.keyboard.up('ArrowDown');
   });
 
   test('un match complet : annonces, K.O., deux rounds, écran de résultat, revanche', async ({ page }) => {

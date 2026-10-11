@@ -25,6 +25,8 @@ export interface AiProfile {
   punish: number;
   /** Chance d'enchaîner une deuxième gifle quand la première a touché (multipliée par `punish`). */
   combo: number;
+  /** Part de coups de pied quand elle enchaîne ou attaque une garde : elle varie les hauteurs. */
+  mix: number;
   /** Chance de gifler un adversaire qui charge à portée. */
   interrupt: number;
   /** Chance de répondre à une garde par une grosse gifle visée en zone dorée. */
@@ -36,9 +38,9 @@ export interface AiProfile {
 }
 
 export const AI_PROFILES: Record<AiLevel, AiProfile> = {
-  easy: { reaction: 26, think: [26, 60], defend: 0.12, duck: 0, punish: 0.25, combo: 0.3, interrupt: 0.15, breakGuard: 0.05, bigShare: 0.3, aimError: 22 },
-  normal: { reaction: 15, think: [12, 32], defend: 0.45, duck: 0.15, punish: 0.6, combo: 0.7, interrupt: 0.5, breakGuard: 0.3, bigShare: 0.22, aimError: 9 },
-  hard: { reaction: 8, think: [4, 16], defend: 0.8, duck: 0.4, punish: 0.95, combo: 0.9, interrupt: 0.85, breakGuard: 0.6, bigShare: 0.2, aimError: 3.5 },
+  easy: { reaction: 26, think: [26, 60], defend: 0.12, duck: 0, punish: 0.25, combo: 0.3, mix: 0.1, interrupt: 0.15, breakGuard: 0.05, bigShare: 0.3, aimError: 22 },
+  normal: { reaction: 15, think: [12, 32], defend: 0.45, duck: 0.15, punish: 0.6, combo: 0.7, mix: 0.25, interrupt: 0.5, breakGuard: 0.3, bigShare: 0.22, aimError: 9 },
+  hard: { reaction: 8, think: [4, 16], defend: 0.8, duck: 0.4, punish: 0.95, combo: 0.9, mix: 0.4, interrupt: 0.85, breakGuard: 0.6, bigShare: 0.2, aimError: 3.5 },
 };
 
 interface PlanStep {
@@ -67,6 +69,7 @@ export class AiSource implements InputSource {
   private judged = -1;
   /** Pas du dernier coup adverse qu'elle a vu partir : un adversaire qui gifle sans arrêt se respecte. */
   private lastSwing = -1000;
+  private lastLow = false;
   private round = 0;
   private lastMode = 'free';
   private now = 0;
@@ -95,6 +98,7 @@ export class AiSource implements InputSource {
       this.wait = 0;
       this.judged = -1;
       this.lastSwing = -1000;
+      this.lastLow = false;
       this.lastMode = 'free';
       if (state.phase !== 'fight') return noInput();
     }
@@ -114,8 +118,8 @@ export class AiSource implements InputSource {
     this.lastMode = self.mode;
     if (self.mode !== 'free' && self.mode !== 'guard' && self.mode !== 'charge') {
       if (self.mode === 'block') {
-        // Elle vient de bloquer : elle garde encore un instant, le temps de voir venir la suite.
-        this.plan = [{ input: key('garde'), steps: 3 }];
+        // Elle vient de bloquer : elle garde encore un instant à la même hauteur, le temps de voir venir la suite.
+        this.plan = [{ input: self.stance === 'crouch' ? key('garde', 'bas') : key('garde'), steps: 3 }];
       } else if (self.mode !== 'attack' && self.mode !== 'recover') this.plan = [];
       return this.follow(self, foe);
     }
@@ -123,7 +127,8 @@ export class AiSource implements InputSource {
     // Sa gifle vient de toucher : elle enchaîne tant que l'adversaire est figé (elle sent son propre coup, sans retard).
     const now = state.f[other];
     if (was === 'attack' && self.mode === 'free' && (now.mode === 'hit' || now.mode === 'stun') && dist <= this.range(self, now) && this.rng() < p.punish * p.combo) {
-      this.plan = this.tap('gifle');
+      // Elle varie : parfois un coup de pied, pour passer sous une garde haute.
+      this.plan = this.rng() < p.mix ? this.tap('pied') : this.tap('gifle');
       this.wait = 0;
       return this.follow(self, foe);
     }
@@ -137,8 +142,8 @@ export class AiSource implements InputSource {
         return this.follow(self, foe);
       }
       if (was === 'hit' && this.rng() < p.defend) {
-        // Après un coup reçu, elle se couvre au lieu de rendre coup pour coup.
-        this.plan = [{ input: key('garde'), steps: 22 }];
+        // Après un coup reçu, elle se couvre au lieu de rendre coup pour coup. Sans voir le coup, elle doit deviner la hauteur.
+        this.plan = [{ input: this.guess(), steps: 22 }];
         this.wait = 0;
         return this.follow(self, foe);
       }
@@ -146,7 +151,10 @@ export class AiSource implements InputSource {
 
     // 1. Réflexe de défense : elle voit partir un coup à portée. Un seul jugement par coup.
     const threat = foe.mode === 'attack' && foe.move !== null && !foe.hitDone && dist < this.range(foe, self) + 55;
-    if (foe.mode === 'attack') this.lastSwing = state.step;
+    if (foe.mode === 'attack') {
+      this.lastSwing = state.step;
+      if (foe.move) this.lastLow = MOVES[foe.move].level === 'low';
+    }
     if (threat) {
       const id = old.step - foe.mt;
       if (id !== this.judged) {
@@ -156,10 +164,15 @@ export class AiSource implements InputSource {
           // Elle voit le coup avec du retard : elle se couvre assez longtemps pour arrêter aussi le suivant,
           // si l'adversaire enchaîne les gifles sans réfléchir.
           const left = Math.max(20, m.startup + Math.max(0, m.active) - foe.mt + 4);
-          // Une gifle haute passe au-dessus d'un adversaire accroupi ; le critique traverse la garde.
-          const high = foe.move === 'quick' || foe.move === 'big';
-          const duck = high && (this.rng() < p.duck || (foe.move === 'big' && foe.bigCrit && this.rng() < p.defend));
-          this.plan = [{ input: key(duck ? 'bas' : 'garde'), steps: left }];
+          if (MOVES[foe.move as keyof typeof MOVES].level === 'low') {
+            // Coup de pied : garde basse, ou un saut par-dessus.
+            this.plan = this.rng() < p.duck * 0.5 ? [{ input: key('haut'), steps: 3 }] : [{ input: key('garde', 'bas'), steps: left }];
+          } else {
+            // Une gifle haute passe au-dessus d'un adversaire accroupi ; le critique traverse la garde.
+            const duckable = foe.move === 'quick' || foe.move === 'big';
+            const duck = duckable && (this.rng() < p.duck || (foe.move === 'big' && foe.bigCrit && this.rng() < p.defend));
+            this.plan = [{ input: key(duck ? 'bas' : 'garde'), steps: left }];
+          }
           this.wait = 0;
         }
       }
@@ -196,6 +209,15 @@ export class AiSource implements InputSource {
     const available = m.startup + Math.max(0, m.active) + m.recovery - (foe.mt + this.profile.reaction) + m.startup;
     const walk = Math.max(0, Math.ceil(((dist - reach + 2) * SUB) / physicsOf(self.id).walk));
     return walk + moveSteps('quick', self.id).startup + 2 <= available;
+  }
+
+  /**
+   * Garde prise sans avoir vu le coup : elle parie sur la hauteur du dernier coup adverse qu'elle a vu,
+   * d'autant plus sûrement que le niveau est élevé. Sans indice : haute, les gifles étant plus fréquentes.
+   */
+  private guess(): InputFrame {
+    const low = this.rng() < this.profile.defend ? this.lastLow : this.rng() < 0.3;
+    return low ? key('garde', 'bas') : key('garde');
   }
 
   private toward(self: FighterState, foe: FighterState): 'gauche' | 'droite' {
@@ -257,7 +279,7 @@ export class AiSource implements InputSource {
     if (this.now - this.lastSwing < 50 && dist < this.range(foe, self) + 60 && this.rng() < p.defend) {
       const edge = this.range(foe, self) + 12;
       // Hors de sa portée, elle vient se placer juste au bord ; à sa portée, elle garde.
-      this.plan = dist > edge + 4 ? [{ input: key(toward), steps: 12, until: (me, f) => Math.abs(f.x - me.x) / SUB <= edge }] : [{ input: key('garde'), steps: 16 }];
+      this.plan = dist > edge + 4 ? [{ input: key(toward), steps: 12, until: (me, f) => Math.abs(f.x - me.x) / SUB <= edge }] : [{ input: this.guess(), steps: 16 }];
       this.wait = 0;
       return;
     }
@@ -276,10 +298,17 @@ export class AiSource implements InputSource {
       }
     }
 
-    // 4. L'adversaire garde : la grosse gifle en zone dorée brise la garde.
-    if (foe.mode === 'guard' && inRange && this.rng() < p.breakGuard) {
-      this.plan = this.aimed(self);
-      return;
+    // 4. L'adversaire garde : elle frappe à l'autre hauteur, ou brise la garde haute d'une grosse gifle en zone dorée.
+    if (foe.mode === 'guard' && inRange) {
+      if (this.rng() < p.mix * 2) {
+        this.plan = foe.stance === 'crouch' ? this.tap('gifle') : this.tap('pied');
+        this.wait = Math.min(this.wait, 6);
+        return;
+      }
+      if (foe.stance !== 'crouch' && this.rng() < p.breakGuard) {
+        this.plan = this.aimed(self);
+        return;
+      }
     }
 
     // 5. Loin : on se rapproche, parfois en sautant avec une gifle aérienne.
@@ -297,12 +326,15 @@ export class AiSource implements InputSource {
     if (r < p.bigShare) {
       // Les niveaux faibles relâchent souvent trop tôt ou trop tard.
       this.plan = this.aimed(self);
-    } else if (r < 0.66) {
+    } else if (r < 0.58) {
       this.plan = this.tap('gifle');
-    } else if (r < 0.78) {
-      this.plan = [{ input: key('bas'), steps: 3 }, { input: key('bas', 'gifle'), steps: 2 }, { input: key('bas'), steps: 2 }];
-    } else if (r < 0.88) {
-      this.plan = [{ input: key('garde'), steps: this.between([14, 34]) }];
+    } else if (r < 0.74) {
+      this.plan = this.tap('pied');
+    } else if (r < 0.8) {
+      // Balayette : accroupie, elle passe sous les gifles hautes.
+      this.plan = [{ input: key('bas'), steps: 3 }, { input: key('bas', 'pied'), steps: 2 }, { input: key('bas'), steps: 2 }];
+    } else if (r < 0.9) {
+      this.plan = [{ input: this.guess(), steps: this.between([14, 34]) }];
     } else {
       this.plan = [{ input: key(away), steps: this.between([10, 22]) }];
     }

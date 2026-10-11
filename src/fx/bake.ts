@@ -129,6 +129,7 @@ export function bakeAll(scene: Phaser.Scene) {
   bakeText(scene, 'lbl_guard', 'GARDE DE RAGE !', tag(CSS.pink));
   bakeText(scene, 'lbl_block', 'BLOQUÉ !', { ...tag(CSS.cyan), color: CSS.ink });
   bakeText(scene, 'lbl_break', 'GARDE BRISÉE !', tag(CSS.red));
+  bakeText(scene, 'lbl_wrong', 'MAUVAISE GARDE !', tag(CSS.red));
   bakeText(scene, 'lbl_down', 'AU TAPIS !', tag(CSS.pink));
   for (const n of [2, 3]) bakeText(scene, `lbl_x${n}`, `×${n}`, title(64, CSS.pink, 11));
   bakeText(scene, 'lbl_ragemax', 'RAGE MAX !', {

@@ -67,13 +67,15 @@ export interface FighterState {
   prev: number;
   /** Appui sur « Gifle » gardé en mémoire quelques pas : pressé un peu trop tôt, le coup part quand même. */
   buf: number;
+  /** Même chose pour le bouton « Pied ». */
+  bufKick: number;
 }
 
 export type FightEvent =
   | { t: 'round'; n: number }
   | { t: 'fight' }
   | { t: 'swing'; who: 0 | 1; move: MoveId }
-  | { t: 'hit'; by: 0 | 1; move: MoveId; dmg: number; crit: boolean; blocked: boolean; guardBreak: boolean; knockdown: boolean; x: number; y: number }
+  | { t: 'hit'; by: 0 | 1; move: MoveId; dmg: number; crit: boolean; blocked: boolean; /** Il gardait, mais pas à la bonne hauteur. */ wrongGuard: boolean; guardBreak: boolean; knockdown: boolean; x: number; y: number }
   | { t: 'self'; who: 0 | 1; dmg: number }
   | { t: 'ko'; who: 0 | 1 | 2 }
   | { t: 'timeup' }
@@ -182,6 +184,7 @@ function newFighter(id: FighterId, x: number, facing: 1 | -1): FighterState {
     guard: GUARD_MAX,
     prev: 0,
     buf: 0,
+    bufKick: 0,
   };
 }
 
@@ -235,7 +238,7 @@ const inGolden = (id: FighterId, pct: number) => {
 };
 
 const clamp = (v: number, min: number, max: number) => (v < min ? min : v > max ? max : v);
-const BIT = { gifle: 1 << 4, grosseGifle: 1 << 5 };
+const BIT = { gifle: 1 << 4, grosseGifle: 1 << 5, pied: 1 << 7 };
 
 /** Fait avancer le saut en cours. Renvoie vrai à l'atterrissage. */
 function fly(n: FighterState): boolean {
@@ -280,7 +283,10 @@ function act(f: FighterState, other: FighterState, input: InputFrame, who: 0 | 1
   n.prev = now;
   if (pressed & BIT.gifle) n.buf = BUFFER_STEPS;
   else if (n.buf > 0) n.buf -= 1;
+  if (pressed & BIT.pied) n.bufKick = BUFFER_STEPS;
+  else if (n.bufKick > 0) n.bufKick -= 1;
   const slap = n.buf > 0;
+  const kick = n.bufKick > 0;
 
   // Recul après un coup reçu.
   if (n.kb !== 0) {
@@ -317,7 +323,10 @@ function act(f: FighterState, other: FighterState, input: InputFrame, who: 0 | 1
           if (n.mode === 'stun') n.guard = GUARD_MAX;
           const guarding = n.mode === 'block' && input.garde;
           toFree(n);
-          if (guarding) n.mode = 'guard';
+          if (guarding) {
+            n.mode = 'guard';
+            n.stance = input.bas ? 'crouch' : 'stand';
+          }
         }
       }
       break;
@@ -363,6 +372,8 @@ function act(f: FighterState, other: FighterState, input: InputFrame, who: 0 | 1
 
     case 'guard':
       faceOther();
+      // Garde haute par défaut ; stick vers le bas : garde basse. On peut changer en cours de garde.
+      n.stance = input.bas ? 'crouch' : 'stand';
       if (!input.garde) toFree(n);
       break;
 
@@ -378,12 +389,17 @@ function act(f: FighterState, other: FighterState, input: InputFrame, who: 0 | 1
       faceOther();
       if (input.garde) {
         n.mode = 'guard';
-        n.stance = 'stand';
+        n.stance = input.bas ? 'crouch' : 'stand';
         n.walk = 0;
       } else if (slap) {
         n.buf = 0;
+        n.stance = 'stand';
+        startAttack(n, 'quick', who, ev);
+      } else if (kick) {
+        // Coup de pied debout, ou balayette si on est accroupi.
+        n.bufKick = 0;
         n.stance = input.bas ? 'crouch' : 'stand';
-        startAttack(n, input.bas ? 'crouch' : 'quick', who, ev);
+        startAttack(n, input.bas ? 'sweep' : 'kick', who, ev);
       } else if (pressed & BIT.grosseGifle) {
         n.mode = 'charge';
         n.mt = 0;
@@ -447,7 +463,9 @@ export function strikeBox(f: FighterState): Rect | null {
 /** Rectangle vulnérable (le corps), ou `null` si le combattant est intouchable. */
 export function hurtBox(f: FighterState): Rect | null {
   if (f.mode === 'down' || f.mode === 'getup' || f.mode === 'ko' || f.mode === 'win') return null;
-  const body = ROSTER[f.id].body[f.stance === 'crouch' ? 'crouch' : 'stand'];
+  // En garde basse, on protège ses jambes mais la tête reste à portée de gifle : seul l'accroupi « pur » passe dessous.
+  const low = f.stance === 'crouch' && f.mode !== 'guard' && f.mode !== 'block';
+  const body = ROSTER[f.id].body[low ? 'crouch' : 'stand'];
   return { x0: f.x - body.halfW * SUB, x1: f.x + body.halfW * SUB, y0: f.y, y1: f.y + body.h * SUB };
 }
 
@@ -478,7 +496,11 @@ function applyHit(att: FighterState, def: FighterState, hit: Hit, by: 0 | 1, ev:
   const m = MOVES[hit.move];
   att.hitDone = true;
   const dir = def.x > att.x || (def.x === att.x && att.facing === 1) ? 1 : -1;
-  const guarded = (def.mode === 'guard' || def.mode === 'block') && !hit.crit;
+  // La garde n'arrête que les coups de sa hauteur : haute contre les gifles, basse contre les coups de pied.
+  const guarding = def.mode === 'guard' || def.mode === 'block';
+  const rightHeight = (def.stance === 'crouch' ? 'low' : 'high') === m.level;
+  const guarded = guarding && rightHeight && !hit.crit;
+  const wrongGuard = guarding && !rightHeight;
 
   if (guarded) {
     const dmg = Math.round(hit.dmg * GUARD.chipRatio);
@@ -494,14 +516,14 @@ function applyHit(att: FighterState, def: FighterState, hit: Hit, by: 0 | 1, ev:
       def.left = steps(m.hitstunMs * GUARD.blockstunRatio);
     }
     def.kb = dir * ((m.push * SUB) >> 1);
-    ev.push({ t: 'hit', by, move: hit.move, dmg, crit: false, blocked: true, guardBreak: broken, knockdown: false, x: hit.x, y: hit.y });
+    ev.push({ t: 'hit', by, move: hit.move, dmg, crit: false, blocked: true, wrongGuard: false, guardBreak: broken, knockdown: false, x: hit.x, y: hit.y });
     return steps(m.hitstopMs) >> 1;
   }
 
   const dmg = Math.round((hit.dmg * physicsOf(def.id).resPct) / 100);
   const knockdown = hit.move === 'big' && dmg >= BIG_SLAP.knockdownDamage * HP;
   // Un critique traverse la garde.
-  const guardBreak = hit.crit && (def.mode === 'guard' || def.mode === 'block');
+  const guardBreak = hit.crit && guarding && rightHeight;
   // Après une garde brisée (ou traversée), la jauge repart pleine : sinon le prochain blocage la casserait aussitôt.
   if (guardBreak || def.mode === 'stun') def.guard = GUARD_MAX;
   def.hp = Math.max(0, def.hp - dmg);
@@ -514,7 +536,7 @@ function applyHit(att: FighterState, def: FighterState, hit: Hit, by: 0 | 1, ev:
   def.walk = 0;
   if (def.stance === 'crouch') def.stance = 'stand';
   def.kb = dir * m.push * SUB * (knockdown ? 2 : 1);
-  ev.push({ t: 'hit', by, move: hit.move, dmg, crit: hit.crit, blocked: false, guardBreak, knockdown, x: hit.x, y: hit.y });
+  ev.push({ t: 'hit', by, move: hit.move, dmg, crit: hit.crit, blocked: false, wrongGuard, guardBreak, knockdown, x: hit.x, y: hit.y });
   return steps(m.hitstopMs);
 }
 
@@ -669,14 +691,15 @@ export function actionOf(f: FighterState): Action {
       return 'selfSlap';
     case 'guard':
     case 'block':
-      return 'guard';
+      return f.stance === 'crouch' ? 'guardLow' : 'guard';
     case 'charge':
       return 'charge';
     case 'attack':
     case 'recover':
       if (f.move === 'big') return f.mode === 'attack' && f.mt < moveSteps('big', f.id).startup ? 'bigSwing' : 'bigSlap';
       if (f.move === 'air') return 'airSlap';
-      if (f.move === 'crouch') return 'crouchSlap';
+      if (f.move === 'kick') return 'kick';
+      if (f.move === 'sweep') return 'crouchKick';
       return 'quickSlap';
     case 'free':
       if (f.stance === 'jump') return 'jump';

@@ -6,6 +6,7 @@ Jeu de combat de gifles en temps réel, façon jeu de baston anime des années 9
 
 - Feuille de route : [ROADMAP.md](ROADMAP.md)
 - Avancement et réglages : [CHANGELOG.md](CHANGELOG.md)
+- Poses, tailles et règles des décors : [GUIDE-DESSINS.md](GUIDE-DESSINS.md)
 
 ## État
 
@@ -16,9 +17,11 @@ Phases 0 à 4 terminées : le solo se joue de bout en bout. On choisit son comba
 | | Tactile | Clavier |
 | --- | --- | --- |
 | Se déplacer, sauter, s'accroupir | Stick à gauche | Flèches ou ZQSD |
-| Gifle (debout, accroupi ou en l'air) | GIFLE | J |
+| Gifle (haute), debout ou en l'air | GIFLE | J |
+| Coup de pied (bas) ; accroupi : balayette | PIED | I |
 | Grosse gifle : maintenir, relâcher dans la zone dorée | GROSSE GIFLE | K |
-| Garde | GARDE | L |
+| Garde haute, contre les gifles | GARDE | L |
+| Garde basse, contre les coups de pied | GARDE + stick vers le bas | L + flèche bas |
 
 ## Habillage : textes et images
 

@@ -51,7 +51,7 @@ describe('gabarits', () => {
   }
 
   it('aucun coup simple ne met K.O. d’un seul coup', () => {
-    for (const m of [MOVES.quick, MOVES.crouch, MOVES.air]) expect(m.damage).toBeLessThan(MATCH.hp / 4);
+    for (const m of [MOVES.quick, MOVES.air, MOVES.kick, MOVES.sweep]) expect(m.damage).toBeLessThan(MATCH.hp / 4);
   });
 });
 

@@ -33,7 +33,7 @@ export const MOVEMENT = {
   airSpeedFactor: 1.5,
   /** Vitesse de la marche arrière, par rapport à la marche avant. */
   backWalkFactor: 0.8,
-  /** Un appui sur « Gifle » fait un peu trop tôt (pendant un autre coup) est gardé en mémoire ce temps-là. */
+  /** Un appui sur « Gifle » ou « Pied » fait un peu trop tôt (pendant un autre coup) est gardé en mémoire ce temps-là. */
   inputBufferMs: 100,
 };
 
@@ -72,7 +72,7 @@ export const GABARITS = {
   /** Lent, frappe fort, encaisse, avec une grande allonge (voir `roster.ts`). Spéciale : une seule gifle énorme. */
   lourd: { walkSpeed: 170, jumpMs: 650, base: 14, chargeTimeMs: 1400, goldenZone: [79, 91], resistance: 0.85, tempo: 1, special: { hits: 1, multiplier: 1.8 } },
   /** Rapide, mobile, fragile. Spéciale : trois gifles enchaînées. */
-  rapide: { walkSpeed: 230, jumpMs: 550, base: 11, chargeTimeMs: 1000, goldenZone: [76, 92], resistance: 1.13, tempo: 1, special: { hits: 3, multiplier: 0.7 } },
+  rapide: { walkSpeed: 230, jumpMs: 550, base: 12, chargeTimeMs: 1000, goldenZone: [76, 92], resistance: 1.05, tempo: 1, special: { hits: 3, multiplier: 0.7 } },
 } satisfies Record<string, Gabarit>;
 
 export type GabaritId = keyof typeof GABARITS;
@@ -98,19 +98,25 @@ export interface MoveDef {
   hitstopMs: number;
   /** Recul de l'adversaire touché : vitesse de départ en px par pas (elle s'amortit ensuite). */
   push: number;
+  /** Hauteur du coup : une gifle est haute, un coup de pied est bas. La garde doit être à la bonne hauteur. */
+  level: 'high' | 'low';
   box: HitBox;
 }
 
 /**
- * Durées, dégâts et portée des coups. Les hauteurs font le jeu : la gifle rapide et la grosse gifle
- * passent au-dessus d'un adversaire accroupi (140 px de haut), la gifle accroupie et l'aérienne le touchent.
+ * Durées, dégâts et portée des coups.
+ * - Gifles (hautes) : la rapide et la grosse passent au-dessus d'un adversaire accroupi (140 px de haut) ;
+ *   l'aérienne le touche. Elles se bloquent avec la garde haute.
+ * - Coups de pied (bas) : plus lents, plus longs, ils touchent un adversaire accroupi mais on peut sauter
+ *   par-dessus. Ils se bloquent avec la garde basse. `sweep` est le coup de pied donné accroupi (balayette).
  */
 export const MOVES = {
-  quick: { startupMs: 100, activeMs: 70, recoveryMs: 180, damage: 5, hitstunMs: 250, hitstopMs: 50, push: 3, box: { x0: 15, x1: 96, y0: 150, y1: 215 } },
-  crouch: { startupMs: 130, activeMs: 70, recoveryMs: 220, damage: 6, hitstunMs: 250, hitstopMs: 50, push: 3, box: { x0: 15, x1: 92, y0: 50, y1: 135 } },
-  air: { startupMs: 120, activeMs: null, recoveryMs: 150, damage: 7, hitstunMs: 300, hitstopMs: 60, push: 4, box: { x0: 0, x1: 86, y0: -20, y1: 110 } },
+  quick: { startupMs: 100, activeMs: 70, recoveryMs: 180, damage: 5, hitstunMs: 250, hitstopMs: 50, push: 3, level: 'high', box: { x0: 15, x1: 96, y0: 150, y1: 215 } },
+  air: { startupMs: 120, activeMs: null, recoveryMs: 150, damage: 7, hitstunMs: 300, hitstopMs: 60, push: 4, level: 'high', box: { x0: 0, x1: 86, y0: -20, y1: 110 } },
+  kick: { startupMs: 150, activeMs: 80, recoveryMs: 230, damage: 7, hitstunMs: 280, hitstopMs: 60, push: 5, level: 'low', box: { x0: 15, x1: 112, y0: 10, y1: 75 } },
+  sweep: { startupMs: 130, activeMs: 70, recoveryMs: 250, damage: 6, hitstunMs: 250, hitstopMs: 50, push: 4, level: 'low', box: { x0: 15, x1: 104, y0: 0, y1: 55 } },
   /** Grosse gifle, après relâchement du bouton. Dégâts selon la formule. */
-  big: { startupMs: 60, activeMs: 90, recoveryMs: 350, damage: 0, hitstunMs: 450, hitstopMs: 100, push: 9, box: { x0: 15, x1: 116, y0: 141, y1: 222 } },
+  big: { startupMs: 60, activeMs: 90, recoveryMs: 350, damage: 0, hitstunMs: 450, hitstopMs: 100, push: 9, level: 'high', box: { x0: 15, x1: 116, y0: 141, y1: 222 } },
 } satisfies Record<string, MoveDef>;
 
 export type MoveId = keyof typeof MOVES;

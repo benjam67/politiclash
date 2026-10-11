@@ -11,10 +11,10 @@ export interface InputSource {
   destroy?(): void;
 }
 
-/** Clavier : flèches ou ZQSD (touches physiques, donc WASD sur un clavier anglais), J gifle, K grosse gifle, L garde. */
+/** Clavier : flèches ou ZQSD (touches physiques, donc WASD sur un clavier anglais), J gifle, I pied, K grosse gifle, L garde. */
 export class KeyboardSource implements InputSource {
   private down = new Set<string>();
-  private static readonly USED = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyA', 'KeyD', 'KeyW', 'KeyS', 'KeyJ', 'KeyK', 'KeyL']);
+  private static readonly USED = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyA', 'KeyD', 'KeyW', 'KeyS', 'KeyJ', 'KeyK', 'KeyL', 'KeyI']);
   private onDown = (e: KeyboardEvent) => {
     if (!KeyboardSource.USED.has(e.code)) return;
     this.down.add(e.code);
@@ -39,6 +39,7 @@ export class KeyboardSource implements InputSource {
       gifle: d.has('KeyJ'),
       grosseGifle: d.has('KeyK'),
       garde: d.has('KeyL'),
+      pied: d.has('KeyI'),
     };
   }
 
@@ -130,10 +131,13 @@ export class DummySource implements InputSource {
       i.gifle = true;
       hold = 3;
     } else if (r < 0.44) {
-      i.bas = i.gifle = true;
+      // Coup de pied, une fois sur deux en balayette.
+      i.pied = true;
+      i.bas = this.rng() < 0.5;
       hold = 3;
     } else if (r < 0.62) {
       i.garde = true;
+      i.bas = this.rng() < 0.35;
       hold = 25 + Math.floor(this.rng() * 40);
     } else if (r < 0.78) {
       // Grosse gifle : il vise autour de la zone dorée, sans la trouver à tous les coups.

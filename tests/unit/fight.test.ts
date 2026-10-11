@@ -15,7 +15,7 @@ const px = (v: number) => v / SUB;
 
 describe('entrées', () => {
   it('se compactent en un entier et se retrouvent à l’identique', () => {
-    for (let n = 0; n < 128; n++) expect(encodeInput(decodeInput(n))).toBe(n);
+    for (let n = 0; n < 256; n++) expect(encodeInput(decodeInput(n))).toBe(n);
     expect(encodeInput(none)).toBe(0);
   });
 
@@ -180,8 +180,8 @@ describe('déterminisme', () => {
     let b = 0;
     for (let i = 0; i < n; i++) {
       // Les touches changent de temps en temps, comme avec un vrai joueur.
-      if (rng() < 0.08) a = Math.floor(rng() * 128);
-      if (rng() < 0.08) b = Math.floor(rng() * 128);
+      if (rng() < 0.08) a = Math.floor(rng() * 256);
+      if (rng() < 0.08) b = Math.floor(rng() * 256);
       list.push([a, b]);
     }
     return list;

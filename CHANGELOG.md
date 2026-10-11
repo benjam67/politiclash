@@ -183,6 +183,39 @@ Tous les matchs se terminent, aucun round ne va au chrono, et personne ne dépas
 **À noter pour le jalon 2**
 - Le niveau Normal bat le Facile presque à tous les coups, et le Difficile bat le Normal de même : les marches entre niveaux sont hautes. À ajuster selon le ressenti du propriétaire.
 
+## Phase 4 bis · Coups de pied et garde haute ou basse — 2026-10-11
+
+Ajout demandé par le propriétaire pendant le jalon 2 : chaque combattant a une gifle, un coup de pied et un coup spécial ; pour bloquer, il faut choisir la bonne hauteur. Trois choix validés avec lui : le coup de pied remplace la gifle accroupie, la garde basse se fait avec Garde + stick vers le bas, et une garde à la mauvaise hauteur laisse passer le coup en entier.
+
+**Fait**
+- **Nouveau bouton « Pied »** (touche I au clavier), huitième entrée de l'objet d'entrée unique.
+- **Coup de pied** (debout) : bas, plus lent et plus long que la gifle rapide, 7 dégâts. Il touche un adversaire accroupi ; on peut sauter par-dessus.
+- **Balayette** (Pied en étant accroupi) : basse, 6 dégâts, elle passe sous les gifles hautes. Elle remplace la gifle accroupie. Accroupi + Gifle : on se relève pour donner la gifle rapide.
+- **Garde haute et garde basse** : Garde seule bloque les gifles ; Garde + stick vers le bas bloque les coups de pied. On peut changer de hauteur sans lâcher le bouton. Mauvaise hauteur : le coup passe en entier, avec l'étiquette « MAUVAISE GARDE ! ».
+- En garde basse, la tête reste à portée de gifle (seul l'accroupi sans garde passe sous les gifles). Sans cette règle, la garde basse aurait tout arrêté au sol.
+- **Contrôles tactiles** : quatre boutons en arc autour du pouce droit (Gifle dans le coin, Pied à gauche, Garde au-dessus, Grosse gifle en diagonale).
+- **IA** : elle donne des coups de pied, garde à la bonne hauteur quand elle voit partir le coup, saute parfois par-dessus, et frappe à l'autre hauteur un adversaire qui garde. Quand elle doit se couvrir sans avoir vu le coup, elle parie sur la hauteur du dernier coup adverse.
+- Poses provisoires : l'ancienne pose d'esquive pour le coup de pied et la balayette, la garde écrasée pour la garde basse.
+- **`GUIDE-DESSINS.md`** : la liste complète des poses (22 par personnage), les tailles, les planches et les règles des décors.
+
+**Équilibrage refait** (200 matchs par ligne)
+
+| Affiche | Round moyen | Victoires |
+| --- | --- | --- |
+| Bernard / Lola, Facile | 30 s | 55 % / 45 % |
+| Bernard / Lola, Normal | 27 s | 44 % / 56 % |
+| Bernard / Lola, Difficile | 32 s | 53 % / 47 % |
+| Bernard contre Bernard, Normal | 31 s | 50 % / 50 % |
+| Lola contre Lola, Normal | 24 s | 50 % / 50 % |
+
+- Avec les coups de pied, la grande allonge de Bernard le rendait trop fort (88 % en Difficile). Réglages : allonge de Bernard ramenée à 1,08 ; gabarit `rapide` à base 12 et résistance 1,05.
+- Contre le « marteleur » (un joueur qui avance et gifle sans arrêt) : Facile 0 victoire sur 20, Normal 3, Difficile 20. Le Normal se fait donc encore déborder par un joueur qui martèle : à surveiller au jalon 2.
+
+**Vérifications**
+- 126 tests unitaires, dont les coups de pied (portée, adversaire accroupi, saut par-dessus, balayette sous une gifle) et les gardes (bonne et mauvaise hauteur, gifle aérienne, changement de hauteur).
+- 26 tests Playwright, dont le bouton Pied et la garde basse avec deux doigts.
+- Captures regardées : coup de pied, garde basse, placement des quatre boutons.
+
 ---
 
 # Historique du premier jeu (`soufflet`)

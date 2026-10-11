@@ -1,11 +1,12 @@
 // L'objet d'entrée unique : le joueur (clavier, tactile), l'IA et plus tard le joueur distant
 // produisent tous la même chose à chaque pas de simulation. La logique ne sait pas d'où ça vient.
 
-export const INPUT_KEYS = ['gauche', 'droite', 'haut', 'bas', 'gifle', 'grosseGifle', 'garde'] as const;
+// L'ordre fixe le bit de chaque touche : on n'ajoute qu'à la fin.
+export const INPUT_KEYS = ['gauche', 'droite', 'haut', 'bas', 'gifle', 'grosseGifle', 'garde', 'pied'] as const;
 export type InputKey = (typeof INPUT_KEYS)[number];
 export type InputFrame = Record<InputKey, boolean>;
 
-export const noInput = (): InputFrame => ({ gauche: false, droite: false, haut: false, bas: false, gifle: false, grosseGifle: false, garde: false });
+export const noInput = (): InputFrame => ({ gauche: false, droite: false, haut: false, bas: false, gifle: false, grosseGifle: false, garde: false, pied: false });
 
 /** Entrées compactées en un entier (un bit par touche) : pour le réseau et les enregistrements. */
 export function encodeInput(i: InputFrame): number {

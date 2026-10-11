@@ -103,13 +103,18 @@ Un match se joue en 2 rounds gagnants (3 au maximum). Chaque round : 100 PV par 
 
 ### Coups
 
-| Coup | Commande | Rôle |
-| --- | --- | --- |
-| Gifle rapide | Appui sur « Gifle » | Rapide, peu de dégâts, sert à interrompre |
-| Grosse gifle | Maintenir « Grosse gifle », relâcher pour frapper | Reprend la jauge du premier jeu : charge, zone dorée, surchauffe |
-| Gifle accroupie | « Gifle » en étant accroupi | Touche un adversaire accroupi |
-| Gifle aérienne | « Gifle » en l'air | Touche un adversaire accroupi, punit les grosses gifles en charge |
-| Gifle spéciale | « Grosse gifle » avec la rage pleine | Selon le gabarit : une gifle énorme, ou trois gifles enchaînées |
+Chaque combattant a une gifle, un coup de pied et un coup spécial. Les gifles sont **hautes**, les coups de pied sont **bas** : c'est ce qui décide de la garde à tenir.
+
+| Coup | Commande | Hauteur | Rôle |
+| --- | --- | --- | --- |
+| Gifle rapide | Appui sur « Gifle » | Haute | Rapide, peu de dégâts, sert à interrompre. Passe au-dessus d'un adversaire accroupi |
+| Grosse gifle | Maintenir « Grosse gifle », relâcher pour frapper | Haute | Reprend la jauge du premier jeu : charge, zone dorée, surchauffe |
+| Gifle aérienne | « Gifle » en l'air | Haute | Touche un adversaire accroupi, punit les grosses gifles en charge |
+| Coup de pied | Appui sur « Pied » | Bas | Plus lent, plus long. Touche un adversaire accroupi ; on peut sauter par-dessus |
+| Balayette | « Pied » en étant accroupi | Bas | Passe sous les gifles hautes |
+| Gifle spéciale | « Grosse gifle » avec la rage pleine | Haute | Selon le gabarit : une gifle énorme, ou trois gifles enchaînées |
+
+Le coup de pied et la garde haute ou basse ont été ajoutés le 11 octobre 2026 à la demande du propriétaire (phase 4 bis). La balayette remplace l'ancienne gifle accroupie.
 
 **Grosse gifle, héritage du premier jeu :**
 - La jauge monte de 0 à 100 % tant que le bouton est maintenu. Le combattant ne peut pas se déplacer pendant la charge et reste vulnérable.
@@ -119,14 +124,17 @@ Un match se joue en 2 rounds gagnants (3 au maximum). Chaque round : 100 PV par 
 
 ### Défense
 
-- **Garde** : maintenir « Garde ». Bloque les gifles, sauf une grosse gifle en zone dorée. Un coup bloqué inflige 10 % de ses dégâts.
+- **Garde haute** : maintenir « Garde ». Bloque les gifles, sauf une grosse gifle en zone dorée.
+- **Garde basse** : maintenir « Garde » en tenant le stick vers le bas. Bloque les coups de pied.
+- **Mauvaise hauteur** : le coup passe en entier, comme sans garde. En garde basse, la tête reste à portée de gifle.
+- Un coup bloqué inflige 10 % de ses dégâts.
 - **Jauge de garde** : chaque coup bloqué la vide un peu ; elle se recharge hors garde. Vide, la garde est brisée et le combattant est sonné 1 seconde.
-- **Accroupi** : esquive la gifle rapide debout et la grosse gifle.
+- **Accroupi** (sans garde) : esquive la gifle rapide et la grosse gifle, mais prend les coups de pied.
 
 ### Dégâts
 
 ```
-Gifle rapide, accroupie, aérienne :  D = dégâts du coup × R_d
+Gifles, coups de pied :              D = dégâts du coup × R_d
 Grosse gifle :                       D = B × (C / 100) × K × R_d
 ```
 
@@ -140,18 +148,19 @@ Les distances sont en pixels pour un écran logique de 844 × 390 : la logique t
 
 | Gabarit | Style | Vitesse de marche | Durée du saut | Base B | Charge 0 → 100 % | Zone dorée | Résistance R_d | Mécanique de la spéciale | Porté pour l'instant par |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `lourd` | Lent, frappe fort, encaisse, grande allonge (×1,15) | 170 px/s | 650 ms | 14 | 1,4 s | 79–91 % | 0,85 | Une gifle ×1,8 | Big Bernard |
-| `rapide` | Rapide, mobile, fragile | 230 px/s | 550 ms | 11 | 1,0 s | 76–92 % | 1,13 | 3 gifles à ×0,7 | Lola Tornade |
+| `lourd` | Lent, frappe fort, encaisse, bonne allonge (×1,08) | 170 px/s | 650 ms | 14 | 1,4 s | 79–91 % | 0,85 | Une gifle ×1,8 | Big Bernard |
+| `rapide` | Rapide, mobile, fragile | 230 px/s | 550 ms | 12 | 1,0 s | 76–92 % | 1,05 | 3 gifles à ×0,7 | Lola Tornade |
 
-Ces valeurs sont celles réglées par simulation en phase 3.
+Ces valeurs sont celles réglées par simulation, la dernière fois après l'ajout des coups de pied.
 
-### Durées des coups (valeurs de départ, à régler)
+### Durées des coups
 
 | Coup | Préparation | Coup actif | Récupération | Dégâts | Adversaire figé |
 | --- | --- | --- | --- | --- | --- |
 | Gifle rapide | 100 ms | 70 ms | 180 ms | 5 | 250 ms |
-| Gifle accroupie | 130 ms | 70 ms | 220 ms | 6 | 250 ms |
 | Gifle aérienne | 120 ms | jusqu'à l'atterrissage | 150 ms | 7 | 300 ms |
+| Coup de pied | 150 ms | 80 ms | 230 ms | 7 | 280 ms |
+| Balayette | 130 ms | 70 ms | 250 ms | 6 | 250 ms |
 | Grosse gifle (après relâchement) | 60 ms | 90 ms | 350 ms | selon formule | 450 ms, recul important |
 
 Une grosse gifle de 14 dégâts ou plus **met l'adversaire à terre** ; il se relève après 800 ms, invulnérable au sol et pendant le relevé. *(Valeur de départ : 25, hors d'atteinte pour le gabarit `rapide` ; ramenée à 14 en phase 2.)*
@@ -169,20 +178,20 @@ Toutes ces valeurs vivent dans `src/config/balance.ts` et `src/config/roster.ts`
 ### Tactile (mobile, paysage)
 
 - **Moitié gauche de l'écran** : stick virtuel. Gauche et droite pour marcher, haut pour sauter, bas pour s'accroupir.
-- **Moitié droite** : trois boutons, « Gifle », « Grosse gifle » (à maintenir), « Garde » (à maintenir).
+- **Moitié droite** : quatre boutons, « Gifle », « Pied », « Grosse gifle » (à maintenir), « Garde » (à maintenir ; avec le stick vers le bas : garde basse).
 - Les contrôles ne doivent jamais masquer les combattants ni les barres de vie.
 
 ### Clavier (ordinateur et tests)
 
 - Flèches ou ZQSD : déplacements, saut, accroupi.
-- J : gifle, K : grosse gifle, L : garde.
+- J : gifle, I : pied, K : grosse gifle, L : garde.
 
 ### Une seule interface d'entrée
 
 Le joueur, l'IA et plus tard le joueur distant produisent tous le même objet d'entrée à chaque pas de simulation :
 
 ```
-{ gauche, droite, haut, bas, gifle, grosseGifle, garde }
+{ gauche, droite, haut, bas, gifle, grosseGifle, garde, pied }
 ```
 
 La logique ne sait pas d'où viennent les entrées. C'est ce qui permet de tester par simulation et de brancher le jeu en ligne sans réécrire le combat.
@@ -214,30 +223,12 @@ Les animations fonctionnent par **changement de pose**, sans animation fluide : 
 - Toutes les poses d'un perso ont **la même taille d'image et la même ligne de pieds**. On change de texture sans recalage.
 - Fond transparent. Optimisation : environ 600 px de haut, format WebP.
 
-### Poses existantes (Bernard et Lola, 11 chacun)
+### Poses
 
-Attente (`idle`), armement (`windup`), élan (`swing`), gifle (`slap`), coup reçu (`hit`), sonné (`dazed`), victoire (`victory`), autogifle (`selfslap`), esquive (`dodge`), esquive parfaite (`dodge_perfect`), garde (`guard`).
+La liste complète des poses (22 obligatoires par personnage), les tailles, les planches de plusieurs poses et les règles pour les décors sont dans **`GUIDE-DESSINS.md`**, le document de référence pour les dessins.
 
-La **garde est donc déjà dessinée** ; il n'y a qu'une seule pose de coup reçu (pas de version « lourde »).
-
-### Poses à fournir par le propriétaire du projet
-
-Un nouveau combattant demande les 11 poses existantes, plus celles du tableau. Pour Bernard et Lola, seules celles du tableau manquent. Dans l'ordre de priorité :
-
-| Priorité | Pose | Nombre d'images |
-| --- | --- | --- |
-| 1 | Accroupi (remarque du jalon 1 : la pose provisoire écrase le dessin, le personnage paraît rétrécir) | 1 |
-| 1 | Saut | 1 (montée et descente partagées) |
-| 1 | Marche | 2 au minimum, 4 dans l'idéal |
-| 2 | Gifle rapide | 1 |
-| 2 | Gifle accroupie (même écrasement provisoire que la pose accroupie : à dessiner avec elle) | 1 |
-| 2 | Gifle aérienne | 1 |
-| 2 | À terre | 1 |
-| 3 | Coup reçu lourd | 1 |
-| 3 | Relevé | 1 |
-| 3 | Gifle spéciale | 1 à 2 |
-
-Soit 11 à 15 images en plus des 11 de base.
+- Bernard et Lola ont 9 des 22 poses : `idle`, `guard`, `windup`, `swing`, `slap`, `selfslap`, `hit`, `dazed`, `victory`. Il leur en manque 13 chacun.
+- Les deux poses d'esquive du premier jeu (`dodge`, `dodge_perfect`) ne font plus partie de la liste ; `dodge` sert de coup de pied provisoire.
 
 ### Poses provisoires : le code n'attend pas les dessins
 
@@ -247,8 +238,11 @@ Le fichier `src/config/poses.ts` associe chaque action à une image. Tant qu'une
 | --- | --- |
 | Marche | Attente, avec un léger rebond |
 | Saut | Attente, déplacée vers le haut |
-| Accroupi | Attente, écrasée verticalement |
-| Gifle rapide, accroupie, aérienne, spéciale | Gifle |
+| Accroupi | Attente, écrasée verticalement (remarque du jalon 1 : le personnage paraît rétrécir) |
+| Garde basse | Garde, écrasée |
+| Gifle rapide, aérienne, spéciale | Gifle |
+| Coup de pied | Ancienne pose d'esquive |
+| Balayette | Ancienne pose d'esquive, écrasée |
 | Coup reçu lourd | Coup reçu, incliné |
 | À terre, relevé | Sonné, incliné |
 
@@ -329,7 +323,7 @@ Uniquement aux 3 jalons, ou en cas de choix qui ne peut pas être annulé facile
 **Faite le 11 octobre 2026** (détail dans `CHANGELOG.md`). **Jalon 1 validé** par le propriétaire le 11 octobre : contrôles, plaisir de la gifle et rythme jugés bons. Seule remarque : accroupi, le personnage « rétrécit » (pose provisoire écrasée) ; les vraies poses accroupies sont à dessiner.
 
 - Boîtes de frappe et boîtes vulnérables par pose.
-- Gifle rapide, gifle accroupie, gifle aérienne, grosse gifle avec jauge (zone dorée, surchauffe).
+- Gifle rapide, gifle accroupie (remplacée depuis par la balayette), gifle aérienne, grosse gifle avec jauge (zone dorée, surchauffe).
 - Garde, jauge de garde, garde brisée, coup reçu, recul, mise à terre et relevé.
 - PV, KO, chrono, rounds, fin de match, écran Result.
 - Adversaire provisoire : un mannequin qui avance, garde et gifle au hasard.
@@ -356,6 +350,14 @@ Uniquement aux 3 jalons, ou en cas de choix qui ne peut pas être annulé facile
 - Combat miroir autorisé (même perso des deux côtés), avec une teinte différente pour le second.
 - *Validé quand* : tout le parcours se fait au tactile sans erreur, captures d'écran correctes.
 - **Jalon 2 : le propriétaire joue.** Le solo est jouable de bout en bout.
+
+### Phase 4 bis · Coups de pied et garde haute ou basse ✔
+
+**Faite le 11 octobre 2026**, à la demande du propriétaire (détail dans `CHANGELOG.md`).
+
+- Bouton « Pied » : coup de pied debout, balayette accroupi. La balayette remplace la gifle accroupie.
+- Garde haute contre les gifles, garde basse (Garde + stick vers le bas) contre les coups de pied. Mauvaise hauteur : le coup passe en entier.
+- IA, simulation et équilibrage refaits.
 
 ### Phase 5 · Mécaniques avancées et sensations
 
@@ -399,7 +401,7 @@ Uniquement aux 3 jalons, ou en cas de choix qui ne peut pas être annulé facile
 | Quand | Quoi |
 | --- | --- |
 | Après le premier envoi | Activer GitHub Pages sur le dépôt (Settings → Pages → branche `gh-pages`) |
-| Dès que possible, sans bloquer le code | Les nouvelles poses de Bernard et Lola, priorité 1 puis 2 puis 3 |
+| Dès que possible, sans bloquer le code | Les 13 poses qui manquent à Bernard et Lola, priorité 1 puis 2 puis 3 (voir `GUIDE-DESSINS.md`) |
 | Avant le jalon 2 si possible | Un décor en version large (2 écrans) |
 | Quand le moteur est validé | Les dessins des personnages politiques et des décors, leurs textes dans `texts.ts`, et le gabarit choisi pour chacun |
 

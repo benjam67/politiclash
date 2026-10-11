@@ -501,7 +501,7 @@ export class FightScene extends Phaser.Scene {
         sfx.dizzy();
         this.crowd?.cheer(0.6);
         this.commentator.say('guardBreak');
-      } else if (e.move === 'big') {
+      } else if (e.move === 'big' || e.move === 'kick' || e.move === 'sweep') {
         this.fx.damageNumber(p.x, p.y - 70, Math.max(1, Math.round(dmg)), 'n', 'lbl_block');
         this.commentator.say('guard');
       }
@@ -513,7 +513,7 @@ export class FightScene extends Phaser.Scene {
     const big = e.move === 'big';
     this.v[victim].flashUntil = this.time.now + (big ? 110 : 70);
     this.fx.flash(p.x, p.y, 0.5 + power * 0.9);
-    this.fx.damageNumber(p.x, p.y - 70, Math.max(1, Math.round(dmg)), e.crit ? 'c' : 'n', e.crit ? 'lbl_crit' : e.knockdown ? 'lbl_down' : undefined);
+    this.fx.damageNumber(p.x, p.y - 70, Math.max(1, Math.round(dmg)), e.crit ? 'c' : 'n', e.crit ? 'lbl_crit' : e.knockdown ? 'lbl_down' : e.wrongGuard ? 'lbl_wrong' : undefined);
     this.fx.debris(p.x, p.y, dir as 1 | -1, Math.round(2 + power * 8), e.crit ? 2 : big && power > 0.5 ? 1 : 0);
     sfx.slap(0.25 + power * 0.75, e.crit);
     sfx.cry(def.id, power);
