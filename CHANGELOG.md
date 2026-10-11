@@ -121,6 +121,68 @@ Tout ce qui est retiré reste lisible dans l'historique du dépôt et dans `souf
 - Le rythme est-il bon (vitesse de marche, durée des coups, durée d'un round) ?
 - Les boutons de droite gênent-ils quand un combattant est collé au bord droit ?
 
+## Phase 3 · IA — 2026-10-11
+
+**Jalon 1 validé** par le propriétaire (contrôles, plaisir de la gifle, rythme). Sa remarque : accroupi, le personnage « rétrécit ». C'est la pose provisoire (l'image d'attente écrasée) ; la vraie pose accroupie, et la gifle accroupie qui va avec, sont notées dans la liste des poses à dessiner.
+
+**Fait**
+- **IA** (`ai/ai.ts`) : elle produit des entrées, comme un joueur. Elle voit l'adversaire **avec un temps de réaction** (son état d'il y a quelques pas), jamais ses touches.
+- Ce qu'elle sait faire : s'approcher, gifler (debout, accroupie, en sautant), viser la zone dorée, se mettre en garde ou s'accroupir en voyant partir un coup, **riposter après un blocage**, **enchaîner** quand sa gifle touche, punir un coup parti dans le vide, couper une charge, briser une garde avec une grosse gifle, se couvrir face à un adversaire qui gifle sans arrêt. Elle ne se gifle jamais elle-même.
+- **Trois niveaux** :
+
+| Niveau | Réaction | Se défend | Punit une ouverture | Précision de la zone dorée |
+| --- | --- | --- | --- | --- |
+| Facile | 0,43 s | 12 % | 25 % | ± 22 % |
+| Normal | 0,25 s | 45 % | 60 % | ± 9 % |
+| Difficile | 0,13 s | 80 % | 95 % | ± 3,5 % |
+
+- **Simulation** (`ai/simulate.ts`, `npm run sim`) : 200 matchs IA contre IA par affiche, sans affichage, en alternant les côtés.
+- **Démo** : `?autoplay=1` fait jouer deux IA.
+
+**Équilibrage** (200 matchs par ligne)
+
+| Affiche | Round moyen | Victoires |
+| --- | --- | --- |
+| Bernard / Lola, Facile | 32 s | 41 % / 60 % |
+| Bernard / Lola, Normal | 33 s | 54 % / 47 % |
+| Bernard / Lola, Difficile | 37 s | 51 % / 49 % |
+| Bernard contre Bernard, Normal | 38 s | 53 % / 47 % |
+| Lola contre Lola, Normal | 28 s | 51 % / 49 % |
+| Normal contre Facile | | 97 % pour le Normal |
+| Difficile contre Normal | | 98 % pour le Difficile |
+
+Tous les matchs se terminent, aucun round ne va au chrono, et personne ne dépasse 60 % à niveau égal.
+
+**Réglages choisis** pour y arriver (`config/balance.ts`, `config/roster.ts`)
+- Gabarit `lourd` : marche 170 px/s (160 avant), zone dorée 79–91 % (80–90 avant), **allonge 1,15** (1,06 avant). Sa grande allonge est devenue sa vraie force.
+- Gabarit `rapide` : résistance 1,13 (1,1 avant).
+- Nouveau réglage `tempo` (vivacité des coups) par gabarit, laissé à 1 pour les deux : essayé, mais trop brutal. Une image de différence suffit à rendre les gifles bloquées de l'un punissables et pas celles de l'autre.
+
+**Corrigé en route**
+- **Garde brisée** : frappé pendant qu'il était sonné, un combattant gardait une jauge vide, et sa garde recassait au premier blocage, en boucle. La jauge repart maintenant pleine après une casse.
+- Ce bug a été trouvé grâce à un test : un « joueur » qui se contente d'avancer et de marteler le bouton Gifle battait l'IA Difficile 20 fois sur 20. Après correction et quelques réflexes en plus : Facile 0 victoire sur 20, Normal 11, Difficile 20.
+
+**Vérifications**
+- 116 tests unitaires (IA : silence pendant l'annonce, approche, niveaux rangés, pas d'autogifle, match rejouable à l'identique, résultat contre le « marteleur »).
+- `npm run sim` : 7 séries de 200 matchs, critères de la roadmap vérifiés automatiquement.
+
+## Phase 4 · Choix du personnage et du niveau — 2026-10-11
+
+**Fait**
+- **Choix du personnage** (`scenes/CharacterSelectScene.ts`) : grille de 6 cases (les combattants disponibles et des cases « Bientôt »). Le joueur choisit son combattant, puis son adversaire ou « Au hasard », puis la difficulté. Retour possible à chaque étape.
+- **Choix du lieu** (`scenes/StageSelectScene.ts`) : une vignette par décor, des cases « Bientôt », et « Au hasard ».
+- **Parcours complet** : accueil → personnage → adversaire → difficulté → lieu → combat → résultat → revanche, autre combat ou accueil. « Autre combat » repropose le combattant et la difficulté du match précédent.
+- **Combat miroir** permis (même combattant des deux côtés), le second avec une teinte bleutée.
+- Niveau de l'IA rappelé sous le chrono pendant le combat.
+- Les portraits et les vignettes sont découpés automatiquement dans les images existantes : rien de plus à dessiner pour un nouveau combattant ou un nouveau décor.
+
+**Vérifications**
+- 24 tests Playwright sur mobile émulé, dont tout le parcours au tactile, les retours en arrière, l'adversaire au hasard, le combat miroir, la démo IA contre IA jusqu'au résultat. Aucune erreur console.
+- Captures regardées : choix du personnage, de l'adversaire, de la difficulté, du lieu, résultat.
+
+**À noter pour le jalon 2**
+- Le niveau Normal bat le Facile presque à tous les coups, et le Difficile bat le Normal de même : les marches entre niveaux sont hautes. À ajuster selon le ressenti du propriétaire.
+
 ---
 
 # Historique du premier jeu (`soufflet`)

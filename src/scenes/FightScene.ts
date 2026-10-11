@@ -25,7 +25,7 @@ import {
 import { computeCamera, minZoom, type Camera } from '../logic/camera';
 import { mergeInputs, type InputFrame } from '../logic/input';
 import { DummySource, IdleSource, KeyboardSource, WanderSource, type InputSource } from '../input/sources';
-import { AiSource, type AiLevel } from '../ai/ai';
+import { AiSource, levelLabel, type AiLevel } from '../ai/ai';
 import { sfx } from '../audio/sfx';
 import { announceImage, Fx } from '../fx/Fx';
 import { Commentator, Crowd } from '../fx/Crowd';
@@ -33,7 +33,7 @@ import { ChargeGauge } from '../ui/ChargeGauge';
 import { HealthBar } from '../ui/HealthBar';
 import { RoundPips, TimerDiamond } from '../ui/hud';
 import { safeInsets } from '../ui/safe';
-import { COLORS } from '../ui/theme';
+import { COLORS, CSS, FONT_TITLE } from '../ui/theme';
 import { TouchControls } from '../ui/TouchControls';
 import type { ResultData } from './ResultScene';
 
@@ -92,6 +92,7 @@ export class FightScene extends Phaser.Scene {
   private gauge!: ChargeGauge;
   private soundBtn!: Phaser.GameObjects.Image;
   private homeBtn!: Phaser.GameObjects.Image;
+  private levelTag!: Phaser.GameObjects.Text;
   private fx!: Fx;
   private touch!: TouchControls;
   layout!: StageLayout;
@@ -184,6 +185,11 @@ export class FightScene extends Phaser.Scene {
     });
     this.homeBtn = this.add.image(0, 0, 'ico_home').setDepth(130).setInteractive({ useHandCursor: true });
     this.homeBtn.on('pointerup', () => this.scene.start('Title'));
+    // Niveau de l'IA, discret, sous le chrono.
+    this.levelTag = this.add
+      .text(0, 0, this.p2Kind === 'ai' ? (this.autoplay ? `DÉMO · ${levelLabel(this.level).toUpperCase()}` : `IA ${levelLabel(this.level).toUpperCase()}`) : '', { fontFamily: FONT_TITLE, fontSize: '15px', color: CSS.cream, stroke: CSS.ink, strokeThickness: 5 })
+      .setOrigin(0.5, 0)
+      .setDepth(100);
 
     // Entrées : clavier et tactile pour le joueur 1 ; adversaire provisoire à droite.
     this.keyboard = new KeyboardSource();
@@ -291,6 +297,7 @@ export class FightScene extends Phaser.Scene {
     this.v[0].pips.setPosition(width / 2 - centerGap - 20, 66);
     this.v[1].pips.setPosition(width / 2 + centerGap + 20, 66);
     this.timer.setPosition(width / 2, 48);
+    this.levelTag.setPosition(width / 2, 104);
     // Sous le bouton d'accueil, au-dessus du stick.
     this.gauge.layout(margin + 6, 204, Math.max(160, height - safe.bottom - 213 - 204 - 60));
     this.soundBtn.setPosition(width - 44 - side, 120);

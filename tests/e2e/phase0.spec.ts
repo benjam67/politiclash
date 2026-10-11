@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { collectErrors, expectNoErrors, SHOTS, waitReady } from './helpers';
+import { collectErrors, expectNoErrors, SHOTS, tapNamed, waitReady, waitScene } from './helpers';
 
 test('la scène de combat s’affiche sans erreur en paysage', async ({ page }) => {
   const errors = collectErrors(page);
@@ -51,23 +51,20 @@ test('on peut choisir les combattants par l’URL, y compris en combat miroir', 
   await expectNoErrors(errors);
 });
 
-test('l’accueil porte le nouveau nom et le bouton JOUER mène au combat', async ({ page }) => {
+test('l’accueil porte le nouveau nom et le bouton JOUER mène au choix du personnage', async ({ page }) => {
   const errors = collectErrors(page);
   await page.goto('./');
   await waitReady(page, 'Title');
   await expect(page).toHaveTitle('PolitiClash');
-  const pos = await page.evaluate(() => {
-    type O = { name: string; text?: string; x: number; y: number };
-    const g = window.__slap!.game!;
-    const sc = g.scene.getScene('Title') as unknown as { children: { list: O[] } };
-    const btn = sc.children.list.find((o) => o.name === 'btn-JOUER')!;
-    const k = g.scale.displayScale;
-    return { title: sc.children.list.find((o) => o.name === 'title')!.text, x: btn.x / k.x, y: btn.y / k.y };
+  const title = await page.evaluate(() => {
+    type O = { name: string; text?: string };
+    const sc = window.__slap!.game!.scene.getScene('Title') as unknown as { children: { list: O[] } };
+    return sc.children.list.find((o) => o.name === 'title')!.text;
   });
-  expect(pos.title).toBe('POLITICLASH');
+  expect(title).toBe('POLITICLASH');
   await page.screenshot({ path: `${SHOTS}/phase0-accueil.png` });
-  await page.touchscreen.tap(pos.x, pos.y);
-  await waitReady(page, 'Fight');
+  await tapNamed(page, 'Title', 'btn-JOUER');
+  await waitScene(page, 'CharacterSelect');
   await expectNoErrors(errors);
 });
 

@@ -78,3 +78,25 @@ export async function freezeWhen(page: Page, cond: string, timeout = 15_000) {
   await page.waitForFunction(() => (window as unknown as { __froze?: boolean }).__froze === true, null, { timeout });
 }
 export const resume = (page: Page) => page.evaluate(() => window.__slap!.game!.loop.wake());
+
+/** Touche un objet (bouton, carte) d'une scène, désigné par son nom. */
+export async function tapNamed(page: Page, scene: string, name: string) {
+  const p = await page.evaluate(
+    ([sc, n]) => {
+      type O = { name: string; x: number; y: number };
+      const g = window.__slap!.game!;
+      const o = (g.scene.getScene(sc) as unknown as { children: { list: O[] } }).children.list.find((c) => c.name === n);
+      if (!o) return null;
+      return { x: o.x / g.scale.displayScale.x, y: o.y / g.scale.displayScale.y };
+    },
+    [scene, name] as const,
+  );
+  if (!p) throw new Error(`objet « ${name} » introuvable dans la scène ${scene}`);
+  await page.touchscreen.tap(p.x, p.y);
+}
+
+/** Noms des objets nommés d'une scène (boutons, cartes). */
+export const namesIn = (page: Page, scene: string) =>
+  page.evaluate((sc) => (window.__slap!.game!.scene.getScene(sc) as unknown as { children: { list: { name: string }[] } }).children.list.map((o) => o.name).filter(Boolean), scene);
+
+export const waitScene = (page: Page, scene: string, timeout = 30_000) => page.waitForFunction((s) => window.__slap?.scene === s && window.__slap?.ready === true, scene, { timeout });

@@ -132,7 +132,7 @@ Grosse gifle :                       D = B × (C / 100) × K × R_d
 
 - B = base du perso, C = charge en %, K = 2 en zone dorée sinon 1, R_d = résistance de celui qui reçoit.
 
-### Gabarits de départ (valeurs de départ, à régler)
+### Gabarits (réglés par simulation en phase 3)
 
 Un gabarit est un profil de jeu neutre. Chaque combattant en reçoit un (choix du propriétaire, dans `roster.ts`). D'autres gabarits s'ajouteront en phase 8 (le défenseur, le technicien fragile, celui qui se relève toujours…).
 
@@ -140,8 +140,10 @@ Les distances sont en pixels pour un écran logique de 844 × 390 : la logique t
 
 | Gabarit | Style | Vitesse de marche | Durée du saut | Base B | Charge 0 → 100 % | Zone dorée | Résistance R_d | Mécanique de la spéciale | Porté pour l'instant par |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `lourd` | Lent, frappe fort, encaisse | 160 px/s | 650 ms | 14 | 1,4 s | 80–90 % | 0,85 | Une gifle ×1,8 | Big Bernard |
-| `rapide` | Rapide, mobile, fragile | 230 px/s | 550 ms | 11 | 1,0 s | 76–92 % | 1,1 | 3 gifles à ×0,7 | Lola Tornade |
+| `lourd` | Lent, frappe fort, encaisse, grande allonge (×1,15) | 170 px/s | 650 ms | 14 | 1,4 s | 79–91 % | 0,85 | Une gifle ×1,8 | Big Bernard |
+| `rapide` | Rapide, mobile, fragile | 230 px/s | 550 ms | 11 | 1,0 s | 76–92 % | 1,13 | 3 gifles à ×0,7 | Lola Tornade |
+
+Ces valeurs sont celles réglées par simulation en phase 3.
 
 ### Durées des coups (valeurs de départ, à régler)
 
@@ -335,14 +337,18 @@ Uniquement aux 3 jalons, ou en cas de choix qui ne peut pas être annulé facile
 - *Validé quand* : un match complet se joue contre le mannequin, tous les tests unitaires des coups passent.
 - **Jalon 1 : le propriétaire joue.** Questions à lui poser : les contrôles sont-ils agréables au pouce ? La gifle fait-elle plaisir ? Le rythme est-il bon ?
 
-### Phase 3 · IA
+### Phase 3 · IA ✔
+
+**Faite le 11 octobre 2026** (détail et tableau d'équilibrage dans `CHANGELOG.md`).
 
 - IA qui produit des entrées comme un joueur, avec un temps de réaction (elle ne lit pas les entrées du joueur à l'instant même).
 - Trois niveaux : Facile (lente, garde peu), Normal, Difficile (punit les grosses gifles ratées, vise la zone dorée).
 - Mode `?autoplay=1` et simulation de 200 matchs.
 - *Validé quand* : la simulation respecte les critères de durée et d'équilibre, et l'IA Facile perd contre une suite d'entrées simple scriptée.
 
-### Phase 4 · Choix du personnage et du niveau
+### Phase 4 · Choix du personnage et du niveau ✔
+
+**Faite le 11 octobre 2026** (détail dans `CHANGELOG.md`). En attente du jalon 2.
 
 - Scène **CharacterSelect** : grille de 6 cases, les combattants disponibles jouables, cases « Bientôt » pour les autres. Le joueur choisit son perso, puis son adversaire (ou « Au hasard »), puis la difficulté.
 - Scène **StageSelect** : vignettes des niveaux disponibles, option « Au hasard ».

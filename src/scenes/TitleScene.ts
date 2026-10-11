@@ -8,7 +8,7 @@ import { needsInstallHint, safeInsets } from '../ui/safe';
 import { FIGHTER_IDS, spriteOf } from '../config/roster';
 import { GAME } from '../config/texts';
 
-/** Écran d'accueil. Phase 0 : un seul bouton ; le choix du perso et du niveau arrive en phase 4. */
+/** Écran d'accueil : le bouton JOUER mène au choix du personnage. */
 export class TitleScene extends Phaser.Scene {
   private items: Phaser.GameObjects.GameObject[] = [];
 
@@ -83,7 +83,7 @@ export class TitleScene extends Phaser.Scene {
         .setDepth(3),
     );
 
-    add(makeButton(this, width / 2, height * 0.6, 'JOUER', COLORS.yellow, () => this.scene.start('Fight', {}), { w: 320, h: 84, font: 38 }).setDepth(4));
+    add(makeButton(this, width / 2, height * 0.6, 'JOUER', COLORS.yellow, () => this.scene.start('CharacterSelect', {}), { w: 320, h: 84, font: 38 }).setDepth(4));
 
     add(
       this.add

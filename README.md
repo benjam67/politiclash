@@ -9,7 +9,7 @@ Jeu de combat de gifles en temps réel, façon jeu de baston anime des années 9
 
 ## État
 
-Phases 0 à 2 terminées : un match complet se joue contre un mannequin (déplacements, gifles, grosse gifle à jauge, garde, K.O., rounds, écran de résultat). La vraie IA arrive en phase 3, le choix du personnage et du niveau en phase 4.
+Phases 0 à 4 terminées : le solo se joue de bout en bout. On choisit son combattant, son adversaire, la difficulté (IA Facile, Normal, Difficile) et le lieu, puis on se bat en 2 rounds gagnants. Restent les gifles spéciales et la rage (phase 5), la finition (phase 6) et le jeu en ligne (phase 7).
 
 ## Comment jouer
 
@@ -38,7 +38,8 @@ npm test           # tests unitaires (Vitest)
 npm run test:e2e   # tests Playwright sur mobile émulé (build + preview)
 BASE_URL=https://benjam67.github.io/politiclash/ npm run test:e2e   # contre la version en ligne
 npm run assets     # régénère public/assets/ depuis raw/
+npm run sim        # équilibrage : 200 matchs IA contre IA par affiche
 npm run music -- sortie.wav   # rend la musique en fichier
 ```
 
-Accès direct au combat : `?scene=fight&p1=bernard|lola&p2=bernard|lola&stage=bar`, plus `&foe=idle|wander` (adversaire immobile ou qui se promène), `&intro=0` (sans l'annonce) et `&touch=1` (contrôles tactiles sur ordinateur).
+Accès direct au combat : `?scene=fight&p1=bernard|lola&p2=bernard|lola&stage=bar&level=easy|normal|hard`. Démo IA contre IA : `?autoplay=1`. Pour les essais : `&foe=idle|wander|dummy` (adversaire d'essai à la place de l'IA), `&intro=0` (sans l'annonce), `&touch=1` (contrôles tactiles sur ordinateur).

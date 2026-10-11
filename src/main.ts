@@ -3,6 +3,8 @@ import { BootScene } from './scenes/BootScene';
 import { FightScene } from './scenes/FightScene';
 import { TitleScene } from './scenes/TitleScene';
 import { ResultScene } from './scenes/ResultScene';
+import { CharacterSelectScene } from './scenes/CharacterSelectScene';
+import { StageSelectScene } from './scenes/StageSelectScene';
 import type { InputFrame } from './logic/input';
 import type { FightState } from './logic/fight';
 
@@ -40,7 +42,7 @@ const game = new Phaser.Game({
   input: { activePointers: 4 },
   render: { antialias: true, powerPreference: 'high-performance' },
   fps: { target: 60 },
-  scene: [BootScene, TitleScene, FightScene, ResultScene],
+  scene: [BootScene, TitleScene, CharacterSelectScene, StageSelectScene, FightScene, ResultScene],
 });
 
 window.__slap.game = game;
