@@ -31,7 +31,7 @@ async function approach(page: Page, p2: Record<string, boolean> = {}) {
   await setInputs(page, {}, p2);
 }
 
-const IDLE = './?scene=fight&foe=idle&intro=0';
+const IDLE = './?scene=fight&p1=bernard&p2=lola&foe=idle&intro=0';
 
 test.describe('phase 2 : coups, garde, rounds', () => {
   test('gifle rapide au clavier : l’image change, les PV baissent, effets et son', async ({ page }) => {
@@ -201,7 +201,7 @@ test.describe('phase 2 : coups, garde, rounds', () => {
   test('un match complet : annonces, K.O., deux rounds, écran de résultat, revanche', async ({ page }) => {
     test.setTimeout(150_000);
     const errors = collectErrors(page);
-    await page.goto('./?scene=fight&foe=idle');
+    await page.goto('./?scene=fight&p1=bernard&p2=lola&foe=idle');
     await waitReady(page, 'Fight');
     expect((await state(page)).phase).toBe('intro');
     await page.waitForTimeout(500);
@@ -251,7 +251,7 @@ test.describe('phase 2 : coups, garde, rounds', () => {
 
   test('contre le mannequin : il attaque, des coups sont échangés, aucune erreur', async ({ page }) => {
     const errors = collectErrors(page);
-    await page.goto('./?scene=fight&foe=dummy&intro=0&seed=11');
+    await page.goto('./?scene=fight&p1=bernard&p2=lola&foe=dummy&intro=0&seed=11');
     await waitReady(page, 'Fight');
     await setInputs(page, { droite: true });
     await waitState(page, `s.p1.hp < 100`, 40_000);

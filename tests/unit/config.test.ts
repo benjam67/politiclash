@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { GABARITS, MATCH, MOVES } from '../../src/config/balance';
-import { ACTIONS, POSE_FILES, poseFor } from '../../src/config/poses';
-import { FIGHTER_IDS, ROSTER, ROSTER_SLOTS, spriteOf } from '../../src/config/roster';
+import { ACTIONS, posesOf, poseFor } from '../../src/config/poses';
+import { FIGHTER_IDS, PLAYABLE_IDS, ROSTER, ROSTER_SLOTS, spriteOf } from '../../src/config/roster';
 import { STAGE_IDS, STAGES } from '../../src/config/stages';
 import { COMMENTS, FIGHTER_TEXTS, STAGE_TEXTS } from '../../src/config/texts';
 
@@ -11,8 +11,8 @@ const ASSETS = path.resolve(__dirname, '../../public/assets');
 
 describe('configuration des combattants', () => {
   it('tient dans l’écran de sélection', () => {
-    expect(FIGHTER_IDS.length).toBeGreaterThanOrEqual(2);
-    expect(FIGHTER_IDS.length).toBeLessThanOrEqual(ROSTER_SLOTS);
+    expect(PLAYABLE_IDS.length).toBeGreaterThanOrEqual(2);
+    expect(PLAYABLE_IDS.length).toBeLessThanOrEqual(ROSTER_SLOTS);
   });
 
   for (const id of FIGHTER_IDS) {
@@ -25,11 +25,15 @@ describe('configuration des combattants', () => {
       });
 
       it('a une image pour chaque pose fournie', () => {
-        for (const pose of POSE_FILES) expect(fs.existsSync(path.join(ASSETS, 'fighters', id, `${pose}.webp`)), pose).toBe(true);
+        for (const pose of posesOf(id)) expect(fs.existsSync(path.join(ASSETS, 'fighters', id, `${pose}.webp`)), pose).toBe(true);
       });
 
       it('associe chaque action à une image existante', () => {
-        for (const action of ACTIONS) expect(POSE_FILES).toContain(poseFor(id, action).pose);
+        for (const action of ACTIONS) {
+          const def = poseFor(id, action);
+          expect(posesOf(id)).toContain(def.pose);
+          if (def.alt) expect(posesOf(id)).toContain(def.alt);
+        }
       });
 
       it('est plus bas accroupi que debout', () => {

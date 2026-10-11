@@ -13,10 +13,19 @@ const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
 const RAW = path.join(ROOT, 'raw');
 const OUT = path.join(ROOT, 'public/assets');
 // Même liste que POSE_FILES dans src/config/poses.ts.
-const POSES = ['idle', 'windup', 'swing', 'slap', 'hit', 'dazed', 'victory', 'selfslap', 'dodge', 'dodge_perfect', 'guard'];
-const FIGHTERS = { bernard: [1300, 823], lola: [908, 772] };
+// Mêmes listes que dans src/config/poses.ts.
+const POSES_V1 = ['idle', 'windup', 'swing', 'slap', 'hit', 'dazed', 'victory', 'selfslap', 'dodge', 'dodge_perfect', 'guard'];
+const POSES_FULL = ['idle', 'walk1', 'walk2', 'jump', 'crouch', 'guard', 'guard_low', 'quick', 'air_slap', 'kick', 'crouch_kick', 'windup', 'swing', 'slap', 'special', 'special2', 'selfslap', 'hit', 'hit_heavy', 'down', 'getup', 'dazed', 'victory'];
 // Bernard (le plus grand canevas) ramené à ~600 px de haut.
 const FIGHTER_SCALE = 600 / 823;
+// Taille du canevas source, poses fournies, facteur de réduction.
+// Les jeux complets (1300 × 820, perso debout ~590 px) sont réduits à ~500 px de haut.
+const FIGHTERS = {
+  bernard: { size: [1300, 823], poses: POSES_V1, scale: FIGHTER_SCALE },
+  lola: { size: [908, 772], poses: POSES_V1, scale: FIGHTER_SCALE },
+  aviateur: { size: [1300, 820], poses: POSES_FULL, scale: 0.85 },
+  tailleur: { size: [1300, 820], poses: POSES_FULL, scale: 0.85 },
+};
 const FEET_OFFSET = 10; // pieds à 10 px du bas de l'image source
 const HABITUES = ['vieux_beret', 'fermier', 'grandmere', 'facteur', 'jeune_siffleur', 'mecano', 'boulanger', 'femme_cardigan'];
 const PROP_SCALE = 1; // habitués : déjà petits, gardés en taille native
@@ -55,7 +64,7 @@ async function rowsMaxX(file, y0, y1) {
   return best;
 }
 
-for (const [name, [W, H]] of Object.entries(FIGHTERS)) {
+for (const [name, { size: [W, H], poses: POSES, scale: FIGHTER_SCALE }] of Object.entries(FIGHTERS)) {
   const dir = path.join(RAW, 'fighters', name);
   let u = { x0: W, y0: H, x1: 0, y1: 0 };
   for (const p of POSES) {

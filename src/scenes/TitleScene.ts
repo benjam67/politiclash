@@ -5,7 +5,7 @@ import { makeButton } from '../ui/button';
 import { COLORS, CSS, FONT_TITLE, FONT_UI } from '../ui/theme';
 import { fighterKey } from '../config/poses';
 import { needsInstallHint, safeInsets } from '../ui/safe';
-import { FIGHTER_IDS, spriteOf } from '../config/roster';
+import { PLAYABLE_IDS, spriteOf } from '../config/roster';
 import { GAME } from '../config/texts';
 
 /** Écran d'accueil : le bouton JOUER mène au choix du personnage. */
@@ -50,7 +50,7 @@ export class TitleScene extends Phaser.Scene {
 
     // Deux combattants encadrent le menu.
     const s = L.fighterScale * 1.08;
-    const [a, b] = [FIGHTER_IDS[0], FIGHTER_IDS[1] ?? FIGHTER_IDS[0]];
+    const [a, b] = [PLAYABLE_IDS[0], PLAYABLE_IDS[1] ?? PLAYABLE_IDS[0]];
     add(this.add.image(width * 0.16, height * 0.98, fighterKey(a, 'idle')).setOrigin(spriteOf(a).originX, spriteOf(a).originY).setScale(s).setDepth(2));
     add(
       this.add

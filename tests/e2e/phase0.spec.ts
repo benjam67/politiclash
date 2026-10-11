@@ -27,9 +27,9 @@ test('la scène de combat s’affiche sans erreur en paysage', async ({ page }) 
   expect(keys).toContain('stage_bar');
   expect(keys).toContain('patron');
   expect(keys.filter((k) => k.startsWith('habitue_'))).toHaveLength(8);
-  expect(info.textures.find((t) => t.key === 'bernard_idle')?.flipX).toBe(false);
-  expect(info.textures.find((t) => t.key === 'lola_idle')?.flipX).toBe(true);
-  expect(info.state.ids).toEqual({ left: 'bernard', right: 'lola' });
+  expect(info.textures.find((t) => t.key === 'aviateur_idle')?.flipX).toBe(false);
+  expect(info.textures.find((t) => t.key === 'tailleur_idle')?.flipX).toBe(true);
+  expect(info.state.ids).toEqual({ left: 'aviateur', right: 'tailleur' });
   expect(info.state.stage).toBe('bar');
   expect(info.state.timeLeft).toBe(60);
   // Combattants visibles en entier dans le monde du jeu.

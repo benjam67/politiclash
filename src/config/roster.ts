@@ -36,10 +36,29 @@ export const ROSTER = {
     reach: 1,
     body: { stand: { halfW: 26, h: 230 }, crouch: { halfW: 30, h: 140 } },
   },
+  aviateur: {
+    gabarit: 'rapide',
+    voice: 'grave',
+    reach: 1,
+    body: { stand: { halfW: 26, h: 230 }, crouch: { halfW: 30, h: 142 } },
+  },
+  tailleur: {
+    gabarit: 'rapide',
+    voice: 'aigu',
+    reach: 1,
+    body: { stand: { halfW: 26, h: 230 }, crouch: { halfW: 30, h: 142 } },
+  },
 } satisfies Record<string, FighterDef>;
 
 export type FighterId = keyof typeof ROSTER;
+/** Tous les combattants connus du moteur (tests et simulation compris). */
 export const FIGHTER_IDS = Object.keys(ROSTER) as FighterId[];
+/**
+ * Combattants proposés au joueur (écran de sélection, écran titre, adversaire au hasard).
+ * Bernard et Lola, du premier jeu, sont retirés du jeu : ils ne restent dans le moteur
+ * que pour les tests (seuls à porter le gabarit `lourd` pour l'instant).
+ */
+export const PLAYABLE_IDS: FighterId[] = ['aviateur', 'tailleur'];
 
 /** L'écran de sélection prévoit 6 cases ; les cases vides affichent « Bientôt ». */
 export const ROSTER_SLOTS = 6;

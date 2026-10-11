@@ -10,7 +10,7 @@ export interface Progress {
   /** Perso choisi en solo et à l'entraînement. */
   fighter: FighterId;
   /** Tenue portée par chaque perso et bar choisi (identifiants de `UNLOCKS`, ou 'base'). */
-  skin: Record<FighterId, string>;
+  skin: Record<'bernard' | 'lola', string>;
   bar: string;
 }
 

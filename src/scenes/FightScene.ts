@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
 import { GABARITS, GUARD, MATCH, SIM, STAGE } from '../config/balance';
-import { FIGHTER_IDS, ROSTER, spriteOf, type FighterId } from '../config/roster';
+import { PLAYABLE_IDS, ROSTER, spriteOf, type FighterId } from '../config/roster';
 import { STAGES, type StageId } from '../config/stages';
 import { FIGHTER_TEXTS } from '../config/texts';
-import { fighterKey, poseFor } from '../config/poses';
+import { ALT_STEPS, fighterKey, poseFor } from '../config/poses';
 import { computeLayout, HABITUES, type StageLayout } from '../logic/layout';
 import {
   actionOf,
@@ -97,7 +97,7 @@ export class FightScene extends Phaser.Scene {
   private touch!: TouchControls;
   layout!: StageLayout;
 
-  private ids: [FighterId, FighterId] = ['bernard', 'lola'];
+  private ids: [FighterId, FighterId] = [PLAYABLE_IDS[0], PLAYABLE_IDS[1] ?? PLAYABLE_IDS[0]];
   private stageId: StageId = 'bar';
   private p2Kind: FoeKind = 'ai';
   private level: AiLevel = 'normal';
@@ -126,8 +126,8 @@ export class FightScene extends Phaser.Scene {
   }
 
   init(data: FightData) {
-    const left = data.left ?? FIGHTER_IDS[0];
-    this.ids = [left, data.right ?? FIGHTER_IDS.find((id) => id !== left) ?? left];
+    const left = data.left ?? PLAYABLE_IDS[0];
+    this.ids = [left, data.right ?? PLAYABLE_IDS.find((id) => id !== left) ?? left];
     this.stageId = data.stage ?? 'bar';
     this.p2Kind = data.p2 ?? 'ai';
     this.level = data.level ?? 'normal';
@@ -384,7 +384,7 @@ export class FightScene extends Phaser.Scene {
     const x = this.localX(f.x / SUB);
     const y = this.feetY - (f.y / SUB) * this.k;
     view.sprite
-      .setTexture(fighterKey(f.id, def.pose))
+      .setTexture(fighterKey(f.id, def.alt && Math.floor(f.t / ALT_STEPS) % 2 === 1 ? def.alt : def.pose))
       .setFlipX(flip)
       .setOrigin(flip ? 1 - a.originX : a.originX, a.originY)
       .setPosition(x + shake, y - bob)

@@ -38,6 +38,15 @@ export const FIGHTER_TEXTS: Record<FighterId, FighterTexts> = {
     name: 'Lola Tornade', short: 'Lola', katakana: 'ローラ', special: 'La Toupie',
     specialLines: ['LA TOUPIE ! Elle tourne, elle tourne… et ça claque !', 'Trois claques en une ! La Toupie est lâchée !'],
   },
+  // Textes provisoires : nom du coup spécial et répliques à écrire par le propriétaire.
+  aviateur: {
+    name: 'Manu Macs', short: 'Manu', katakana: 'マニュ', special: 'Coup spécial',
+    specialLines: ['Coup spécial ! On a senti le courant d’air jusqu’au comptoir !'],
+  },
+  tailleur: {
+    name: 'Narine le Zen', short: 'Narine', katakana: 'ナリーヌ', special: 'Coup spécial',
+    specialLines: ['Coup spécial ! Ça, on ne l’apprend dans aucune école !'],
+  },
 };
 
 export const STAGE_TEXTS: Record<StageId, { name: string }> = {

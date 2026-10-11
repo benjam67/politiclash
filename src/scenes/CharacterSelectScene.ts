@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { AI_LEVELS, levelLabel, type AiLevel } from '../ai/ai';
 import { fighterKey } from '../config/poses';
-import { FIGHTER_IDS, ROSTER_SLOTS, spriteOf, type FighterId } from '../config/roster';
+import { PLAYABLE_IDS, ROSTER_SLOTS, spriteOf, type FighterId } from '../config/roster';
 import { FIGHTER_TEXTS } from '../config/texts';
 import { computeLayout } from '../logic/layout';
 import { sfx } from '../audio/sfx';
@@ -142,7 +142,7 @@ export class CharacterSelectScene extends Phaser.Scene {
       const gap = 20;
       const top = 128 + ch / 2;
       for (let i = 0; i < ROSTER_SLOTS; i++) {
-        const id = FIGHTER_IDS[i];
+        const id = PLAYABLE_IDS[i];
         const x = cx + ((i % cols) - (cols - 1) / 2) * (cw + gap);
         const y = top + Math.floor(i / cols) * (ch + gap);
         if (id) {
@@ -203,7 +203,7 @@ export class CharacterSelectScene extends Phaser.Scene {
 
   private finish(level: AiLevel) {
     this.level = level;
-    const right = this.right ?? FIGHTER_IDS[Math.floor(Math.random() * FIGHTER_IDS.length)];
+    const right = this.right ?? PLAYABLE_IDS[Math.floor(Math.random() * PLAYABLE_IDS.length)];
     const data: StageSelectData = { left: this.left as FighterId, right, level };
     this.scene.start('StageSelect', data);
   }

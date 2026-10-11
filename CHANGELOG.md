@@ -453,3 +453,15 @@ Retour du propriétaire après une partie à deux : sur iPhone, le plein écran 
 - Trois nouvelles poses par perso, fournies par le propriétaire : `dodge` (esquive), `dodge_perfect` (esquive parfaite), `guard` (garde de rage). Elles remplacent les teintes provisoires (bleu / or / rose).
 - Les images générées n'étaient pas détourées (fond noir ou blanc) et deux d'entre elles contenaient un second personnage et des traits de vitesse : détourage par remplissage depuis les bords, on ne garde que le perso, les zones de fond enfermées (entre un bras et le corps) sont retirées. Chaque pose est ensuite posée sur le canevas du perso (1300 × 823 ou 908 × 772), pieds sur la ligne commune, à la même échelle que les autres.
 - En jeu : la pose d'esquive apparaît dès que le joueur glisse vers l'arrière (et le perso se remet en place si c'était trop tôt) ; la garde de rage tient jusqu'à l'impact.
+
+## Deux premiers combattants avec le jeu de poses complet — 2026-10-11
+
+À la demande du propriétaire, pour essai : deux combattants fournis en planches (2 planches de 12 poses chacun) remplacent Bernard et Lola dans le jeu.
+
+- **Images** : planches détourées (fond vert), découpées en 23 poses de 1300 × 820 px, pieds à 10 px du bas, la planche 2 recalée sur la planche 1 grâce à une pose de repère. Dossiers `raw/fighters/aviateur/` et `raw/fighters/tailleur/`.
+- **Poses** : `poses.ts` connaît deux jeux d'images, le premier (11 poses, avec poses provisoires) et le jeu complet du guide (une vraie image par action, sans effet de remplacement). La marche alterne `walk1` et `walk2` tous les 10 pas. `special2` est fournie mais pas encore utilisée.
+- **Gabarit** : `rapide` pour les deux, mêmes boîtes de corps (choix provisoire du propriétaire, pour tester). Simulation : 24 séries sur 24 dans les critères.
+- **Bernard et Lola** : retirés de l'écran de sélection, de l'écran titre et du tirage au hasard (`PLAYABLE_IDS` dans `roster.ts`). Ils restent dans le moteur pour les tests, qui s'appuient sur eux (seuls porteurs du gabarit `lourd`) ; leurs images ne sont chargées que si l'URL les demande (`?p1=bernard&p2=lola`).
+- **Textes** : noms repris des fichiers fournis ; nom du coup spécial et répliques provisoires, à écrire dans `texts.ts`.
+- **À reprendre sur les dessins** : `walk1` et `walk2` sont presque identiques ; `kick` frappe à hauteur de hanche au lieu du genou.
+- **Tests navigateur** : 3 tests de la phase 1 et 2 échouent dans le bac à sable, y compris sur la version précédente (attentes trop serrées sur une machine lente) ; à revoir.

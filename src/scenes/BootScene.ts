@@ -2,9 +2,9 @@ import Phaser from 'phaser';
 import { HABITUES } from '../logic/layout';
 import { loadFonts } from '../ui/theme';
 import { bakeAll } from '../fx/bake';
-import { FIGHTER_IDS, type FighterId } from '../config/roster';
+import { FIGHTER_IDS, PLAYABLE_IDS, type FighterId } from '../config/roster';
 import { STAGE_IDS, STAGES, type StageId } from '../config/stages';
-import { fighterKey, POSE_FILES } from '../config/poses';
+import { fighterKey, posesOf } from '../config/poses';
 import type { FightData } from './FightScene';
 
 export class BootScene extends Phaser.Scene {
@@ -29,8 +29,11 @@ export class BootScene extends Phaser.Scene {
     // Figurants du bar : le patron et les habitués.
     this.load.image('patron', 'stages/bar/patron.webp');
     for (const h of HABITUES) this.load.image(`habitue_${h}`, `stages/bar/habitues/${h}.webp`);
-    for (const id of FIGHTER_IDS) {
-      for (const pose of POSE_FILES) this.load.image(fighterKey(id, pose), `fighters/${id}/${pose}.webp`);
+    // Les combattants jouables, plus ceux demandés par l'URL (tests avec les anciens personnages).
+    const asked = fightDataFromUrl(location.search);
+    const ids = new Set<FighterId>([...PLAYABLE_IDS, ...(asked.left ? [asked.left] : []), ...(asked.right ? [asked.right] : [])]);
+    for (const id of ids) {
+      for (const pose of posesOf(id)) this.load.image(fighterKey(id, pose), `fighters/${id}/${pose}.webp`);
     }
   }
 

@@ -41,8 +41,8 @@ test.describe('phase 4 : choix du personnage et du niveau', () => {
     // 6 cases : les combattants disponibles et des cases « Bientôt ».
     const names = await namesIn(page, 'CharacterSelect');
     expect(names.filter((n) => n.startsWith('card-'))).toHaveLength(6);
-    expect(names).toContain('card-bernard');
-    expect(names).toContain('card-lola');
+    expect(names).toContain('card-aviateur');
+    expect(names).toContain('card-tailleur');
     expect(names.filter((n) => n.startsWith('card-soon-'))).toHaveLength(4);
     await page.waitForTimeout(200);
     await page.screenshot({ path: `${SHOTS}/phase4-choix-perso.png` });
@@ -51,26 +51,26 @@ test.describe('phase 4 : choix du personnage et du niveau', () => {
     await tapNamed(page, 'CharacterSelect', 'card-soon-2');
     expect(await st(page)).toMatchObject({ step: 'p1' });
 
-    await tapNamed(page, 'CharacterSelect', 'card-lola');
+    await tapNamed(page, 'CharacterSelect', 'card-tailleur');
     await page.waitForFunction(() => (window.__slap!.state as { step: string }).step === 'p2');
-    expect(await st(page)).toMatchObject({ left: 'lola' });
+    expect(await st(page)).toMatchObject({ left: 'tailleur' });
     await page.waitForTimeout(200);
     await page.screenshot({ path: `${SHOTS}/phase4-choix-adversaire.png` });
 
-    await tapNamed(page, 'CharacterSelect', 'card-bernard');
+    await tapNamed(page, 'CharacterSelect', 'card-aviateur');
     await page.waitForFunction(() => (window.__slap!.state as { step: string }).step === 'level');
     await page.waitForTimeout(200);
     await page.screenshot({ path: `${SHOTS}/phase4-difficulte.png` });
     await tapNamed(page, 'CharacterSelect', 'btn-level-easy');
 
     await waitScene(page, 'StageSelect');
-    expect(await st(page)).toMatchObject({ left: 'lola', right: 'bernard', level: 'easy' });
+    expect(await st(page)).toMatchObject({ left: 'tailleur', right: 'aviateur', level: 'easy' });
     await page.waitForTimeout(200);
     await page.screenshot({ path: `${SHOTS}/phase4-choix-lieu.png` });
     await tapNamed(page, 'StageSelect', 'card-bar');
 
     await waitScene(page, 'Fight');
-    expect(await st(page)).toMatchObject({ ids: { left: 'lola', right: 'bernard' }, stage: 'bar', foe: 'ai', level: 'easy' });
+    expect(await st(page)).toMatchObject({ ids: { left: 'tailleur', right: 'aviateur' }, stage: 'bar', foe: 'ai', level: 'easy' });
     await expectNoErrors(errors);
   });
 
@@ -82,11 +82,11 @@ test.describe('phase 4 : choix du personnage et du niveau', () => {
     await waitScene(page, 'CharacterSelect');
     const step = (s: string) => page.waitForFunction((v) => (window.__slap!.state as { step: string }).step === v, s);
 
-    await tapNamed(page, 'CharacterSelect', 'card-bernard');
+    await tapNamed(page, 'CharacterSelect', 'card-aviateur');
     await step('p2');
     await tapNamed(page, 'CharacterSelect', 'btn-back');
     await step('p1');
-    await tapNamed(page, 'CharacterSelect', 'card-bernard');
+    await tapNamed(page, 'CharacterSelect', 'card-aviateur');
     await step('p2');
     await tapNamed(page, 'CharacterSelect', 'btn-AU HASARD');
     await step('level');
@@ -94,23 +94,23 @@ test.describe('phase 4 : choix du personnage et du niveau', () => {
     await tapNamed(page, 'CharacterSelect', 'btn-back');
     await step('p2');
     // Même combattant des deux côtés.
-    await tapNamed(page, 'CharacterSelect', 'card-bernard');
+    await tapNamed(page, 'CharacterSelect', 'card-aviateur');
     await step('level');
     await tapNamed(page, 'CharacterSelect', 'btn-level-normal');
     await waitScene(page, 'StageSelect');
     await tapNamed(page, 'StageSelect', 'btn-back');
     await waitScene(page, 'CharacterSelect');
     // Le combattant choisi est proposé de nouveau.
-    expect(await st(page)).toMatchObject({ step: 'p1', left: 'bernard', level: 'normal' });
-    await tapNamed(page, 'CharacterSelect', 'card-bernard');
+    expect(await st(page)).toMatchObject({ step: 'p1', left: 'aviateur', level: 'normal' });
+    await tapNamed(page, 'CharacterSelect', 'card-aviateur');
     await step('p2');
-    await tapNamed(page, 'CharacterSelect', 'card-bernard');
+    await tapNamed(page, 'CharacterSelect', 'card-aviateur');
     await step('level');
     await tapNamed(page, 'CharacterSelect', 'btn-level-hard');
     await waitScene(page, 'StageSelect');
     await tapNamed(page, 'StageSelect', 'btn-AU HASARD');
     await waitScene(page, 'Fight');
-    expect(await st(page)).toMatchObject({ ids: { left: 'bernard', right: 'bernard' }, level: 'hard' });
+    expect(await st(page)).toMatchObject({ ids: { left: 'aviateur', right: 'aviateur' }, level: 'hard' });
     await page.waitForTimeout(300);
     await page.screenshot({ path: `${SHOTS}/phase4-miroir.png` });
     await expectNoErrors(errors);
@@ -119,7 +119,7 @@ test.describe('phase 4 : choix du personnage et du niveau', () => {
   test('après le match : « Autre combat » ramène au choix du personnage', async ({ page }) => {
     test.setTimeout(150_000);
     const errors = collectErrors(page);
-    await page.goto('./?scene=fight&foe=idle&p1=lola&p2=bernard&level=hard');
+    await page.goto('./?scene=fight&foe=idle&p1=tailleur&p2=aviateur&level=hard');
     await waitReady(page, 'Fight');
     await page.evaluate(() => {
       let n = 0;
@@ -133,7 +133,7 @@ test.describe('phase 4 : choix du personnage et du niveau', () => {
     await page.screenshot({ path: `${SHOTS}/phase4-resultat.png` });
     await tapNamed(page, 'Result', 'btn-AUTRE COMBAT');
     await waitScene(page, 'CharacterSelect');
-    expect(await st(page)).toMatchObject({ step: 'p1', left: 'lola', level: 'hard' });
+    expect(await st(page)).toMatchObject({ step: 'p1', left: 'tailleur', level: 'hard' });
     await expectNoErrors(errors);
   });
 });
