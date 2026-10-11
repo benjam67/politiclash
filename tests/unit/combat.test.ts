@@ -51,8 +51,12 @@ function bigSlap(s: FightState, hold: number, b: InputFrame = none) {
 
 describe('gifle rapide', () => {
   it('se déroule en trois temps : préparation, coup actif, récupération', () => {
-    const m = moveSteps('quick');
-    expect([m.startup, m.active, m.recovery]).toEqual([st(100), st(70), st(180)]);
+    const base = moveSteps('quick');
+    expect([base.startup, base.active, base.recovery]).toEqual([st(100), st(70), st(180)]);
+    // La vivacité du gabarit allonge ou raccourcit la préparation et la récupération.
+    const m = moveSteps('quick', 'bernard');
+    expect(m.startup).toBe(st(100 * GABARITS.lourd.tempo));
+    expect(m.recovery).toBe(st(180 * GABARITS.lourd.tempo));
     let s = createFightStarted('bernard', 'lola');
     s = step(s, press('gifle'), none);
     expect(s.f[0].mode).toBe('attack');
@@ -70,7 +74,8 @@ describe('gifle rapide', () => {
     expect(hitsOf(ev)).toHaveLength(1);
     expect(hit.by).toBe(0);
     expect(hit.blocked).toBe(false);
-    expect(hit.dmg / HP).toBeCloseTo(MOVES.quick.damage * GABARITS.rapide.resistance, 5);
+    // Arrondi au dixième de PV.
+    expect(hit.dmg).toBe(Math.round((MOVES.quick.damage * HP * Math.round(GABARITS.rapide.resistance * 100)) / 100));
     expect(s.f[1].hp).toBe(MATCH.hp * HP - hit.dmg);
     expect(s.f[1].x).toBeGreaterThan(close().f[1].x);
   });
@@ -133,8 +138,9 @@ describe('gifle accroupie et gifle aérienne', () => {
     expect(actionOf(s.f[0])).toBe('airSlap');
     while (s.f[0].stance === 'jump') s = step(s, none, none);
     expect(s.f[0].mode).toBe('recover');
-    expect(s.f[0].left).toBe(st(MOVES.air.recoveryMs));
-    expect(run(s, st(MOVES.air.recoveryMs)).s.f[0].mode).toBe('free');
+    const rec = moveSteps('air', 'bernard').recovery;
+    expect(s.f[0].left).toBe(rec);
+    expect(run(s, rec).s.f[0].mode).toBe('free');
   });
 });
 
@@ -178,7 +184,7 @@ describe('grosse gifle', () => {
     expect(hit.crit).toBe(true);
     expect(hit.dmg / HP).toBeGreaterThan(lourd.base * 0.8 * BIG_SLAP.criticalMultiplier * GABARITS.rapide.resistance - 0.1);
     expect(hit.knockdown).toBe(true);
-    expect(hit.dmg).toBe(Math.round((bigDamage('bernard', 85, true) * 110) / 100));
+    expect(hit.dmg).toBe(Math.round((bigDamage('bernard', 85, true) * Math.round(GABARITS.rapide.resistance * 100)) / 100));
     expect(s.f[1].mode === 'down' || s.f[1].mode === 'getup').toBe(true);
   });
 
@@ -258,6 +264,8 @@ describe('garde', () => {
     // Sonné, on encaisse plein pot.
     const r = run(run(s, 15).s, 25, press('gifle'), press('garde'));
     expect(hitsOf(r.ev)[0].blocked).toBe(false);
+    // Frappé pendant qu'il est sonné, il retrouve une jauge pleine : la garde ne recasse pas au coup suivant.
+    expect(r.s.f[1].guard).toBe(GUARD_MAX);
   });
 
   it('se recharge hors garde', () => {
@@ -386,7 +394,7 @@ describe('rounds et match', () => {
 
 describe('appui gardé en mémoire', () => {
   it('une gifle demandée juste avant la fin du coup précédent part quand même', () => {
-    const m = moveSteps('quick');
+    const m = moveSteps('quick', 'bernard');
     const total = m.startup + m.active + m.recovery;
     let s = step(createFightStarted('bernard', 'lola'), press('gifle'), none);
     s = run(s, total - 5).s;

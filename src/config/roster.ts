@@ -27,7 +27,7 @@ export const ROSTER = {
   bernard: {
     gabarit: 'lourd',
     voice: 'grave',
-    reach: 1.06,
+    reach: 1.15,
     body: { stand: { halfW: 36, h: 228 }, crouch: { halfW: 40, h: 140 } },
   },
   lola: {

@@ -62,15 +62,17 @@ export interface Gabarit {
   goldenZone: [number, number];
   /** Résistance R_d appliquée aux dégâts reçus. */
   resistance: number;
+  /** Vivacité : multiplie la durée de ses coups (préparation et récupération). Moins de 1 = plus vif. */
+  tempo: number;
   /** Mécanique de la gifle spéciale : nombre de gifles et multiplicateur de chacune. */
   special: { hits: number; multiplier: number };
 }
 
 export const GABARITS = {
-  /** Lent, frappe fort, encaisse. Spéciale : une seule gifle énorme. */
-  lourd: { walkSpeed: 160, jumpMs: 650, base: 14, chargeTimeMs: 1400, goldenZone: [80, 90], resistance: 0.85, special: { hits: 1, multiplier: 1.8 } },
+  /** Lent, frappe fort, encaisse, avec une grande allonge (voir `roster.ts`). Spéciale : une seule gifle énorme. */
+  lourd: { walkSpeed: 170, jumpMs: 650, base: 14, chargeTimeMs: 1400, goldenZone: [79, 91], resistance: 0.85, tempo: 1, special: { hits: 1, multiplier: 1.8 } },
   /** Rapide, mobile, fragile. Spéciale : trois gifles enchaînées. */
-  rapide: { walkSpeed: 230, jumpMs: 550, base: 11, chargeTimeMs: 1000, goldenZone: [76, 92], resistance: 1.1, special: { hits: 3, multiplier: 0.7 } },
+  rapide: { walkSpeed: 230, jumpMs: 550, base: 11, chargeTimeMs: 1000, goldenZone: [76, 92], resistance: 1.13, tempo: 1, special: { hits: 3, multiplier: 0.7 } },
 } satisfies Record<string, Gabarit>;
 
 export type GabaritId = keyof typeof GABARITS;

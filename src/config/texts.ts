@@ -44,6 +44,9 @@ export const STAGE_TEXTS: Record<StageId, { name: string }> = {
   bar: { name: 'Le bar' },
 };
 
+/** Noms des niveaux de difficulté. */
+export const TEXTS_AI = { easy: 'Facile', normal: 'Normal', hard: 'Difficile' };
+
 /** Phrases du commentateur, par situation. Ton absurde et exagéré. */
 export const COMMENTS = {
   roundStart: ['Mesdames, messieurs, ça va claquer !', 'Le patron siffle, les joues tremblent !', 'Qui repartira avec la joue en feu ?'],

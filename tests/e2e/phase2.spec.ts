@@ -45,7 +45,8 @@ test.describe('phase 2 : coups, garde, rounds', () => {
     await page.keyboard.up('KeyJ');
     const s = await state(page);
     expect(s.lastHit).toMatchObject({ move: 'quick', blocked: false, crit: false });
-    expect(s.p2.hp).toBeCloseTo(100 - 5.5, 5);
+    // 5 dégâts × 1,13 (résistance du gabarit rapide), arrondi au dixième.
+    expect(s.p2.hp).toBeCloseTo(100 - 5.7, 5);
     await waitState(page, `s.p2.mode === 'free' && s.p1.mode === 'free'`);
     const f = await fx(page);
     expect(f.flashes).toBe(1);
@@ -197,7 +198,7 @@ test.describe('phase 2 : coups, garde, rounds', () => {
 
   test('contre le mannequin : il attaque, des coups sont échangés, aucune erreur', async ({ page }) => {
     const errors = collectErrors(page);
-    await page.goto('./?scene=fight&intro=0&seed=11');
+    await page.goto('./?scene=fight&foe=dummy&intro=0&seed=11');
     await waitReady(page, 'Fight');
     await setInputs(page, { droite: true });
     await waitState(page, `s.p1.hp < 100`, 40_000);

@@ -118,6 +118,9 @@ interface Physics {
 
 const PHYSICS = new Map<FighterId, Physics>();
 
+/** À appeler après avoir modifié un gabarit en cours de route (outils de réglage). */
+export const clearPhysicsCache = () => PHYSICS.clear();
+
 /** Valeurs par pas d'un combattant, déduites de son gabarit. */
 export function physicsOf(id: FighterId): Physics {
   let p = PHYSICS.get(id);
@@ -138,12 +141,15 @@ export function physicsOf(id: FighterId): Physics {
   return p;
 }
 
-/** Durées d'un coup, en pas. */
-export const moveSteps = (m: MoveId) => ({
-  startup: steps(MOVES[m].startupMs),
-  active: MOVES[m].activeMs === null ? -1 : steps(MOVES[m].activeMs as number),
-  recovery: steps(MOVES[m].recoveryMs),
-});
+/** Durées d'un coup, en pas. La préparation et la récupération dépendent de la vivacité du combattant. */
+export function moveSteps(m: MoveId, id?: FighterId) {
+  const tempo = id ? GABARITS[ROSTER[id].gabarit].tempo : 1;
+  return {
+    startup: steps(MOVES[m].startupMs * tempo),
+    active: MOVES[m].activeMs === null ? -1 : steps(MOVES[m].activeMs as number),
+    recovery: steps(MOVES[m].recoveryMs * tempo),
+  };
+}
 
 export const GUARD_MAX = GUARD.max * GUARD_UNIT;
 export const ROUND_STEPS = MATCH.roundTimeS * SIM.stepsPerSecond;
@@ -318,7 +324,7 @@ function act(f: FighterState, other: FighterState, input: InputFrame, who: 0 | 1
 
     case 'attack': {
       n.mt += 1;
-      const m = moveSteps(n.move as MoveId);
+      const m = moveSteps(n.move as MoveId, n.id);
       if (n.move === 'air') {
         if (landed) {
           n.mode = 'recover';
@@ -428,7 +434,7 @@ interface Rect {
 /** Rectangle de frappe du coup en cours, s'il est actif et n'a pas encore touché. */
 export function strikeBox(f: FighterState): Rect | null {
   if (f.mode !== 'attack' || f.hitDone || !f.move) return null;
-  const m = moveSteps(f.move);
+  const m = moveSteps(f.move, f.id);
   const active = f.move === 'air' ? f.mt >= m.startup && f.stance === 'jump' : f.mt >= m.startup && f.mt < m.startup + m.active;
   if (!active) return null;
   const b = MOVES[f.move].box;
@@ -494,9 +500,10 @@ function applyHit(att: FighterState, def: FighterState, hit: Hit, by: 0 | 1, ev:
 
   const dmg = Math.round((hit.dmg * physicsOf(def.id).resPct) / 100);
   const knockdown = hit.move === 'big' && dmg >= BIG_SLAP.knockdownDamage * HP;
-  // Un critique traverse la garde et la vide.
+  // Un critique traverse la garde.
   const guardBreak = hit.crit && (def.mode === 'guard' || def.mode === 'block');
-  if (guardBreak) def.guard = 0;
+  // Après une garde brisée (ou traversée), la jauge repart pleine : sinon le prochain blocage la casserait aussitôt.
+  if (guardBreak || def.mode === 'stun') def.guard = GUARD_MAX;
   def.hp = Math.max(0, def.hp - dmg);
   def.mode = knockdown ? 'down' : 'hit';
   def.left = knockdown ? steps(BIG_SLAP.knockdownMs) : steps(m.hitstunMs);
@@ -667,7 +674,7 @@ export function actionOf(f: FighterState): Action {
       return 'charge';
     case 'attack':
     case 'recover':
-      if (f.move === 'big') return f.mode === 'attack' && f.mt < moveSteps('big').startup ? 'bigSwing' : 'bigSlap';
+      if (f.move === 'big') return f.mode === 'attack' && f.mt < moveSteps('big', f.id).startup ? 'bigSwing' : 'bigSlap';
       if (f.move === 'air') return 'airSlap';
       if (f.move === 'crouch') return 'crouchSlap';
       return 'quickSlap';

@@ -9,6 +9,7 @@ import { makeButton } from '../ui/button';
 import { safeInsets } from '../ui/safe';
 import { COLORS, CSS, FONT_TITLE } from '../ui/theme';
 import type { FightData, FoeKind } from './FightScene';
+import type { AiLevel } from '../ai/ai';
 
 export interface ResultData {
   ids: [FighterId, FighterId];
@@ -16,6 +17,8 @@ export interface ResultData {
   winner: 0 | 1;
   wins: [number, number];
   p2: FoeKind;
+  level: AiLevel;
+  autoplay: boolean;
 }
 
 /** Écran de résultat : le vainqueur, le score en rounds, revanche ou retour à l'accueil. */
@@ -99,7 +102,7 @@ export class ResultScene extends Phaser.Scene {
         .setName('result-score'),
     );
 
-    const again: FightData = { left: r.ids[0], right: r.ids[1], stage: r.stage, p2: r.p2 };
+    const again: FightData = { left: r.ids[0], right: r.ids[1], stage: r.stage, p2: r.p2, level: r.level, autoplay: r.autoplay };
     const by = Math.min(height * 0.62, height - safe.bottom - 150);
     add(makeButton(this, width / 2, by, 'REVANCHE', COLORS.yellow, () => this.scene.start('Fight', again), { w: 320, h: 76, font: 34 }).setDepth(4));
     add(makeButton(this, width / 2, by + 96, 'ACCUEIL', COLORS.cream, () => this.scene.start('Title'), { w: 240, h: 58, font: 24 }).setDepth(4));

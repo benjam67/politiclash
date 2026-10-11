@@ -39,14 +39,15 @@ export class BootScene extends Phaser.Scene {
     // Tous les textes à gros contour et les effets sont tracés une fois ici, jamais pendant le jeu.
     bakeAll(this);
     const q = new URLSearchParams(location.search);
-    if (q.get('scene') === 'fight') this.scene.start('Fight', fightDataFromUrl(location.search));
+    if (q.get('scene') === 'fight' || q.get('autoplay') === '1') this.scene.start('Fight', fightDataFromUrl(location.search));
     else this.scene.start('Title');
   }
 }
 
 /**
  * Accès direct au combat par l'URL (tests, essais) :
- * `?scene=fight&p1=bernard|lola&p2=bernard|lola&stage=bar`, `&foe=idle|wander` (adversaire immobile, ou qui se promène ; sinon le mannequin),
+ * `?scene=fight&p1=bernard|lola&p2=bernard|lola&stage=bar`, `&level=easy|normal|hard` (niveau de l'IA), `?autoplay=1` (démo : IA contre IA),
+ * `&foe=idle|wander|dummy` (adversaire d'essai à la place de l'IA : immobile, promeneur, mannequin),
  * `&intro=0` (sans l'annonce du round),
  * `&seed=42` (adversaire reproductible), `&touch=1` (contrôles tactiles sur ordinateur). Sans paramètre : écran d'accueil.
  */
@@ -56,11 +57,14 @@ export function fightDataFromUrl(search: string): FightData {
   const st = q.get('stage');
   const seed = Number(q.get('seed'));
   const foe = q.get('foe');
+  const lv = q.get('level');
   return {
     left: fighter(q.get('p1')),
     right: fighter(q.get('p2')),
     stage: (STAGE_IDS as string[]).includes(st ?? '') ? (st as StageId) : undefined,
-    p2: foe === 'idle' || foe === 'wander' ? foe : 'dummy',
+    p2: foe === 'idle' || foe === 'wander' || foe === 'dummy' ? foe : 'ai',
+    level: lv === 'easy' || lv === 'hard' ? lv : 'normal',
+    autoplay: q.get('autoplay') === '1',
     intro: q.get('intro') !== '0',
     seed: q.has('seed') && Number.isFinite(seed) ? seed : undefined,
   };

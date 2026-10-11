@@ -224,11 +224,11 @@ Un nouveau combattant demande les 11 poses existantes, plus celles du tableau. P
 
 | Priorité | Pose | Nombre d'images |
 | --- | --- | --- |
-| 1 | Accroupi | 1 |
+| 1 | Accroupi (remarque du jalon 1 : la pose provisoire écrase le dessin, le personnage paraît rétrécir) | 1 |
 | 1 | Saut | 1 (montée et descente partagées) |
 | 1 | Marche | 2 au minimum, 4 dans l'idéal |
 | 2 | Gifle rapide | 1 |
-| 2 | Gifle accroupie | 1 |
+| 2 | Gifle accroupie (même écrasement provisoire que la pose accroupie : à dessiner avec elle) | 1 |
 | 2 | Gifle aérienne | 1 |
 | 2 | À terre | 1 |
 | 3 | Coup reçu lourd | 1 |
@@ -324,7 +324,7 @@ Uniquement aux 3 jalons, ou en cas de choix qui ne peut pas être annulé facile
 
 ### Phase 2 · Coups et collisions ✔
 
-**Faite le 11 octobre 2026** (détail dans `CHANGELOG.md`). En attente du jalon 1.
+**Faite le 11 octobre 2026** (détail dans `CHANGELOG.md`). **Jalon 1 validé** par le propriétaire le 11 octobre : contrôles, plaisir de la gifle et rythme jugés bons. Seule remarque : accroupi, le personnage « rétrécit » (pose provisoire écrasée) ; les vraies poses accroupies sont à dessiner.
 
 - Boîtes de frappe et boîtes vulnérables par pose.
 - Gifle rapide, gifle accroupie, gifle aérienne, grosse gifle avec jauge (zone dorée, surchauffe).

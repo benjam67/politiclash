@@ -25,6 +25,7 @@ import {
 import { computeCamera, minZoom, type Camera } from '../logic/camera';
 import { mergeInputs, type InputFrame } from '../logic/input';
 import { DummySource, IdleSource, KeyboardSource, WanderSource, type InputSource } from '../input/sources';
+import { AiSource, type AiLevel } from '../ai/ai';
 import { sfx } from '../audio/sfx';
 import { announceImage, Fx } from '../fx/Fx';
 import { Commentator, Crowd } from '../fx/Crowd';
@@ -37,15 +38,20 @@ import { TouchControls } from '../ui/TouchControls';
 import type { ResultData } from './ResultScene';
 
 export type Side = 'left' | 'right';
-export type FoeKind = 'dummy' | 'wander' | 'idle';
+/** Qui joue un combattant : l'IA, ou un adversaire d'essai (mannequin, promeneur, immobile). */
+export type FoeKind = 'ai' | 'dummy' | 'wander' | 'idle';
 
 export interface FightData {
   /** Combattant de gauche (joueur 1) et de droite. Par défaut : les deux premiers de la liste. */
   left?: FighterId;
   right?: FighterId;
   stage?: StageId;
-  /** Qui joue le combattant de droite : le mannequin (défaut), un promeneur, ou personne. */
+  /** Qui joue le combattant de droite : l'IA (défaut), ou un adversaire d'essai. */
   p2?: FoeKind;
+  /** Niveau de l'IA. */
+  level?: AiLevel;
+  /** Démo : le combattant de gauche est lui aussi joué par l'IA. */
+  autoplay?: boolean;
   /** Faux : pas d'annonce du round, le combat démarre tout de suite (tests). */
   intro?: boolean;
   seed?: number;
@@ -92,7 +98,10 @@ export class FightScene extends Phaser.Scene {
 
   private ids: [FighterId, FighterId] = ['bernard', 'lola'];
   private stageId: StageId = 'bar';
-  private p2Kind: FoeKind = 'dummy';
+  private p2Kind: FoeKind = 'ai';
+  private level: AiLevel = 'normal';
+  private autoplay = false;
+  private p1Ai: InputSource | null = null;
   private intro = true;
   private seed = 1;
 
@@ -119,7 +128,10 @@ export class FightScene extends Phaser.Scene {
     const left = data.left ?? FIGHTER_IDS[0];
     this.ids = [left, data.right ?? FIGHTER_IDS.find((id) => id !== left) ?? left];
     this.stageId = data.stage ?? 'bar';
-    this.p2Kind = data.p2 ?? 'dummy';
+    this.p2Kind = data.p2 ?? 'ai';
+    this.level = data.level ?? 'normal';
+    this.autoplay = !!data.autoplay;
+    this.p1Ai = null;
     this.intro = data.intro ?? true;
     this.seed = data.seed ?? Math.floor(Math.random() * 1e9);
     this.crowd = null;
@@ -180,9 +192,14 @@ export class FightScene extends Phaser.Scene {
     const isTouch = matchMedia('(pointer: coarse)').matches || q.get('touch') === '1';
     this.touch.setVisible(isTouch);
     // Un écran tactile détecté après coup (ordinateur hybride) : les contrôles apparaissent au premier toucher.
-    const reveal = () => this.touch.setVisible(true);
+    const reveal = () => this.touch.setVisible(!this.autoplay);
     window.addEventListener('touchstart', reveal, { once: true });
-    this.p2 = this.p2Kind === 'idle' ? new IdleSource() : this.p2Kind === 'wander' ? new WanderSource(this.seed + 6) : new DummySource(this.seed + 6);
+    const k = this.p2Kind;
+    this.p2 = k === 'idle' ? new IdleSource() : k === 'wander' ? new WanderSource(this.seed + 6) : k === 'dummy' ? new DummySource(this.seed + 6) : new AiSource(this.level, this.seed + 6);
+    if (this.autoplay) {
+      this.p1Ai = new AiSource(this.level, this.seed + 7);
+      this.touch.setVisible(false);
+    }
 
     this.applyLayout();
     this.scale.on(Phaser.Scale.Events.RESIZE, this.applyLayout, this);
@@ -220,7 +237,7 @@ export class FightScene extends Phaser.Scene {
       const forced = window.__slap?.inputs ?? {};
       const f1 = typeof forced.p1 === 'function' ? forced.p1(this.state) : forced.p1;
       const f2 = typeof forced.p2 === 'function' ? forced.p2(this.state) : forced.p2;
-      const in0 = mergeInputs(this.keyboard.read(), this.touch.read(), f1 ?? {});
+      const in0 = this.p1Ai ? this.p1Ai.read(this.state, 0) : mergeInputs(this.keyboard.read(), this.touch.read(), f1 ?? {});
       const in1: InputFrame = f2 ? mergeInputs(f2) : this.p2.read(this.state, 1);
       this.state = step(this.state, in0, in1);
       for (const e of this.state.ev) this.onEvent(e);
@@ -449,7 +466,7 @@ export class FightScene extends Phaser.Scene {
         break;
       }
       case 'matchEnd': {
-        const data: ResultData = { ids: this.ids, stage: this.stageId, winner: e.winner, wins: [s.wins[0], s.wins[1]], p2: this.p2Kind };
+        const data: ResultData = { ids: this.ids, stage: this.stageId, winner: e.winner, wins: [s.wins[0], s.wins[1]], p2: this.p2Kind, level: this.level, autoplay: this.autoplay };
         this.scene.start('Result', data);
         break;
       }
@@ -526,6 +543,9 @@ export class FightScene extends Phaser.Scene {
       mode: 'fight',
       ids: { left: this.ids[0], right: this.ids[1] },
       stage: this.stageId,
+      foe: this.p2Kind,
+      level: this.level,
+      autoplay: this.autoplay,
       step: s.step,
       hash: hashState(s),
       phase: s.phase,
