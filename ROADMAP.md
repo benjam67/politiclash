@@ -291,7 +291,7 @@ Claude enchaîne les phases seul et vérifie lui-même chaque étape. Le propri�
 - **Simulation de matchs** : mode `?autoplay=1` où deux IA s'affrontent. Lancer 200 matchs sans affichage : un match se termine toujours, la durée moyenne d'un round est comprise entre 20 et 50 secondes, aucun perso au-dessus de 60 % de victoires à niveau d'IA égal.
 - **Tests Playwright sur mobile émulé** : téléphone en paysage (844 × 390, tactile). Simuler stick et boutons, vérifier que le perso se déplace, que les PV baissent, que les poses changent et qu'il n'y a **aucune erreur dans la console**.
 - **Contrôle visuel** : captures d'écran Playwright aux moments clés (sélection du perso, sélection du niveau, marche, saut, garde, impact, mise à terre, fin de round). Les regarder pour repérer persos coupés, contrôles qui masquent l'action, textes illisibles.
-- **Performance** : chargement initial de moins de 4 Mo, 60 images par seconde sur mobile émulé avec ralentissement du processeur ×4.
+- **Performance** : chargement initial de moins de 4 Mo ; une image calculée en moins de 8 ms sur mobile émulé avec ralentissement du processeur ×4 (soit de la marge pour 60 images par seconde).
 
 ### Quand s'arrêter pour demander
 
@@ -312,13 +312,15 @@ Uniquement aux 3 jalons, ou en cas de choix qui ne peut pas être annulé facile
 - Jeu renommé (titre, manifest PWA), adresse du site corrigée.
 - *Validé quand* : le site en ligne affiche la scène de combat statique (décor, Bernard, Lola) sans erreur, et les tests conservés passent.
 
-### Phase 1 · Temps réel et déplacements
+### Phase 1 · Temps réel et déplacements ✔
+
+**Faite le 11 octobre 2026** (détail dans `CHANGELOG.md`).
 
 - Boucle de logique à pas fixe, fonction `step` pure et déterministe, état sérialisable.
 - Interface d'entrée unique ; contrôles clavier et tactiles (stick et boutons).
 - Marche, saut, accroupi, retournement automatique, collision entre combattants, limites du niveau, caméra.
 - Poses provisoires pour toutes les actions.
-- *Validé quand* : les deux combattants se déplacent au clavier et au tactile, le test de déterminisme passe, 60 images par seconde sur mobile émulé.
+- *Validé quand* : les deux combattants se déplacent au clavier et au tactile, le test de déterminisme passe, 60 images par seconde sur mobile émulé. *(Le bac à sable de test n'ayant pas de carte graphique, on y mesure le temps de calcul d'une image, processeur ralenti 4 fois ; les 60 images par seconde réelles se vérifient sur téléphone au jalon 1.)*
 
 ### Phase 2 · Coups et collisions
 

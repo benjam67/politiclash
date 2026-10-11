@@ -1,19 +1,20 @@
 import { expect, test } from '@playwright/test';
 import { collectErrors, expectNoErrors, SHOTS, waitReady } from './helpers';
 
-test('la scène de combat statique s’affiche sans erreur en paysage', async ({ page }) => {
+test('la scène de combat s’affiche sans erreur en paysage', async ({ page }) => {
   const errors = collectErrors(page);
-  await page.goto('./?scene=fight');
+  await page.goto('./?scene=fight&foe=idle');
   await waitReady(page, 'Fight');
 
   const info = await page.evaluate(() => {
     const g = window.__slap!.game!;
-    const scene = g.scene.getScene('Fight') as unknown as {
-      children: { list: { type: string; texture?: { key: string }; flipX?: boolean; visible: boolean }[] };
-    };
+    type O = { texture?: { key: string }; flipX?: boolean; list?: O[] };
+    const scene = g.scene.getScene('Fight') as unknown as { children: { list: O[] } };
+    // Le décor, les figurants et les combattants sont dans le conteneur du niveau.
+    const all = scene.children.list.flatMap((o) => [o, ...(o.list ?? [])]);
     return {
       size: [g.scale.width, g.scale.height],
-      textures: scene.children.list.filter((o) => o.texture).map((o) => ({ key: o.texture!.key, flipX: o.flipX })),
+      textures: all.filter((o) => o.texture).map((o) => ({ key: o.texture!.key, flipX: o.flipX })),
       layout: window.__slap!.layout as {
         left: { left: number; right: number; top: number };
         right: { left: number; right: number; top: number };

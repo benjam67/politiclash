@@ -25,12 +25,12 @@ export const ROSTER = {
   bernard: {
     gabarit: 'lourd',
     voice: 'grave',
-    body: { stand: { halfW: 38, h: 250 }, crouch: { halfW: 42, h: 150 } },
+    body: { stand: { halfW: 36, h: 228 }, crouch: { halfW: 40, h: 140 } },
   },
   lola: {
     gabarit: 'rapide',
     voice: 'aigu',
-    body: { stand: { halfW: 28, h: 252 }, crouch: { halfW: 32, h: 150 } },
+    body: { stand: { halfW: 26, h: 230 }, crouch: { halfW: 30, h: 140 } },
   },
 } satisfies Record<string, FighterDef>;
 

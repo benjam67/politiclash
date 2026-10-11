@@ -9,7 +9,9 @@ Jeu de combat de gifles en temps réel, façon jeu de baston anime des années 9
 
 ## État
 
-Phase 0 terminée : scène de combat statique (décor, deux combattants, interface). Le combat en temps réel arrive avec les phases 1 et 2.
+Phases 0 et 1 terminées : les deux combattants se déplacent en temps réel (marche, saut, accroupi), au clavier et au tactile. Les coups arrivent avec la phase 2.
+
+Clavier : flèches ou ZQSD pour se déplacer, J gifle, K grosse gifle, L garde.
 
 ## Habillage : textes et images
 
@@ -32,4 +34,4 @@ npm run assets     # régénère public/assets/ depuis raw/
 npm run music -- sortie.wav   # rend la musique en fichier
 ```
 
-Accès direct au combat : `?scene=fight&p1=bernard|lola&p2=bernard|lola&stage=bar`.
+Accès direct au combat : `?scene=fight&p1=bernard|lola&p2=bernard|lola&stage=bar`, plus `&foe=idle` (adversaire immobile) et `&touch=1` (contrôles tactiles sur ordinateur).

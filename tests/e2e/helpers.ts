@@ -25,3 +25,33 @@ export async function waitReady(page: Page, scene?: 'Title' | 'Fight') {
 export async function expectNoErrors(errors: string[]) {
   expect(errors, errors.join('\n')).toEqual([]);
 }
+
+export interface FighterInfo {
+  x: number;
+  y: number;
+  facing: 1 | -1;
+  action: string;
+}
+export interface FightInfo {
+  step: number;
+  hash: number;
+  p1: FighterInfo;
+  p2: FighterInfo;
+  camera: { x: number; zoom: number };
+  fps: number;
+}
+
+export const getState = (page: Page) => page.evaluate(() => window.__slap!.state as unknown as FightInfo);
+
+/** Attend qu'une condition sur l'état du combat (`s`) devienne vraie. */
+export const waitState = (page: Page, cond: string, timeout = 8000) =>
+  page.waitForFunction((c) => new Function('s', `return (${c});`)(window.__slap?.state), cond, { timeout });
+
+/** Position et taille à l'écran (px CSS) d'un objet de la scène de combat, désigné par une expression sur la scène `sc`. */
+export const cssPoint = (page: Page, expr: string) =>
+  page.evaluate((e) => {
+    const g = window.__slap!.game!;
+    const sc = g.scene.getScene('Fight');
+    const o = new Function('sc', `return (${e});`)(sc) as { x: number; y: number };
+    return { x: o.x / g.scale.displayScale.x, y: o.y / g.scale.displayScale.y };
+  }, expr);

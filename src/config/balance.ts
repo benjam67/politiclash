@@ -12,6 +12,27 @@ export const SIM = {
   screenH: 390,
 };
 
+/** Arène et déplacements (px de l'écran logique). */
+export const ARENA = {
+  /** Distance minimale entre un combattant et le bord du niveau (et de l'écran) : sa silhouette n'est jamais coupée. */
+  wallMargin: 140,
+  /** Les combattants ne peuvent pas s'éloigner de plus que cette distance : ils tiennent tous les deux à l'écran. */
+  maxSeparation: 560,
+  /** Distance entre les deux combattants au début du round. */
+  startDistance: 250,
+  /** Quand deux corps se chevauchent (après un saut), ils s'écartent au plus de cette distance par pas, chacun. */
+  pushPerStep: 6,
+};
+
+export const MOVEMENT = {
+  /** Hauteur du sommet du saut. */
+  jumpHeight: 95,
+  /** Vitesse horizontale en l'air, par rapport à la marche. */
+  airSpeedFactor: 1.5,
+  /** Vitesse de la marche arrière, par rapport à la marche avant. */
+  backWalkFactor: 0.8,
+};
+
 export const MATCH = {
   roundsToWin: 2,
   maxRounds: 3,
@@ -93,7 +114,7 @@ export const ADVANCED = {
 /** Mise en scène (proportions relatives à la hauteur de l'écran). */
 export const STAGE = {
   /** Hauteur de la silhouette idle des combattants, en fraction de la hauteur d'écran. */
-  fighterHeight: 0.66,
+  fighterHeight: 0.6,
   /** Ligne des pieds des combattants, distance au bas de l'écran (fraction de hauteur). */
   fighterFeetFromBottom: 0.045,
   /** Écart entre l'avant des deux combattants au début du round, en fraction de la largeur d'écran. */

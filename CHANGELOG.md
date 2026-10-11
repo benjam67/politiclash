@@ -54,6 +54,34 @@ Tout ce qui est retiré reste lisible dans l'historique du dépôt et dans `souf
 - Captures d'écran regardées : accueil et scène de combat corrects, rien de coupé.
 - Poids du build : 1,25 Mo de code (dont Phaser 1,2 Mo, 319 Ko compressé) et 957 Ko d'images.
 
+## Phase 1 · Temps réel et déplacements — 2026-10-11
+
+**Fait**
+- **Simulation à pas fixe** (`logic/fight.ts`) : 60 pas par seconde, indépendants de l'affichage. `step(état, entréesJ1, entréesJ2)` est une fonction pure : aucun appel à Phaser, à l'horloge ou au hasard, et que des entiers (positions en 1/256 de px logique). L'état est un objet simple, copiable, avec une empreinte de contrôle (`hashState`).
+- **Entrée unique** (`logic/input.ts`) : `{ gauche, droite, haut, bas, gifle, grosseGifle, garde }`, compactable en un entier pour le réseau. Trois sources la produisent déjà : le clavier, le tactile et un adversaire provisoire qui se promène.
+- **Déplacements** : marche avant et arrière, saut vertical, avant ou arrière (trajectoire calculée sans accumulation, direction fixée au décollage), accroupi, retournement automatique, corps qui ne se traversent pas au sol, bords du niveau, distance maximale entre les deux.
+- **Caméra** (`logic/camera.ts`) : suit le milieu entre les deux combattants, s'arrête aux bords du niveau. Le niveau fait 2 écrans de large ; le décor du bar est répété en miroir sur les côtés en attendant sa version large.
+- **Contrôles tactiles** (`ui/TouchControls.ts`) : stick virtuel à gauche, qui se place sous le pouce ; boutons Gifle, Grosse gifle et Garde à droite (lus dès maintenant, sans effet avant la phase 2). **Clavier** : flèches ou ZQSD, J, K, L.
+- **Poses provisoires** branchées : marche (attente avec rebond), saut (attente déplacée), accroupi (attente écrasée).
+
+**Réglages choisis** (`config/balance.ts`)
+- Combattants à 60 % de la hauteur d'écran (66 % dans le premier jeu) et saut de 95 px : à 66 % et 120 px, la tête de Bernard sortait de l'écran en sautant.
+- Marche arrière à 80 % de la vitesse avant ; vitesse horizontale en saut à 150 % de la marche (un saut vers l'avant au contact passe de l'autre côté).
+- Bord du niveau à 140 px du combattant : sa silhouette n'est jamais coupée. Distance maximale entre les deux : 560 px, ce qui tient exactement sur un téléphone 19,5:9.
+- Sur un écran moins large (16:9, tablette), la caméra recule juste assez pour garder les deux à l'écran. La logique, elle, ne dépend jamais de l'écran : indispensable pour le jeu en ligne.
+- Après un saut par-dessus l'adversaire, les deux corps s'écartent en douceur (6 px par pas au plus) au lieu de se téléporter.
+- Stick : zone morte de 20, saut à 38 vers le haut, accroupi à 34 vers le bas (unités d'un écran de 720 de haut). Le seuil du saut est plus grand pour ne pas sauter en marchant.
+
+**Vérifications**
+- 73 tests unitaires, dont : vitesses, murs, distance maximale, corps qui ne se traversent pas, durée et hauteur du saut, saut par-dessus avec retournement.
+- **Déterminisme** : 10 000 pas d'entrées au hasard rejoués deux fois donnent exactement la même empreinte ; l'état survit à une copie JSON ; les règles de placement tiennent sur 10 000 pas.
+- 12 tests Playwright sur mobile émulé : clavier, vrais événements tactiles (stick, puis deux doigts en même temps), adversaire qui se promène, retournement, caméra au bord du niveau, placement des contrôles. Aucune erreur console.
+- **Performance** : le bac à sable de test n'a pas de carte graphique, le nombre d'images par seconde n'y veut rien dire. Mesure retenue à la place : temps de calcul d'une image (logique + préparation de l'affichage) avec processeur ralenti 4 fois : **1,5 ms en moyenne, 6,4 ms au pire**, pour 16,7 ms disponibles. Les 60 images par seconde réelles seront à confirmer sur un vrai téléphone au jalon 1.
+- Captures regardées : marche, saut, accroupi, stick, boutons, bord du niveau.
+
+**À surveiller au jalon 1**
+- Les boutons de droite recouvrent en partie un combattant collé au bord droit de l'écran (ils sont translucides).
+
 ---
 
 # Historique du premier jeu (`soufflet`)

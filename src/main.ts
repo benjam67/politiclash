@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { BootScene } from './scenes/BootScene';
 import { FightScene } from './scenes/FightScene';
 import { TitleScene } from './scenes/TitleScene';
+import type { InputFrame } from './logic/input';
 
 declare global {
   interface Window {
@@ -10,6 +11,8 @@ declare global {
       scene?: string;
       layout?: unknown;
       state?: Record<string, unknown>;
+      /** Entrées imposées par les tests (ajoutées à celles du joueur 1, à la place de l'adversaire pour le joueur 2). */
+      inputs?: { p1?: Partial<InputFrame>; p2?: Partial<InputFrame> };
       game?: Phaser.Game;
     };
   }
@@ -28,7 +31,7 @@ const game = new Phaser.Game({
     width: 1280,
     height: 720,
   },
-  input: { activePointers: 2 },
+  input: { activePointers: 4 },
   render: { antialias: true, powerPreference: 'high-performance' },
   fps: { target: 60 },
   scene: [BootScene, TitleScene, FightScene],

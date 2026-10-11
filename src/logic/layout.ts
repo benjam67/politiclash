@@ -50,6 +50,8 @@ export function computeLayout(
   leftId: FighterId = 'bernard',
   rightId: FighterId = 'lola',
   stageId: StageId = 'bar',
+  /** Recul maximal de la caméra (1 = aucun) : le décor est agrandi pour ne jamais laisser de vide. */
+  zoomMin = 1,
 ): StageLayout {
   const stage = STAGES[stageId];
   const L = assets.fighters[leftId] as FighterAsset;
@@ -58,7 +60,8 @@ export function computeLayout(
   // Décor : couvre tout l'écran, sol placé vers 56 % de la hauteur.
   const dw = stage.width;
   const dh = stage.height;
-  const ds = Math.max(width / dw, height / dh);
+  const feet = height * (1 - STAGE.fighterFeetFromBottom);
+  const ds = Math.max(width / dw, height / dh, (height * stage.floorScreen + feet * (1 / zoomMin - 1)) / stage.floorY);
   const floorScale = stage.floorY;
   const decorX = (width - dw * ds) / 2;
   let decorY = height * stage.floorScreen - floorScale * ds;

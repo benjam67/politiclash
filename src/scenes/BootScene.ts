@@ -46,15 +46,19 @@ export class BootScene extends Phaser.Scene {
 
 /**
  * Accès direct au combat par l'URL (tests, essais) :
- * `?scene=fight&p1=bernard|lola&p2=bernard|lola&stage=bar`. Sans paramètre : écran d'accueil.
+ * `?scene=fight&p1=bernard|lola&p2=bernard|lola&stage=bar`, `&foe=idle` (adversaire immobile),
+ * `&seed=42` (adversaire reproductible), `&touch=1` (contrôles tactiles sur ordinateur). Sans paramètre : écran d'accueil.
  */
 export function fightDataFromUrl(search: string): FightData {
   const q = new URLSearchParams(search);
   const fighter = (v: string | null): FighterId | undefined => (FIGHTER_IDS as string[]).includes(v ?? '') ? (v as FighterId) : undefined;
   const st = q.get('stage');
+  const seed = Number(q.get('seed'));
   return {
     left: fighter(q.get('p1')),
     right: fighter(q.get('p2')),
     stage: (STAGE_IDS as string[]).includes(st ?? '') ? (st as StageId) : undefined,
+    p2: q.get('foe') === 'idle' ? 'idle' : 'wander',
+    seed: q.has('seed') && Number.isFinite(seed) ? seed : undefined,
   };
 }
