@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ARENA, GABARITS, MOVEMENT, SIM } from '../../src/config/balance';
 import { ROSTER } from '../../src/config/roster';
-import { actionOf, createFight, hashState, physicsOf, stageWidth, step, SUB, type FightState } from '../../src/logic/fight';
+import { actionOf, createFightStarted as createFight, hashState, physicsOf, stageWidth, step, SUB, type FightState } from '../../src/logic/fight';
 import { decodeInput, encodeInput, mergeInputs, noInput, type InputFrame } from '../../src/logic/input';
 import { createRng } from '../../src/logic/rng';
 
@@ -209,7 +209,7 @@ describe('déterminisme', () => {
     const copy = JSON.parse(JSON.stringify(s)) as FightState;
     expect(copy).toEqual(s);
     expect(hashState(step(copy, none, none))).toBe(hashState(step(s, none, none)));
-    for (const f of s.f) for (const v of [f.x, f.y, f.t, f.vx]) expect(Number.isInteger(v)).toBe(true);
+    for (const f of s.f) for (const v of [f.x, f.y, f.t, f.vx, f.hp, f.guard, f.kb, f.mt, f.left]) expect(Number.isInteger(v)).toBe(true);
   });
 
   it('les règles de placement tiennent pendant 10 000 pas d’entrées au hasard', () => {

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { collectErrors, cssPoint, expectNoErrors, getState, SHOTS, waitReady, waitState } from './helpers';
 
-const URL = './?scene=fight&foe=idle';
+const URL = './?scene=fight&foe=idle&intro=0';
 
 test.describe('phase 1 : déplacements en temps réel', () => {
   test('au clavier : marche, saut, accroupi, et l’image change', async ({ page }) => {
@@ -96,7 +96,7 @@ test.describe('phase 1 : déplacements en temps réel', () => {
 
   test('l’adversaire se promène, les deux se font face, la caméra suit', async ({ page }) => {
     const errors = collectErrors(page);
-    await page.goto('./?scene=fight&seed=3');
+    await page.goto('./?scene=fight&foe=wander&intro=0&seed=3');
     await waitReady(page, 'Fight');
     const start = await getState(page);
     await waitState(page, `Math.abs(s.p2.x - ${start.p2.x}) > 40`, 15_000);
@@ -126,11 +126,11 @@ test.describe('phase 1 : déplacements en temps réel', () => {
   // (logique + préparation de l'affichage), processeur ralenti 4 fois : il doit tenir largement dans
   // les 16,7 ms d'une image à 60 par seconde.
   test('une image se calcule en moins de 8 ms avec un processeur ralenti 4 fois', async ({ page }) => {
-    await page.goto('./?scene=fight&seed=3');
+    await page.goto('./?scene=fight&intro=0&seed=3');
     await waitReady(page, 'Fight');
     const cdp = await page.context().newCDPSession(page);
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
-    await page.evaluate(() => (window.__slap!.inputs = { p1: { droite: true, haut: true } }));
+    await page.evaluate(() => (window.__slap!.inputs = { p1: { droite: true, gifle: true } }));
     await page.waitForTimeout(1500);
     const ms = await page.evaluate(
       () =>

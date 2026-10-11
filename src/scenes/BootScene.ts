@@ -46,7 +46,8 @@ export class BootScene extends Phaser.Scene {
 
 /**
  * Accès direct au combat par l'URL (tests, essais) :
- * `?scene=fight&p1=bernard|lola&p2=bernard|lola&stage=bar`, `&foe=idle` (adversaire immobile),
+ * `?scene=fight&p1=bernard|lola&p2=bernard|lola&stage=bar`, `&foe=idle|wander` (adversaire immobile, ou qui se promène ; sinon le mannequin),
+ * `&intro=0` (sans l'annonce du round),
  * `&seed=42` (adversaire reproductible), `&touch=1` (contrôles tactiles sur ordinateur). Sans paramètre : écran d'accueil.
  */
 export function fightDataFromUrl(search: string): FightData {
@@ -54,11 +55,13 @@ export function fightDataFromUrl(search: string): FightData {
   const fighter = (v: string | null): FighterId | undefined => (FIGHTER_IDS as string[]).includes(v ?? '') ? (v as FighterId) : undefined;
   const st = q.get('stage');
   const seed = Number(q.get('seed'));
+  const foe = q.get('foe');
   return {
     left: fighter(q.get('p1')),
     right: fighter(q.get('p2')),
     stage: (STAGE_IDS as string[]).includes(st ?? '') ? (st as StageId) : undefined,
-    p2: q.get('foe') === 'idle' ? 'idle' : 'wander',
+    p2: foe === 'idle' || foe === 'wander' ? foe : 'dummy',
+    intro: q.get('intro') !== '0',
     seed: q.has('seed') && Number.isFinite(seed) ? seed : undefined,
   };
 }

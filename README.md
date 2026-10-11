@@ -9,9 +9,16 @@ Jeu de combat de gifles en temps réel, façon jeu de baston anime des années 9
 
 ## État
 
-Phases 0 et 1 terminées : les deux combattants se déplacent en temps réel (marche, saut, accroupi), au clavier et au tactile. Les coups arrivent avec la phase 2.
+Phases 0 à 2 terminées : un match complet se joue contre un mannequin (déplacements, gifles, grosse gifle à jauge, garde, K.O., rounds, écran de résultat). La vraie IA arrive en phase 3, le choix du personnage et du niveau en phase 4.
 
-Clavier : flèches ou ZQSD pour se déplacer, J gifle, K grosse gifle, L garde.
+## Comment jouer
+
+| | Tactile | Clavier |
+| --- | --- | --- |
+| Se déplacer, sauter, s'accroupir | Stick à gauche | Flèches ou ZQSD |
+| Gifle (debout, accroupi ou en l'air) | GIFLE | J |
+| Grosse gifle : maintenir, relâcher dans la zone dorée | GROSSE GIFLE | K |
+| Garde | GARDE | L |
 
 ## Habillage : textes et images
 
@@ -34,4 +41,4 @@ npm run assets     # régénère public/assets/ depuis raw/
 npm run music -- sortie.wav   # rend la musique en fichier
 ```
 
-Accès direct au combat : `?scene=fight&p1=bernard|lola&p2=bernard|lola&stage=bar`, plus `&foe=idle` (adversaire immobile) et `&touch=1` (contrôles tactiles sur ordinateur).
+Accès direct au combat : `?scene=fight&p1=bernard|lola&p2=bernard|lola&stage=bar`, plus `&foe=idle|wander` (adversaire immobile ou qui se promène), `&intro=0` (sans l'annonce) et `&touch=1` (contrôles tactiles sur ordinateur).

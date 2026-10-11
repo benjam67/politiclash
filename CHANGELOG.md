@@ -82,6 +82,45 @@ Tout ce qui est retiré reste lisible dans l'historique du dépôt et dans `souf
 **À surveiller au jalon 1**
 - Les boutons de droite recouvrent en partie un combattant collé au bord droit de l'écran (ils sont translucides).
 
+## Phase 2 · Coups et collisions — 2026-10-11
+
+**Fait**
+- **Coups** (`logic/fight.ts`) : gifle rapide, gifle accroupie, gifle aérienne (une par saut, active jusqu'à l'atterrissage), grosse gifle avec jauge (charge, zone dorée ×2, annulation sous 20 %, surchauffe : on se gifle soi-même). Chaque coup a sa préparation, son temps actif et sa récupération.
+- **Collisions par rectangles** : rectangle de frappe par coup (`balance.ts`, avec une allonge par combattant dans `roster.ts`), rectangle vulnérable debout ou accroupi. Les hauteurs font le jeu : la gifle rapide et la grosse gifle passent au-dessus d'un adversaire accroupi ; la gifle accroupie et l'aérienne le touchent.
+- **Garde** : bloque tout sauf la grosse gifle en zone dorée ; 10 % des dégâts passent. **Jauge de garde** affichée au-dessus de la tête : elle se vide à chaque coup bloqué et se recharge hors garde ; vide, la garde est brisée et le combattant est sonné 1 seconde.
+- **Coup reçu** : figement, recul, arrêt sur image au contact, charge interrompue. **Mise à terre** par une grosse gifle forte, puis relevé, invulnérable pendant les deux. Deux coups au même instant se touchent tous les deux.
+- **Match** : annonce du round, chrono de 60 s, K.O., fin du chrono (le plus de PV gagne, égalité possible), 2 rounds gagnants, **écran de résultat** (`scenes/ResultScene.ts`) avec revanche.
+- **Mannequin** (`input/sources.ts`) : il avance, garde, gifle et charge au hasard, sans regarder le joueur. Il utilise la même entrée qu'un joueur.
+- **Effets et sons rebranchés** : éclair d'impact, chiffres de dégâts, onomatopées, lignes de focus, gouttes et dents, tremblement d'écran, éclat blanc sur celui qui encaisse, foule, commentateur, sifflet, cris, annonces. La scène ne fait que réagir aux événements produits par la simulation.
+- Jauge de charge du joueur à gauche ; tremblement du combattant pendant la charge.
+
+**Réglages choisis** (`config/balance.ts`)
+- PV comptés en dixièmes (un coup bloqué de 5 dégâts enlève 0,5 PV), toujours en entiers.
+- **Mise à terre à partir de 14 dégâts** (la roadmap disait 25) : à 25, le gabarit `rapide` ne pouvait jamais mettre le `lourd` à terre (son meilleur critique fait 17). À 14, les deux gabarits y arrivent avec un critique.
+- Jauge de garde : 100 points, un coup bloqué en retire `12 + 2 × dégâts` (22 pour une gifle rapide : la garde casse au 5ᵉ coup bloqué d'affilée), recharge de 14 points par seconde.
+- Arrêt sur image : 50 ms pour une gifle rapide, 100 ms pour une grosse. Blocage : 60 % du temps de figement du coup.
+- Allonge : 1,06 pour Bernard, 1 pour Lola.
+- **Appui gardé en mémoire 100 ms** : une gifle demandée juste avant la fin du coup précédent part quand même. Sans ça, les enchaînements semblent « manger » des appuis.
+- Le K.O. projette le vaincu en arrière, pour que le vainqueur ne le cache pas.
+- Annonce de round : 1,9 s ; fin de round : 2,8 s.
+
+**Corrigé en route**
+- La simulation avance maintenant sur le **temps réel**, mesuré par le jeu. Le temps fourni par Phaser est lissé et plafonné : sur un appareil lent, le combat aurait tourné au ralenti (constaté dans le bac à sable de test, à moitié vitesse).
+- Un « zéro négatif » dans le calcul du recul ne survivait pas à une copie de l'état : corrigé, et le test de copie le surveille.
+
+**Vérifications**
+- 110 tests unitaires : chaque coup (durées, dégâts, portée, une seule touche), grosse gifle (formule, zone dorée, annulation, surchauffe, mise à terre, invulnérabilité), garde (blocage, casse, recharge), échange de coups, annonce, chrono, K.O., double K.O., match en 2 rounds, appui en mémoire.
+- 20 matchs mannequin contre mannequin : tous se terminent. Durée moyenne d'un round : 51 s (deux mannequins se battent mollement ; l'équilibre et le rythme se règlent en phase 3 avec la vraie IA).
+- 19 tests Playwright sur mobile émulé, dont un match complet jusqu'à l'écran de résultat et la revanche, les boutons tactiles, la garde brisée, la surchauffe. Aucune erreur console.
+- Temps de calcul d'une image, processeur ralenti 4 fois, en plein combat : 2,8 ms en moyenne, 10 ms au pire.
+- Captures regardées : charge, impact critique, garde, K.O., résultat.
+
+**Questions pour le jalon 1**
+- Les contrôles sont-ils agréables au pouce (taille et place du stick et des boutons) ?
+- La gifle fait-elle plaisir (impact, son, recul) ?
+- Le rythme est-il bon (vitesse de marche, durée des coups, durée d'un round) ?
+- Les boutons de droite gênent-ils quand un combattant est collé au bord droit ?
+
 ---
 
 # Historique du premier jeu (`soufflet`)

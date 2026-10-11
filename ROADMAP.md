@@ -152,7 +152,7 @@ Les distances sont en pixels pour un écran logique de 844 × 390 : la logique t
 | Gifle aérienne | 120 ms | jusqu'à l'atterrissage | 150 ms | 7 | 300 ms |
 | Grosse gifle (après relâchement) | 60 ms | 90 ms | 350 ms | selon formule | 450 ms, recul important |
 
-Une grosse gifle de 25 dégâts ou plus **met l'adversaire à terre** ; il se relève après 800 ms, invulnérable pendant le relevé.
+Une grosse gifle de 14 dégâts ou plus **met l'adversaire à terre** ; il se relève après 800 ms, invulnérable au sol et pendant le relevé. *(Valeur de départ : 25, hors d'atteinte pour le gabarit `rapide` ; ramenée à 14 en phase 2.)*
 
 ### Mécaniques avancées (phase 5)
 
@@ -322,7 +322,9 @@ Uniquement aux 3 jalons, ou en cas de choix qui ne peut pas être annulé facile
 - Poses provisoires pour toutes les actions.
 - *Validé quand* : les deux combattants se déplacent au clavier et au tactile, le test de déterminisme passe, 60 images par seconde sur mobile émulé. *(Le bac à sable de test n'ayant pas de carte graphique, on y mesure le temps de calcul d'une image, processeur ralenti 4 fois ; les 60 images par seconde réelles se vérifient sur téléphone au jalon 1.)*
 
-### Phase 2 · Coups et collisions
+### Phase 2 · Coups et collisions ✔
+
+**Faite le 11 octobre 2026** (détail dans `CHANGELOG.md`). En attente du jalon 1.
 
 - Boîtes de frappe et boîtes vulnérables par pose.
 - Gifle rapide, gifle accroupie, gifle aérienne, grosse gifle avec jauge (zone dorée, surchauffe).

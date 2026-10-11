@@ -2,7 +2,12 @@ import Phaser from 'phaser';
 import { BootScene } from './scenes/BootScene';
 import { FightScene } from './scenes/FightScene';
 import { TitleScene } from './scenes/TitleScene';
+import { ResultScene } from './scenes/ResultScene';
 import type { InputFrame } from './logic/input';
+import type { FightState } from './logic/fight';
+
+/** Entrées imposées par un test : fixes, ou calculées à chaque pas à partir de l'état du combat. */
+type ForcedInput = Partial<InputFrame> | ((state: FightState) => Partial<InputFrame>);
 
 declare global {
   interface Window {
@@ -11,8 +16,9 @@ declare global {
       scene?: string;
       layout?: unknown;
       state?: Record<string, unknown>;
+      fx?: Record<string, unknown>;
       /** Entrées imposées par les tests (ajoutées à celles du joueur 1, à la place de l'adversaire pour le joueur 2). */
-      inputs?: { p1?: Partial<InputFrame>; p2?: Partial<InputFrame> };
+      inputs?: { p1?: ForcedInput; p2?: ForcedInput };
       game?: Phaser.Game;
     };
   }
@@ -34,7 +40,7 @@ const game = new Phaser.Game({
   input: { activePointers: 4 },
   render: { antialias: true, powerPreference: 'high-performance' },
   fps: { target: 60 },
-  scene: [BootScene, TitleScene, FightScene],
+  scene: [BootScene, TitleScene, FightScene, ResultScene],
 });
 
 window.__slap.game = game;

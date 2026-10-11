@@ -17,7 +17,9 @@ export interface FighterDef {
   gabarit: GabaritId;
   /** Voix des cris générés en code. */
   voice: 'grave' | 'aigu';
-  /** Boîtes de corps (provisoires : réglées pose par pose en phase 2). */
+  /** Allonge : multiplie la portée des coups (1 = portée normale). */
+  reach: number;
+  /** Boîtes de corps : c'est là qu'on peut être touché. Accroupi, on passe sous les gifles hautes. */
   body: { stand: Box; crouch: Box };
 }
 
@@ -25,11 +27,13 @@ export const ROSTER = {
   bernard: {
     gabarit: 'lourd',
     voice: 'grave',
+    reach: 1.06,
     body: { stand: { halfW: 36, h: 228 }, crouch: { halfW: 40, h: 140 } },
   },
   lola: {
     gabarit: 'rapide',
     voice: 'aigu',
+    reach: 1,
     body: { stand: { halfW: 26, h: 230 }, crouch: { halfW: 30, h: 140 } },
   },
 } satisfies Record<string, FighterDef>;

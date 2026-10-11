@@ -55,3 +55,26 @@ export const cssPoint = (page: Page, expr: string) =>
     const o = new Function('sc', `return (${e});`)(sc) as { x: number; y: number };
     return { x: o.x / g.scale.displayScale.x, y: o.y / g.scale.displayScale.y };
   }, expr);
+
+/**
+ * Met la boucle du jeu en pause dès que `cond` (sur l'état `s`) devient vrai, pour photographier
+ * ou contrôler l'instant exact d'un effet. `resume` relance le jeu.
+ */
+export async function freezeWhen(page: Page, cond: string, timeout = 15_000) {
+  await page.evaluate((c) => {
+    const check = new Function('s', `return (${c});`) as (s: unknown) => boolean;
+    const w = window as unknown as { __froze?: boolean };
+    w.__froze = false;
+    const game = window.__slap!.game!;
+    const onStep = () => {
+      if (window.__slap?.state && check(window.__slap.state)) {
+        game.events.off('poststep', onStep);
+        game.loop.sleep();
+        w.__froze = true;
+      }
+    };
+    game.events.on('poststep', onStep);
+  }, cond);
+  await page.waitForFunction(() => (window as unknown as { __froze?: boolean }).__froze === true, null, { timeout });
+}
+export const resume = (page: Page) => page.evaluate(() => window.__slap!.game!.loop.wake());

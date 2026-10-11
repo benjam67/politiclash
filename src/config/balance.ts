@@ -22,6 +22,8 @@ export const ARENA = {
   startDistance: 250,
   /** Quand deux corps se chevauchent (après un saut), ils s'écartent au plus de cette distance par pas, chacun. */
   pushPerStep: 6,
+  /** Recul du combattant mis K.O. : vitesse de départ en px par pas (elle s'amortit ensuite). */
+  koPush: 14,
 };
 
 export const MOVEMENT = {
@@ -31,6 +33,8 @@ export const MOVEMENT = {
   airSpeedFactor: 1.5,
   /** Vitesse de la marche arrière, par rapport à la marche avant. */
   backWalkFactor: 0.8,
+  /** Un appui sur « Gifle » fait un peu trop tôt (pendant un autre coup) est gardé en mémoire ce temps-là. */
+  inputBufferMs: 100,
 };
 
 export const MATCH = {
@@ -71,14 +75,43 @@ export const GABARITS = {
 
 export type GabaritId = keyof typeof GABARITS;
 
-/** Durées et dégâts des coups. `activeMs: null` = actif jusqu'à l'atterrissage. */
+/** Rectangle de frappe, relatif à l'ancrage du combattant : x vers l'avant, y au-dessus des pieds (px logiques). */
+export interface HitBox {
+  x0: number;
+  x1: number;
+  y0: number;
+  y1: number;
+}
+
+export interface MoveDef {
+  startupMs: number;
+  /** `null` = actif jusqu'à l'atterrissage. */
+  activeMs: number | null;
+  recoveryMs: number;
+  /** Dégâts (la grosse gifle les calcule avec sa formule). */
+  damage: number;
+  /** Durée pendant laquelle l'adversaire touché est figé. */
+  hitstunMs: number;
+  /** Arrêt sur image au contact. */
+  hitstopMs: number;
+  /** Recul de l'adversaire touché : vitesse de départ en px par pas (elle s'amortit ensuite). */
+  push: number;
+  box: HitBox;
+}
+
+/**
+ * Durées, dégâts et portée des coups. Les hauteurs font le jeu : la gifle rapide et la grosse gifle
+ * passent au-dessus d'un adversaire accroupi (140 px de haut), la gifle accroupie et l'aérienne le touchent.
+ */
 export const MOVES = {
-  quick: { startupMs: 100, activeMs: 70, recoveryMs: 180, damage: 5, hitstunMs: 250 },
-  crouch: { startupMs: 130, activeMs: 70, recoveryMs: 220, damage: 6, hitstunMs: 250 },
-  air: { startupMs: 120, activeMs: null, recoveryMs: 150, damage: 7, hitstunMs: 300 },
+  quick: { startupMs: 100, activeMs: 70, recoveryMs: 180, damage: 5, hitstunMs: 250, hitstopMs: 50, push: 3, box: { x0: 15, x1: 96, y0: 150, y1: 215 } },
+  crouch: { startupMs: 130, activeMs: 70, recoveryMs: 220, damage: 6, hitstunMs: 250, hitstopMs: 50, push: 3, box: { x0: 15, x1: 92, y0: 50, y1: 135 } },
+  air: { startupMs: 120, activeMs: null, recoveryMs: 150, damage: 7, hitstunMs: 300, hitstopMs: 60, push: 4, box: { x0: 0, x1: 86, y0: -20, y1: 110 } },
   /** Grosse gifle, après relâchement du bouton. Dégâts selon la formule. */
-  big: { startupMs: 60, activeMs: 90, recoveryMs: 350, hitstunMs: 450 },
-} as const;
+  big: { startupMs: 60, activeMs: 90, recoveryMs: 350, damage: 0, hitstunMs: 450, hitstopMs: 100, push: 9, box: { x0: 15, x1: 116, y0: 141, y1: 222 } },
+} satisfies Record<string, MoveDef>;
+
+export type MoveId = keyof typeof MOVES;
 
 /** Grosse gifle : jauge héritée du premier jeu. */
 export const BIG_SLAP = {
@@ -87,19 +120,38 @@ export const BIG_SLAP = {
   /** Temps passé à 100 % avant de se gifler soi-même. */
   overheatGraceMs: 150,
   selfSlapDamage: 8,
+  /** Temps perdu après s'être giflé soi-même. */
+  selfSlapMs: 600,
   /** Multiplicateur en zone dorée (brise aussi la garde). */
   criticalMultiplier: 2,
   /** À partir de ces dégâts, l'adversaire est mis à terre. */
-  knockdownDamage: 25,
-  /** Temps au sol avant le relevé (invulnérable pendant le relevé). */
+  knockdownDamage: 14,
+  /** Temps au sol avant le relevé, puis durée du relevé (invulnérable pendant les deux). */
   knockdownMs: 800,
+  getupMs: 350,
 };
 
 export const GUARD = {
   /** Part des dégâts qui passe à travers la garde. */
   chipRatio: 0.1,
+  /** Jauge de garde : chaque coup bloqué la vide de `drainBase + dégâts × drainPerDamage`. */
+  max: 100,
+  drainBase: 12,
+  drainPerDamage: 2,
+  /** Recharge par seconde, hors garde. */
+  regenPerSecond: 14,
+  /** Durée du blocage, en part du temps de figement du coup. */
+  blockstunRatio: 0.6,
   /** Garde brisée : durée pendant laquelle le combattant est sonné. */
   breakStunMs: 1000,
+};
+
+/** Déroulement d'un round. */
+export const ROUND = {
+  /** « ROUND 1 », « BAGARRE ! » : les combattants attendent. */
+  introMs: 1900,
+  /** Après un K.O. ou la fin du chrono, avant le round suivant. */
+  endMs: 2800,
 };
 
 export const ADVANCED = {
