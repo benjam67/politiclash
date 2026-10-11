@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { commentKey } from './bake';
-import { COMMENTS, type CommentKind } from '../config/comments';
+import { COMMENTS, type CommentKind } from '../config/texts';
 import { COLORS } from '../ui/theme';
 
 interface Person {

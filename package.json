@@ -1,7 +1,7 @@
 {
-  "name": "slap-fighter",
+  "name": "politiclash",
   "version": "1.0.0",
-  "description": "Slap Fighter – jeu de gifles façon baston anime",
+  "description": "PolitiClash – jeu de combat de gifles en temps réel",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
@@ -10,18 +10,15 @@
     "test:e2e": "playwright test",
     "assets": "node scripts/optimize-assets.mjs",
     "icons": "node scripts/make-icons.mjs",
-    "sim": "vitest run --config vitest.sim.config.ts",
     "music": "node scripts/render-music.mjs"
   },
   "license": "UNLICENSED",
   "dependencies": {
-    "peerjs": "^1.5.5",
     "phaser": "^3.90.0"
   },
   "devDependencies": {
     "@playwright/test": "1.56",
     "@types/node": "^26.6.3",
-    "peer": "^1.0.2",
     "sharp": "^0.35.5",
     "typescript": "^7.0.2",
     "vite": "^8.3.2",

@@ -2,8 +2,8 @@
 // éclairs, lignes de focus, trace de main, gouttes, dents, bulles, icônes.
 // Tracer un texte avec un gros contour coûte cher : on ne le fait jamais pendant le combat.
 import Phaser from 'phaser';
-import { COMMENTS } from '../config/comments';
-import { FIGHTERS } from '../config/balance';
+import { COMMENTS, FIGHTER_TEXTS } from '../config/texts';
+import { FIGHTER_IDS } from '../config/roster';
 import { COLORS, CSS, FONT_TITLE, FONT_UI } from '../ui/theme';
 
 type Style = Phaser.Types.GameObjects.Text.TextStyle;
@@ -87,16 +87,14 @@ export function bakeAll(scene: Phaser.Scene) {
   bakeText(scene, 'ann_round_final', 'ROUND FINAL', title(110, CSS.yellow, 16));
   bakeText(scene, 'ann_fight', 'BAGARRE !', title(120, CSS.pink, 16));
   bakeText(scene, 'ann_ko', 'K.O. !', title(150, CSS.yellow, 18));
-  bakeText(scene, 'ann_resume', 'REPRISE !', title(100, CSS.cyan, 15));
-  bakeText(scene, 'ann_lastword', 'DROIT DE RÉPONSE !', title(74, CSS.cyan, 13));
+  bakeText(scene, 'ann_timeup', 'TERMINÉ !', title(120, CSS.cyan, 16));
   bakeText(scene, 'ann_double_ko', 'DOUBLE K.O. !', title(120, CSS.yellow, 17));
-  for (const id of Object.keys(FIGHTERS) as (keyof typeof FIGHTERS)[]) {
-    const name = FIGHTERS[id].short.toUpperCase();
-    bakeText(scene, `ban_turn_${id}`, `À TOI, ${name} !`, title(52, CSS.cream, 10));
+  for (const id of FIGHTER_IDS) {
+    const name = FIGHTER_TEXTS[id].short.toUpperCase();
+    const special = FIGHTER_TEXTS[id].special.toUpperCase();
     bakeText(scene, `ann_roundfor_${id}`, `ROUND POUR ${name} !`, title(40, CSS.cream, 8));
-    bakeText(scene, `ann_harder_${id}`, `PLUS FORT, VERS ${name} !`, title(34, CSS.cream, 8));
-    bakeText(scene, `ann_special_${id}`, `${FIGHTERS[id].special.name.toUpperCase()} !`, title(96, CSS.pink, 15));
-    bakeText(scene, `lbl_ready_${id}`, `${FIGHTERS[id].special.name.toUpperCase()} PRÊT !`, {
+    bakeText(scene, `ann_special_${id}`, `${special} !`, title(96, CSS.pink, 15));
+    bakeText(scene, `lbl_ready_${id}`, `${special} PRÊT !`, {
       fontFamily: FONT_TITLE,
       fontSize: '22px',
       color: CSS.cream,

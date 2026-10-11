@@ -1,6 +1,66 @@
 # Changelog
 
-## Phase 0 · Mise en place — 2026-10-01
+## Phase 0 · Mise en place — 2026-10-11
+
+PolitiClash part d'une copie du premier jeu (`soufflet`, gifles au tour par tour). Cette phase le vide de son combat au tour par tour et pose les fondations du jeu de combat en temps réel.
+
+**Audit du code copié**
+
+Le premier jeu était plus avancé que ne le supposait la roadmap : 7 phases terminées, 137 tests unitaires, un mode en ligne (PeerJS, salon à code de 4 lettres), une progression (XP, niveaux, tenues), sons et musique générés en code. Les sprites comptent 11 poses par perso, dont une vraie pose de garde et deux d'esquive.
+
+| Élément | Sort |
+| --- | --- |
+| Phaser 3.90, TypeScript strict, Vite, Vitest, Playwright, PWA, écran « tourne ton téléphone » | Gardé |
+| Chaîne d'images (`npm run assets`, `raw/` → `public/assets/` + `assets.json`) | Gardée ; dossiers renommés `fighters/` et `stages/bar/` |
+| `logic/layout.ts` (placement de la scène), `logic/rng.ts` (aléatoire à graine) | Gardés |
+| `ui/` (barres de vie, jauge de charge, chrono, losanges, boutons, zone sûre iPhone) | Gardé |
+| `fx/` (effets, foule, commentateur, textes pré-rendus), `audio/` (sons, musique) | Gardés ; pas encore rebranchés sur un combat |
+| `logic/progress.ts`, `config/progress.ts` (XP, niveaux, tenues) | Mis de côté, plus branchés. À reprendre ou retirer en phase 6 |
+| `logic/slap.ts`, `match.ts`, `gesture.ts` (tours, jauge, swipe) | Retirés |
+| `logic/ai.ts`, `simulate.ts`, `tests/sim/` | Retirés (réécrits en phase 3) |
+| `net/` (4 fichiers), serveur PeerJS de test, dépendances `peerjs` et `peer`, salon HTML dans `index.html` | Retirés (réécrits en phase 7) |
+| `scenes/FightScene.ts` (1 876 lignes) | Remplacée par une scène statique de 195 lignes |
+| `scenes/TitleScene.ts` | Simplifiée : titre et bouton JOUER |
+| Tests du tour par tour (unitaires et Playwright des phases 1 à 7) | Retirés |
+
+Tout ce qui est retiré reste lisible dans l'historique du dépôt et dans `soufflet`.
+
+**Nouveaux fichiers de configuration**
+
+- `config/texts.ts` : **tous les textes** (titre, noms, noms courts, coups spéciaux, répliques du commentateur). C'est le fichier d'habillage du propriétaire ; aucun nom de personnage ailleurs dans le code.
+- `config/balance.ts` : réécrit avec les valeurs de départ de la roadmap. Les **gabarits** (`lourd`, `rapide`) y sont des profils de jeu neutres, sans nom.
+- `config/roster.ts` : liste des combattants ; chacun choisit un gabarit, une voix (cris graves ou aigus) et des boîtes de corps provisoires.
+- `config/stages.ts` : liste des niveaux (le bar).
+- `config/poses.ts` : table « action → image » pour les 19 actions du combat, avec les poses provisoires. La garde utilise déjà le vrai dessin.
+
+**Réglages choisis**
+
+- Les distances de la logique sont en px d'un écran logique de 844 × 390 (repère de la roadmap) ; l'affichage reste sur le monde Phaser de 720 de haut, largeur étendue.
+- Gabarit `rapide` : valeurs de la roadmap (base 11, résistance 1,1), et non celles du premier jeu (16 et 1,0), qui avaient été réglées pour le tour par tour. L'équilibre sera refait par simulation en phase 3.
+- Combat miroir : le second combattant porte une teinte bleutée.
+- Les réglages sauvegardés sur l'appareil s'appellent maintenant `politiclash.*` : les deux jeux partagent le même site (`benjam67.github.io`) et ne doivent pas se marcher dessus.
+- Accès direct par l'URL : `?scene=fight&p1=bernard|lola&p2=bernard|lola&stage=bar`.
+
+**Renommage et adresse**
+
+- Jeu renommé PolitiClash (titre, écran d'accueil, manifest PWA, `package.json`).
+- Adresse du site : `/politiclash/` (c'était `/soufflet/`, le jeu copié ne se serait pas affiché).
+- Icônes : toujours le visage de Bernard, à refaire quand les personnages définitifs existeront.
+
+**Vérifications**
+
+- `npm run build` sans erreur ; 48 tests unitaires (placement, progression, cohérence de la configuration : chaque combattant a un gabarit, des textes et une image pour chaque action).
+- 7 tests Playwright sur mobile émulé 844 × 390 : scène statique, combat miroir, accueil et bouton JOUER, zone sûre iPhone, écran portrait, manifest. Aucune erreur console.
+- Captures d'écran regardées : accueil et scène de combat corrects, rien de coupé.
+- Poids du build : 1,25 Mo de code (dont Phaser 1,2 Mo, 319 Ko compressé) et 957 Ko d'images.
+
+---
+
+# Historique du premier jeu (`soufflet`)
+
+Conservé pour mémoire : il décrit le jeu au tour par tour dont PolitiClash est parti.
+
+## Premier jeu · Phase 0 · Mise en place — 2026-10-01
 
 **Fait**
 - Projet Phaser 3.90 + TypeScript (strict) + Vite, Vitest et Playwright (Chromium, mobile émulé 844 × 390 en paysage).
@@ -29,7 +89,7 @@
 - Tests Playwright (3/3) passés en local sur le build de production, mobile émulé 844 × 390.
 - `github.io` n'est pas joignable depuis le bac à sable de Claude : la version en ligne est vérifiée dans le navigateur du propriétaire (viewport 844 × 390) — scène chargée, aucune erreur console, ~1,1 Mo transférés.
 
-## Phase 1 · La gifle — 2026-10-01
+## Premier jeu · Phase 1 · La gifle — 2026-10-01
 
 **Fait**
 - Logique pure dans `src/logic/` :
@@ -52,7 +112,7 @@
 - 8 tests Playwright (mobile 844 × 390, vrais événements tactiles via le protocole DevTools) : appui + swipe fait baisser les PV de Lola avec l'enchaînement de poses exact, critique dans la zone dorée, surchauffe (−8 PV sur Bernard), swipe trop court / à l'envers sans effet, aucune erreur console.
 - Le test du critique s'auto-corrige d'un essai à l'autre (le navigateur de test livre les événements avec 100–200 ms de retard, la fenêtre dorée de Bernard ne dure que 140 ms).
 
-## Phase 2 · Le match — 2026-10-01 (jalon : test par le propriétaire)
+## Premier jeu · Phase 2 · Le match — 2026-10-01 (jalon : test par le propriétaire)
 
 **Fait**
 - `src/logic/match.ts` : match pur (sans Phaser) — tours alternés, gifle, surchauffe, gifle molle au chrono (5 dégâts), K.O., rounds (2 gagnants, 3 au maximum), victoire. Le perdant d'un round commence le suivant.
@@ -76,7 +136,7 @@
 - Écran de victoire : le texte « ENTRAÎNEMENT » débordait du bouton avec la vraie police (Dela Gothic One, plus large que la police de secours). Les libellés des boutons sont maintenant réduits automatiquement pour tenir dans le bouton (290 × 66).
 - Nouveau décor fourni (bar de village 4:3, 1024 × 768, ring en scotch octogonal) intégré à la place du décor provisoire. Ligne du sol calée sur le pied du comptoir (`STAGE.decorFloorY = 420`).
 
-## Phase 3 · Le spectacle — 2026-10-01 (jalon : test par le propriétaire)
+## Premier jeu · Phase 3 · Le spectacle — 2026-10-01 (jalon : test par le propriétaire)
 
 **Fait**
 - **Impact** (`src/fx/Fx.ts`) : éclair blanc et orange en étoile (3 variantes) avec étincelles, lignes de focus manga convergeant vers l'impact, onomatopée « バシッ！ » + « CLAAAC ! » (critique : « バシーン！ » + « CLAAAAAAC ! », gifle molle : « ペチ… » + « PLOC… », surchauffe : « ピシャ！ » + « PAF ! »), chiffre de dégâts, étiquettes CRITIQUE ×2 / EFFLEURÉE / RATÉE… / GIFLE MOLLE… / SURCHAUFFE !
@@ -106,7 +166,7 @@
   - Mixage mesuré instrument par instrument : la mélodie mène (≈ −21 dB), grosse caisse / basse / guitare juste en dessous. L'ancienne version avait une mélodie 17 dB sous la basse, d'où l'impression d'un bourdonnement sans air.
   - `npm run music -- fichier.wav` rend le morceau en fichier pour l'écouter hors du jeu.
 
-## Phase 4 · Mode solo — 2026-10-01
+## Premier jeu · Phase 4 · Mode solo — 2026-10-01
 
 **Fait**
 - IA à 3 niveaux (`src/logic/ai.ts`), qui joue avec exactement les mêmes règles que le joueur (même jauge, même zone dorée, même chrono, mêmes dégâts) : seule la précision « humaine » simulée change — erreur de relâchement (écart type en ms), vitesse et angle du swipe.
@@ -125,7 +185,7 @@
 - 3 tests unitaires de plus (71) : facile perd 62–78 %, difficile gagne 52–68 % sur 1000 matchs, mêmes règles pour tous les profils.
 - 3 tests Playwright de plus (22) : le joueur gifle puis l'IA répond seule avec une vraie gifle, touchers ignorés pendant son tour ; match complet perdu contre l'IA difficile → « DÉFAITE… » sans « NIVEAU SUIVANT » ; les 3 niveaux se lancent depuis l'URL.
 
-## Phase 5 · Mécaniques avancées — 2026-10-01
+## Premier jeu · Phase 5 · Mécaniques avancées — 2026-10-01
 
 **Fait**
 - **Rage** (`src/logic/match.ts`) : +1 par dégât reçu (gifle, gifle molle, surchauffe), plafonnée à 100, conservée d'un round à l'autre. Pleine, elle débloque la gifle spéciale au tour suivant du perso, puis retombe à 0 au lancement de la spéciale. Une gifle molle ou une surchauffe ne gaspille pas la spéciale.
@@ -143,7 +203,7 @@
 - 15 tests unitaires de plus (86) : rage (gain, plafond, déblocage, conservation), spéciales (dégâts exacts, rage à 0, pas de gaspillage), sonné (seuil de 25, durée d'un tour, bornes et douceur de la courbe, surchauffe selon la courbe), équilibre 40–60 % sur 200 matchs avec ces mécaniques.
 - 4 tests Playwright de plus (26) : rage pleine → RAGE MAX et spéciale prête ; Le Battoir (annonce, dégâts, rage à 0) ; La Toupie (3 chiffres, 3 traces, total des dégâts) ; sonné (étoiles, vitesse de jauge mesurée image par image, état levé après le tour).
 
-## Phase 6 · Jeu en ligne — 2026-10-01 (jalon : test par le propriétaire)
+## Premier jeu · Phase 6 · Jeu en ligne — 2026-10-01 (jalon : test par le propriétaire)
 
 **Fait**
 - **Écran d'accueil** (`src/scenes/TitleScene.ts`, avancé de la phase 7 pour rendre le jalon testable sans lien spécial) : SOLO (puis FACILE / NORMAL / DIFFICILE), 2 JOUEURS, EN LIGNE, ENTRAÎNEMENT. Bouton maison en combat pour y revenir ; l'écran de fin propose REVANCHE et MENU.
@@ -202,7 +262,7 @@ Mesuré par simulation : celui qui ouvre gagnait **61,8 %** des manches.
 - Playwright : nouveau fichier `esquive.spec.ts` (8 tests) ; spéciales et jeu en ligne mis à jour (les esquives passent bien par le réseau, journaux identiques des deux côtés).
 - Les gestes à timing serré sont joués dans la page au rythme de l'horloge du jeu : le bac à sable de test est trop lent et irrégulier pour les jouer « en vrai ».
 
-## Phase 7 · Progression et menus — 2026-10-02
+## Premier jeu · Phase 7 · Progression et menus — 2026-10-02
 
 **Fait**
 - **Choix du perso** (écran SOLO, bouton « PERSO : … ») : le joueur est à gauche, l'adversaire est l'autre perso. Vaut pour le solo, le 2 joueurs et l'entraînement ; en ligne, l'hôte reste Bernard. Accès direct : `?fighter=bernard|lola`.

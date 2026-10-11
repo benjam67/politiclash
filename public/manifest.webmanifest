@@ -1,7 +1,7 @@
 {
-  "name": "Slap Fighter",
-  "short_name": "Slap Fighter",
-  "description": "Deux combattants, un bar de village, des gifles.",
+  "name": "PolitiClash",
+  "short_name": "PolitiClash",
+  "description": "Un jeu de combat de gifles en temps réel.",
   "lang": "fr",
   "start_url": "./",
   "scope": "./",

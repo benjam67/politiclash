@@ -1,9 +1,9 @@
 // Sons générés en code (Web Audio), en attendant des fichiers définitifs.
 // Aucun fichier à télécharger : tout est synthétisé à la volée.
-import type { FighterId } from '../config/balance';
+import { ROSTER, type FighterId } from '../config/roster';
 import { MusicPlayer } from './music';
 
-const STORAGE_KEY = 'slap.muted';
+const STORAGE_KEY = 'politiclash.muted';
 
 export class Sfx {
   private ctx: AudioContext | null = null;
@@ -139,12 +139,13 @@ export class Sfx {
     this.noiseBurst(t, 0.14, { type: 'bandpass', freq: 500, freqEnd: 2600, q: 2, gain: 0.25, attack: 0.05 });
   }
 
-  /** Cri du perso qui encaisse (grave pour Bernard, aigu pour Lola). */
+  /** Cri du perso qui encaisse (voix grave ou aiguë, selon `roster.ts`). */
   cry(id: FighterId, intensity: number) {
     this.log(`cry-${id}`);
     if (!this.ctx) return;
     const t = this.ctx.currentTime + 0.03;
-    const base = id === 'bernard' ? 150 : 420;
+    const grave = ROSTER[id].voice === 'grave';
+    const base = grave ? 150 : 420;
     const dur = 0.22 + intensity * 0.25;
     const peak = base * (1.6 + intensity * 0.6);
     const c = this.ctx;
@@ -156,8 +157,8 @@ export class Sfx {
     o.frequency.exponentialRampToValueAtTime(base * 0.8, t + dur);
     const f1 = c.createBiquadFilter();
     f1.type = 'bandpass';
-    f1.frequency.setValueAtTime(id === 'bernard' ? 700 : 1100, t);
-    f1.frequency.linearRampToValueAtTime(id === 'bernard' ? 500 : 800, t + dur);
+    f1.frequency.setValueAtTime(grave ? 700 : 1100, t);
+    f1.frequency.linearRampToValueAtTime(grave ? 500 : 800, t + dur);
     f1.Q.value = 4;
     const g = c.createGain();
     g.gain.setValueAtTime(0.0001, t);

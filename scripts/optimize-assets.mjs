@@ -12,6 +12,7 @@ import path from 'node:path';
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const RAW = path.join(ROOT, 'raw');
 const OUT = path.join(ROOT, 'public/assets');
+// Même liste que POSE_FILES dans src/config/poses.ts.
 const POSES = ['idle', 'windup', 'swing', 'slap', 'hit', 'dazed', 'victory', 'selfslap', 'dodge', 'dodge_perfect', 'guard'];
 const FIGHTERS = { bernard: [1300, 823], lola: [908, 772] };
 // Bernard (le plus grand canevas) ramené à ~600 px de haut.
@@ -55,7 +56,7 @@ async function rowsMaxX(file, y0, y1) {
 }
 
 for (const [name, [W, H]] of Object.entries(FIGHTERS)) {
-  const dir = path.join(RAW, 'characters', name);
+  const dir = path.join(RAW, 'fighters', name);
   let u = { x0: W, y0: H, x1: 0, y1: 0 };
   for (const p of POSES) {
     const b = await alphaBox(path.join(dir, `${p}.png`));
@@ -69,13 +70,13 @@ for (const [name, [W, H]] of Object.entries(FIGHTERS)) {
   const bottom = H;
   const cw = right - left, ch = bottom - top;
   const outW = Math.round(cw * FIGHTER_SCALE), outH = Math.round(ch * FIGHTER_SCALE);
-  fs.mkdirSync(path.join(OUT, 'characters', name), { recursive: true });
+  fs.mkdirSync(path.join(OUT, 'fighters', name), { recursive: true });
   for (const p of POSES) {
     await sharp(path.join(dir, `${p}.png`))
       .extract({ left, top, width: cw, height: ch })
       .resize(outW, outH)
       .webp({ quality: 82, alphaQuality: 90, effort: 6 })
-      .toFile(path.join(OUT, 'characters', name, `${p}.webp`));
+      .toFile(path.join(OUT, 'fighters', name, `${p}.webp`));
   }
   // Ancrage : centre horizontal de l'image d'origine, pieds à 10 px du bas.
   // Silhouette idle mesurée depuis l'ancrage (en px de la texture optimisée),
@@ -103,32 +104,32 @@ for (const [name, [W, H]] of Object.entries(FIGHTERS)) {
   };
 }
 
-fs.mkdirSync(path.join(OUT, 'bar/habitues'), { recursive: true });
+fs.mkdirSync(path.join(OUT, 'stages/bar/habitues'), { recursive: true });
 for (const h of HABITUES) {
-  const src = path.join(RAW, 'bar/habitues', `${h}.png`);
+  const src = path.join(RAW, 'stages/bar/habitues', `${h}.png`);
   const m = await sharp(src).metadata();
   const w = Math.round(m.width * PROP_SCALE), hh = Math.round(m.height * PROP_SCALE);
-  await sharp(src).resize(w, hh).webp({ quality: 82, alphaQuality: 90, effort: 6 }).toFile(path.join(OUT, 'bar/habitues', `${h}.webp`));
+  await sharp(src).resize(w, hh).webp({ quality: 82, alphaQuality: 90, effort: 6 }).toFile(path.join(OUT, 'stages/bar/habitues', `${h}.webp`));
   manifest.props[`habitue_${h}`] = { width: w, height: hh };
 }
 {
-  const src = path.join(RAW, 'bar/patron.png');
+  const src = path.join(RAW, 'stages/bar/patron.png');
   const m = await sharp(src).metadata();
   const w = Math.round((m.width * PATRON_HEIGHT) / m.height);
-  await sharp(src).resize(w, PATRON_HEIGHT).webp({ quality: 82, alphaQuality: 90, effort: 6 }).toFile(path.join(OUT, 'bar/patron.webp'));
+  await sharp(src).resize(w, PATRON_HEIGHT).webp({ quality: 82, alphaQuality: 90, effort: 6 }).toFile(path.join(OUT, 'stages/bar/patron.webp'));
   manifest.props.patron = { width: w, height: PATRON_HEIGHT };
 }
 
 // Décor : decor.png s'il est fourni, sinon le décor provisoire dessiné en SVG.
 {
-  const png = path.join(RAW, 'bar/decor.png');
-  const svg = path.join(RAW, 'bar/decor-placeholder.svg');
+  const png = path.join(RAW, 'stages/bar/decor.png');
+  const svg = path.join(RAW, 'stages/bar/decor-placeholder.svg');
   const src = fs.existsSync(png) ? png : svg;
   const img = sharp(src, { density: 96 });
   const m = await img.metadata();
   const targetH = Math.min(900, m.height);
-  await sharp(src, { density: 96 }).resize({ height: targetH }).webp({ quality: 78, effort: 6 }).toFile(path.join(OUT, 'bar/decor.webp'));
-  const out = await sharp(path.join(OUT, 'bar/decor.webp')).metadata();
+  await sharp(src, { density: 96 }).resize({ height: targetH }).webp({ quality: 78, effort: 6 }).toFile(path.join(OUT, 'stages/bar/decor.webp'));
+  const out = await sharp(path.join(OUT, 'stages/bar/decor.webp')).metadata();
   manifest.props.decor = { width: out.width, height: out.height, placeholder: src === svg };
 }
 

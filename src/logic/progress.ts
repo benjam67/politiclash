@@ -1,5 +1,5 @@
 // Progression du joueur : expérience, niveaux, déblocages, préférences. Pur (le stockage est injecté).
-import type { FighterId } from '../config/balance';
+import type { FighterId } from '../config/roster';
 import { PROGRESS, UNLOCKS, type Unlock } from '../config/progress';
 
 export interface Progress {
@@ -111,7 +111,7 @@ export function sanitize(raw: unknown): Progress {
   return p;
 }
 
-const KEY = 'slap.progress';
+const KEY = 'politiclash.progress';
 type Store = Pick<Storage, 'getItem' | 'setItem'>;
 const defaultStore = (): Store | null => {
   try {

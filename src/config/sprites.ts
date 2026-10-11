@@ -1,6 +1,6 @@
 // Repères mesurés à la main sur les sprites (pose idle), en px de la texture optimisée,
 // relatifs au point d'ancrage (x vers l'avant du perso, y au-dessus des pieds).
-import type { FighterId } from './balance';
+import type { FighterId } from './roster';
 import assets from './assets.json';
 
 const S = assets.fighterScale;

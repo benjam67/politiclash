@@ -1,6 +1,8 @@
 // Calcul pur du placement de la scène de combat (sans Phaser), testable seul.
 import { STAGE } from '../config/balance';
 import assets from '../config/assets.json';
+import type { FighterId } from '../config/roster';
+import { STAGES, type StageId } from '../config/stages';
 
 export const HABITUES = [
   'vieux_beret',
@@ -45,19 +47,21 @@ type FighterAsset = (typeof assets.fighters)['bernard'];
 export function computeLayout(
   width: number,
   height: number,
-  leftId: 'bernard' | 'lola' = 'bernard',
-  rightId: 'bernard' | 'lola' = 'lola',
+  leftId: FighterId = 'bernard',
+  rightId: FighterId = 'lola',
+  stageId: StageId = 'bar',
 ): StageLayout {
+  const stage = STAGES[stageId];
   const L = assets.fighters[leftId] as FighterAsset;
   const R = assets.fighters[rightId] as FighterAsset;
 
   // Décor : couvre tout l'écran, sol placé vers 56 % de la hauteur.
-  const dw = assets.props.decor.width;
-  const dh = assets.props.decor.height;
+  const dw = stage.width;
+  const dh = stage.height;
   const ds = Math.max(width / dw, height / dh);
-  const floorScale = STAGE.decorFloorY;
+  const floorScale = stage.floorY;
   const decorX = (width - dw * ds) / 2;
-  let decorY = height * STAGE.decorFloorScreen - floorScale * ds;
+  let decorY = height * stage.floorScreen - floorScale * ds;
   decorY = Math.min(0, Math.max(height - dh * ds, decorY));
   const decorFloor = decorY + floorScale * ds;
 
@@ -137,35 +141,5 @@ export function computeLayout(
     patron,
     crowd,
     crowdScale,
-  };
-}
-
-/** Enfoncement de la main dans le visage au moment de l'impact (px texture). */
-export const STRIKE_OVERLAP = 22;
-
-/**
- * Pas en avant pour que la main (pose slap) atteigne le visage de l'adversaire,
- * et point d'impact à l'écran. `step` est une distance positive vers l'adversaire.
- */
-export function computeStrike(
-  L: StageLayout,
-  attackerSide: 'left' | 'right',
-  attackerId: 'bernard' | 'lola',
-  defenderId: 'bernard' | 'lola',
-) {
-  const s = L.fighterScale;
-  const att = L[attackerSide];
-  const def = L[attackerSide === 'left' ? 'right' : 'left'];
-  const dir = attackerSide === 'left' ? 1 : -1;
-  const A = assets.fighters[attackerId];
-  const D = assets.fighters[defenderId];
-  const faceX = def.x - dir * D.face.x * s; // avant du visage (tourné vers l'attaquant)
-  const handX = att.x + dir * A.reach.x * s;
-  const step = Math.max(0, dir * (faceX - handX) + STRIKE_OVERLAP * s);
-  return {
-    step,
-    dir,
-    impactX: faceX - dir * (STRIKE_OVERLAP * s * 0.5),
-    impactY: def.y - D.face.y * s,
   };
 }

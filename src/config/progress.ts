@@ -1,5 +1,5 @@
 // Réglages de la progression : expérience, niveaux, déblocages.
-import type { FighterId } from './balance';
+import type { FighterId } from './roster';
 
 export const PROGRESS = {
   /** Écart d'XP entre les niveaux 1 et 2 ; chaque niveau suivant demande 50 de plus (100, 150, 200…). */

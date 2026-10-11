@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 // BASE_URL permet de viser la version en ligne (GitHub Pages) au lieu du build local.
-const BASE_URL = process.env.BASE_URL ?? 'http://localhost:4173/soufflet/';
+const BASE_URL = process.env.BASE_URL ?? 'http://localhost:4173/politiclash/';
 
 export default defineConfig({
   testDir: 'tests/e2e',
@@ -26,11 +26,5 @@ export default defineConfig({
       },
     },
   ],
-  webServer: [
-    // Mise en relation locale pour les tests du jeu en ligne.
-    { command: 'node scripts/peer-server.mjs', url: 'http://127.0.0.1:9000/slap', reuseExistingServer: false, timeout: 30_000 },
-    ...(process.env.BASE_URL
-      ? []
-      : [{ command: 'npm run build && npm run preview', url: BASE_URL, reuseExistingServer: false, timeout: 180_000 }]),
-  ],
+  webServer: process.env.BASE_URL ? [] : [{ command: 'npm run build && npm run preview', url: BASE_URL, reuseExistingServer: false, timeout: 180_000 }],
 });

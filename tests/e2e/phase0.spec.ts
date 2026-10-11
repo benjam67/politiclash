@@ -1,32 +1,10 @@
-import { expect, test, type Page } from '@playwright/test';
-import fs from 'node:fs';
+import { expect, test } from '@playwright/test';
+import { collectErrors, expectNoErrors, SHOTS, waitReady } from './helpers';
 
-const SHOTS = 'screenshots';
-fs.mkdirSync(SHOTS, { recursive: true });
-
-function collectErrors(page: Page) {
-  const errors: string[] = [];
-  page.on('console', (m) => {
-    // Les polices Google peuvent être bloquées par le réseau de test : pas une erreur du jeu.
-    if (m.type() === 'error' && !m.location().url.includes('fonts.g')) errors.push(m.text());
-  });
-  page.on('pageerror', (e) => errors.push(e.message));
-  page.on('requestfailed', (r) => {
-    // Les polices Google peuvent être bloquées hors ligne : pas une erreur du jeu.
-    if (!r.url().includes('fonts.g')) errors.push(`requête échouée : ${r.url()}`);
-  });
-  return errors;
-}
-
-async function waitReady(page: Page) {
-  await page.waitForFunction(() => window.__slap?.ready === true, null, { timeout: 30_000 });
-  await page.waitForTimeout(300);
-}
-
-test('la scène de combat s’affiche sans erreur en paysage', async ({ page }) => {
+test('la scène de combat statique s’affiche sans erreur en paysage', async ({ page }) => {
   const errors = collectErrors(page);
-  await page.goto('./?mode=match');
-  await waitReady(page);
+  await page.goto('./?scene=fight');
+  await waitReady(page, 'Fight');
 
   const info = await page.evaluate(() => {
     const g = window.__slap!.game!;
@@ -40,42 +18,77 @@ test('la scène de combat s’affiche sans erreur en paysage', async ({ page }) 
         left: { left: number; right: number; top: number };
         right: { left: number; right: number; top: number };
       },
+      state: window.__slap!.state as { ids: { left: string; right: string }; stage: string; timeLeft: number },
     };
   });
 
   const keys = info.textures.map((t) => t.key);
-  expect(keys).toContain('decor');
+  expect(keys).toContain('stage_bar');
   expect(keys).toContain('patron');
   expect(keys.filter((k) => k.startsWith('habitue_'))).toHaveLength(8);
   expect(info.textures.find((t) => t.key === 'bernard_idle')?.flipX).toBe(false);
   expect(info.textures.find((t) => t.key === 'lola_idle')?.flipX).toBe(true);
+  expect(info.state.ids).toEqual({ left: 'bernard', right: 'lola' });
+  expect(info.state.stage).toBe('bar');
+  expect(info.state.timeLeft).toBe(60);
   // Combattants visibles en entier dans le monde du jeu.
   const [w] = info.size;
   expect(info.layout.left.left).toBeGreaterThanOrEqual(0);
   expect(info.layout.right.right).toBeLessThanOrEqual(w);
 
   await page.screenshot({ path: `${SHOTS}/phase0-scene.png` });
-  expect(errors).toEqual([]);
+  await expectNoErrors(errors);
+});
+
+test('on peut choisir les combattants par l’URL, y compris en combat miroir', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('./?scene=fight&p1=lola&p2=lola');
+  await waitReady(page, 'Fight');
+  const ids = await page.evaluate(() => (window.__slap!.state as { ids: unknown }).ids);
+  expect(ids).toEqual({ left: 'lola', right: 'lola' });
+  await page.screenshot({ path: `${SHOTS}/phase0-miroir.png` });
+  await expectNoErrors(errors);
+});
+
+test('l’accueil porte le nouveau nom et le bouton JOUER mène au combat', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('./');
+  await waitReady(page, 'Title');
+  await expect(page).toHaveTitle('PolitiClash');
+  const pos = await page.evaluate(() => {
+    type O = { name: string; text?: string; x: number; y: number };
+    const g = window.__slap!.game!;
+    const sc = g.scene.getScene('Title') as unknown as { children: { list: O[] } };
+    const btn = sc.children.list.find((o) => o.name === 'btn-JOUER')!;
+    const k = g.scale.displayScale;
+    return { title: sc.children.list.find((o) => o.name === 'title')!.text, x: btn.x / k.x, y: btn.y / k.y };
+  });
+  expect(pos.title).toBe('POLITICLASH');
+  await page.screenshot({ path: `${SHOTS}/phase0-accueil.png` });
+  await page.touchscreen.tap(pos.x, pos.y);
+  await waitReady(page, 'Fight');
+  await expectNoErrors(errors);
 });
 
 test('écran « tourne ton téléphone » en portrait', async ({ page }) => {
   const errors = collectErrors(page);
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('./?mode=match');
+  await page.goto('./?scene=fight');
   await expect(page.locator('#rotate')).toBeVisible();
   await expect(page.locator('#rotate')).toContainText('Tourne ton téléphone');
   await page.screenshot({ path: `${SHOTS}/phase0-portrait.png` });
   await page.setViewportSize({ width: 844, height: 390 });
   await expect(page.locator('#rotate')).toBeHidden();
-  expect(errors).toEqual([]);
+  await expectNoErrors(errors);
 });
 
 test('manifest PWA valide', async ({ page, request }) => {
-  await page.goto('./?mode=match');
+  await page.goto('./');
   const href = await page.locator('link[rel="manifest"]').getAttribute('href');
   const res = await request.get(new URL(href!, page.url()).toString());
   expect(res.ok()).toBe(true);
   const m = await res.json();
+  expect(m.name).toBe('PolitiClash');
   expect(m.display).toBe('fullscreen');
   expect(m.orientation).toBe('landscape');
   for (const icon of m.icons) {

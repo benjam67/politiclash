@@ -2,24 +2,23 @@ import { expect, test } from '@playwright/test';
 import { collectErrors, expectNoErrors, SHOTS, waitReady } from './helpers';
 
 test.describe('iPhone : encoche, barre d’accueil, plein écran', () => {
-  test('l’interface reste dans la zone sûre (marges simulées : 47 px sur les côtés, 21 px en bas)', async ({ page }) => {
+  test('l’interface reste dans la zone sûre (marges simulées : 47 px sur les côtés)', async ({ page }) => {
     const errors = collectErrors(page);
     const xs = () =>
       page.evaluate(() => {
         const g = window.__slap!.game!;
-        const sc = g.scene.getScene('Fight') as unknown as { homeBtn: { x: number }; soundBtn: { x: number }; hint: { y: number }; scale: { width: number; height: number } };
+        const sc = g.scene.getScene('Fight') as unknown as { homeBtn: { x: number }; soundBtn: { x: number }; scale: { width: number } };
         const k = g.scale.displayScale.x;
-        return { home: sc.homeBtn.x / k, sound: (sc.scale.width - sc.soundBtn.x) / k, hintFromBottom: (sc.scale.height - sc.hint.y) / g.scale.displayScale.y };
+        return { home: sc.homeBtn.x / k, sound: (sc.scale.width - sc.soundBtn.x) / k };
       });
-    await page.goto('./?mode=training');
-    await waitReady(page);
+    await page.goto('./?scene=fight');
+    await waitReady(page, 'Fight');
     const plain = await xs();
-    await page.goto('./?mode=training&safe=47,47,0,21');
-    await waitReady(page);
+    await page.goto('./?scene=fight&safe=47,47,0,21');
+    await waitReady(page, 'Fight');
     const safe = await xs();
     expect(safe.home - plain.home).toBeCloseTo(47, 0);
     expect(safe.sound - plain.sound).toBeCloseTo(47, 0);
-    expect(safe.hintFromBottom - plain.hintFromBottom).toBeCloseTo(21, 0);
     await page.screenshot({ path: `${SHOTS}/iphone-zone-sure.png` });
     await expectNoErrors(errors);
   });

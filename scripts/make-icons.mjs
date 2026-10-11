@@ -7,7 +7,7 @@ const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
 const OUT = path.join(ROOT, 'public/icons');
 fs.mkdirSync(OUT, { recursive: true });
 
-// Zone du visage dans raw/characters/bernard/idle.png (1300 × 823).
+// Zone du visage dans raw/fighters/bernard/idle.png (1300 × 823).
 const FACE = { left: 425, top: 40, width: 220, height: 220 };
 
 const bg = (size, safe) => {
@@ -26,7 +26,7 @@ const bg = (size, safe) => {
 
 async function make(name, size, safe = false) {
   const faceSize = Math.round(size * (safe ? 0.56 : 0.7));
-  const face = await sharp(path.join(ROOT, 'raw/characters/bernard/idle.png'))
+  const face = await sharp(path.join(ROOT, 'raw/fighters/bernard/idle.png'))
     .extract(FACE)
     .resize(faceSize, faceSize)
     .composite([{

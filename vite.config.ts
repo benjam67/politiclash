@@ -1,8 +1,8 @@
 import { defineConfig } from 'vite';
 
-// Le site est servi par GitHub Pages sous https://benjam67.github.io/soufflet/
+// Le site est servi par GitHub Pages sous https://benjam67.github.io/politiclash/
 export default defineConfig({
-  base: '/soufflet/',
+  base: '/politiclash/',
   build: {
     target: 'es2020',
     chunkSizeWarningLimit: 1600,
