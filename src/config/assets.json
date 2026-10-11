@@ -40,41 +40,117 @@
       }
     },
     "aviateur": {
-      "width": 709,
-      "height": 633,
+      "width": 617,
+      "height": 551,
       "originX": 0.46882494004796166,
       "originY": 0.9865771812080537,
       "idle": {
-        "height": 509,
-        "left": -176,
-        "right": 191
+        "height": 443,
+        "left": -153,
+        "right": 167
       },
       "face": {
-        "x": 76,
-        "y": 458
+        "x": 66,
+        "y": 399
       },
       "reach": {
-        "x": 371,
-        "y": 496
+        "x": 323,
+        "y": 432
       }
     },
     "tailleur": {
-      "width": 749,
-      "height": 633,
+      "width": 652,
+      "height": 551,
       "originX": 0.47219069239500566,
       "originY": 0.9865771812080537,
       "idle": {
-        "height": 500,
-        "left": -200,
-        "right": 197
+        "height": 435,
+        "left": -174,
+        "right": 172
       },
       "face": {
-        "x": 75,
-        "y": 470
+        "x": 65,
+        "y": 409
       },
       "reach": {
-        "x": 309,
-        "y": 471
+        "x": 269,
+        "y": 410
+      }
+    },
+    "cadet": {
+      "width": 575,
+      "height": 539,
+      "originX": 0.47619047619047616,
+      "originY": 0.9862637362637363,
+      "idle": {
+        "height": 455,
+        "left": -144,
+        "right": 147
+      },
+      "face": {
+        "x": 67,
+        "y": 428
+      },
+      "reach": {
+        "x": 294,
+        "y": 398
+      }
+    },
+    "barbe": {
+      "width": 609,
+      "height": 527,
+      "originX": 0.46780072904009723,
+      "originY": 0.9859550561797753,
+      "idle": {
+        "height": 445,
+        "left": -139,
+        "right": 141
+      },
+      "face": {
+        "x": 72,
+        "y": 347
+      },
+      "reach": {
+        "x": 293,
+        "y": 399
+      }
+    },
+    "doyen": {
+      "width": 628,
+      "height": 555,
+      "originX": 0.4664310954063604,
+      "originY": 0.9866666666666667,
+      "idle": {
+        "height": 443,
+        "left": -157,
+        "right": 161
+      },
+      "face": {
+        "x": 69,
+        "y": 414
+      },
+      "reach": {
+        "x": 286,
+        "y": 397
+      }
+    },
+    "binocle": {
+      "width": 646,
+      "height": 553,
+      "originX": 0.46735395189003437,
+      "originY": 0.9866131191432396,
+      "idle": {
+        "height": 450,
+        "left": -130,
+        "right": 137
+      },
+      "face": {
+        "x": 70,
+        "y": 352
+      },
+      "reach": {
+        "x": 303,
+        "y": 419
       }
     }
   },

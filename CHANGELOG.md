@@ -465,3 +465,10 @@ Retour du propriétaire après une partie à deux : sur iPhone, le plein écran 
 - **Textes** : noms repris des fichiers fournis ; nom du coup spécial et répliques provisoires, à écrire dans `texts.ts`.
 - **À reprendre sur les dessins** : `walk1` et `walk2` sont presque identiques ; `kick` frappe à hauteur de hanche au lieu du genou.
 - **Tests navigateur** : 3 tests de la phase 1 et 2 échouent dans le bac à sable, y compris sur la version précédente (attentes trop serrées sur une machine lente) ; à revoir.
+
+## Quatre combattants de plus : la grille de sélection est pleine — 2026-10-11
+
+- **Ajout** de `cadet`, `barbe`, `doyen` et `binocle` (23 poses chacun, mêmes planches et même traitement que les deux premiers), tous en gabarit `rapide` en attendant le choix du propriétaire. Les 6 cases de l'écran de sélection sont occupées.
+- **Poids** : les jeux complets sont réduits à 0,74 (perso debout ~440 px) au lieu de 0,85, pour garder le chargement initial sous 4 Mo avec 6 combattants (3,1 Mo d'images de combattants). Au-delà de 6, il faudra charger les poses d'un combattant seulement quand il est choisi.
+- **Dessins** : ces quatre planches utilisent le prompt corrigé (pose d'attente moins écartée, marche à deux temps distincts, coup de pied bas). Les deux premiers combattants gardent leurs anciennes planches.
+- **Vérifications** : 150 tests unitaires, simulation 94 séries sur 94 dans les critères, parcours de sélection au tactile.

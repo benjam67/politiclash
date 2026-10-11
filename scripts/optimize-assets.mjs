@@ -19,12 +19,16 @@ const POSES_FULL = ['idle', 'walk1', 'walk2', 'jump', 'crouch', 'guard', 'guard_
 // Bernard (le plus grand canevas) ramené à ~600 px de haut.
 const FIGHTER_SCALE = 600 / 823;
 // Taille du canevas source, poses fournies, facteur de réduction.
-// Les jeux complets (1300 × 820, perso debout ~590 px) sont réduits à ~500 px de haut.
+// Les jeux complets (1300 × 820, perso debout ~590 px) sont réduits à ~440 px de haut, pour garder le chargement initial sous 4 Mo.
 const FIGHTERS = {
   bernard: { size: [1300, 823], poses: POSES_V1, scale: FIGHTER_SCALE },
   lola: { size: [908, 772], poses: POSES_V1, scale: FIGHTER_SCALE },
-  aviateur: { size: [1300, 820], poses: POSES_FULL, scale: 0.85 },
-  tailleur: { size: [1300, 820], poses: POSES_FULL, scale: 0.85 },
+  aviateur: { size: [1300, 820], poses: POSES_FULL, scale: 0.74 },
+  tailleur: { size: [1300, 820], poses: POSES_FULL, scale: 0.74 },
+  cadet: { size: [1300, 820], poses: POSES_FULL, scale: 0.74 },
+  barbe: { size: [1300, 820], poses: POSES_FULL, scale: 0.74 },
+  doyen: { size: [1300, 820], poses: POSES_FULL, scale: 0.74 },
+  binocle: { size: [1300, 820], poses: POSES_FULL, scale: 0.74 },
 };
 const FEET_OFFSET = 10; // pieds à 10 px du bas de l'image source
 const HABITUES = ['vieux_beret', 'fermier', 'grandmere', 'facteur', 'jeune_siffleur', 'mecano', 'boulanger', 'femme_cardigan'];

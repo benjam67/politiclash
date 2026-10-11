@@ -47,6 +47,22 @@ export const FIGHTER_TEXTS: Record<FighterId, FighterTexts> = {
     name: 'Narine le Zen', short: 'Narine', katakana: 'ナリーヌ', special: 'Coup spécial',
     specialLines: ['Coup spécial ! Ça, on ne l’apprend dans aucune école !'],
   },
+  cadet: {
+    name: 'Baby', short: 'Baby', katakana: 'ベビー', special: 'Coup spécial',
+    specialLines: ['Coup spécial ! On a senti le courant d’air jusqu’au comptoir !'],
+  },
+  barbe: {
+    name: 'Bompardiou', short: 'Bompardiou', katakana: 'ボンパルディウ', special: 'Coup spécial',
+    specialLines: ['Coup spécial ! On a senti le courant d’air jusqu’au comptoir !'],
+  },
+  doyen: {
+    name: 'JLM', short: 'JLM', katakana: 'ジェイエルエム', special: 'Coup spécial',
+    specialLines: ['Coup spécial ! On a senti le courant d’air jusqu’au comptoir !'],
+  },
+  binocle: {
+    name: 'Jordan', short: 'Jordan', katakana: 'ジョルダン', special: 'Coup spécial',
+    specialLines: ['Coup spécial ! On a senti le courant d’air jusqu’au comptoir !'],
+  },
 };
 
 export const STAGE_TEXTS: Record<StageId, { name: string }> = {

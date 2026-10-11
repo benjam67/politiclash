@@ -38,18 +38,14 @@ test.describe('phase 4 : choix du personnage et du niveau', () => {
     await tapNamed(page, 'Title', 'btn-JOUER');
     await waitScene(page, 'CharacterSelect');
     expect(await st(page)).toMatchObject({ step: 'p1', left: null });
-    // 6 cases : les combattants disponibles et des cases « Bientôt ».
+    // 6 cases, toutes occupées : plus de case « Bientôt ».
     const names = await namesIn(page, 'CharacterSelect');
     expect(names.filter((n) => n.startsWith('card-'))).toHaveLength(6);
     expect(names).toContain('card-aviateur');
     expect(names).toContain('card-tailleur');
-    expect(names.filter((n) => n.startsWith('card-soon-'))).toHaveLength(4);
+    expect(names.filter((n) => n.startsWith('card-soon-'))).toHaveLength(0);
     await page.waitForTimeout(200);
     await page.screenshot({ path: `${SHOTS}/phase4-choix-perso.png` });
-
-    // Une case « Bientôt » ne fait rien.
-    await tapNamed(page, 'CharacterSelect', 'card-soon-2');
-    expect(await st(page)).toMatchObject({ step: 'p1' });
 
     await tapNamed(page, 'CharacterSelect', 'card-tailleur');
     await page.waitForFunction(() => (window.__slap!.state as { step: string }).step === 'p2');

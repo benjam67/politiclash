@@ -10,7 +10,7 @@ export const POSES_V1 = ['idle', 'windup', 'swing', 'slap', 'hit', 'dazed', 'vic
 export const POSES_FULL = ['idle', 'walk1', 'walk2', 'jump', 'crouch', 'guard', 'guard_low', 'quick', 'air_slap', 'kick', 'crouch_kick', 'windup', 'swing', 'slap', 'special', 'special2', 'selfslap', 'hit', 'hit_heavy', 'down', 'getup', 'dazed', 'victory'] as const;
 export type PoseFile = (typeof POSES_V1)[number] | (typeof POSES_FULL)[number];
 /** Combattants qui ont le jeu complet. Les autres utilisent le premier jeu. */
-const FULL_SET: readonly FighterId[] = ['aviateur', 'tailleur'];
+const FULL_SET: readonly FighterId[] = ['aviateur', 'tailleur', 'cadet', 'barbe', 'doyen', 'binocle'];
 /** Images fournies pour un combattant (`<pose>.png` dans `raw/fighters/<id>/`). */
 export const posesOf = (id: FighterId): readonly PoseFile[] => (FULL_SET.includes(id) ? POSES_FULL : POSES_V1);
 export const fighterKey = (id: FighterId, pose: PoseFile) => `${id}_${pose}`;

@@ -48,6 +48,30 @@ export const ROSTER = {
     reach: 1,
     body: { stand: { halfW: 26, h: 230 }, crouch: { halfW: 30, h: 142 } },
   },
+  cadet: {
+    gabarit: 'rapide',
+    voice: 'grave',
+    reach: 1,
+    body: { stand: { halfW: 26, h: 230 }, crouch: { halfW: 30, h: 142 } },
+  },
+  barbe: {
+    gabarit: 'rapide',
+    voice: 'grave',
+    reach: 1,
+    body: { stand: { halfW: 26, h: 230 }, crouch: { halfW: 30, h: 142 } },
+  },
+  doyen: {
+    gabarit: 'rapide',
+    voice: 'grave',
+    reach: 1,
+    body: { stand: { halfW: 26, h: 230 }, crouch: { halfW: 30, h: 142 } },
+  },
+  binocle: {
+    gabarit: 'rapide',
+    voice: 'grave',
+    reach: 1,
+    body: { stand: { halfW: 26, h: 230 }, crouch: { halfW: 30, h: 142 } },
+  },
 } satisfies Record<string, FighterDef>;
 
 export type FighterId = keyof typeof ROSTER;
@@ -58,7 +82,7 @@ export const FIGHTER_IDS = Object.keys(ROSTER) as FighterId[];
  * Bernard et Lola, du premier jeu, sont retirés du jeu : ils ne restent dans le moteur
  * que pour les tests (seuls à porter le gabarit `lourd` pour l'instant).
  */
-export const PLAYABLE_IDS: FighterId[] = ['aviateur', 'tailleur'];
+export const PLAYABLE_IDS: FighterId[] = ['aviateur', 'tailleur', 'cadet', 'barbe', 'doyen', 'binocle'];
 
 /** L'écran de sélection prévoit 6 cases ; les cases vides affichent « Bientôt ». */
 export const ROSTER_SLOTS = 6;
