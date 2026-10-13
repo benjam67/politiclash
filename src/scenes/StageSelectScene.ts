@@ -18,7 +18,9 @@ export interface StageSelectData {
 }
 
 /** Nombre de cases de la grille : celles sans niveau affichent « Bientôt ». */
-const SLOTS = 4;
+// Grille de 3 × 2 lieux.
+const COLS = 3;
+const SLOTS = 6;
 
 /** Choix du niveau : une vignette par décor disponible, et « Au hasard ». */
 export class StageSelectScene extends Phaser.Scene {
@@ -76,12 +78,17 @@ export class StageSelectScene extends Phaser.Scene {
     );
 
     const cw = 236;
-    const ch = 190;
-    const gap = 22;
-    const y = height * 0.44;
+    const ch = 172;
+    const gap = 18;
+    const rows = SLOTS / COLS;
+    const top = 118;
+    const y0 = top + ch / 2;
+    const yLast = y0 + (rows - 1) * (ch + gap);
     for (let i = 0; i < SLOTS; i++) {
       const id = STAGE_IDS[i];
-      const x = width / 2 + (i - (SLOTS - 1) / 2) * (cw + gap);
+      const col = i % COLS;
+      const x = width / 2 + (col - (COLS - 1) / 2) * (cw + gap);
+      const y = y0 + Math.floor(i / COLS) * (ch + gap);
       if (id) {
         const st = STAGES[id];
         add(
@@ -98,7 +105,7 @@ export class StageSelectScene extends Phaser.Scene {
       }
     }
     add(
-      makeButton(this, width / 2, Math.min(y + ch / 2 + 78, height - safe.bottom - 60), 'AU HASARD', COLORS.cyan, () => this.start(STAGE_IDS[Math.floor(Math.random() * STAGE_IDS.length)]), { w: 260, h: 60, font: 24 }).setDepth(4),
+      makeButton(this, width / 2, Math.min(yLast + ch / 2 + 56, height - safe.bottom - 40), 'AU HASARD', COLORS.cyan, () => this.start(STAGE_IDS[Math.floor(Math.random() * STAGE_IDS.length)]), { w: 260, h: 60, font: 24 }).setDepth(4),
     );
     add(
       makeButton(this, 96 + side, 58, '← RETOUR', COLORS.cream, () => this.scene.start('CharacterSelect', { left: this.choice.left, level: this.choice.level }), { w: 150, h: 46, font: 17 })

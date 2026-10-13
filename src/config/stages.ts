@@ -56,6 +56,28 @@ export const STAGES = {
     wide: true,
     crowd: false,
   },
+  assemblee: {
+    image: 'stage_assemblee',
+    file: 'stages/assemblee/decor.webp',
+    width: assets.stages.assemblee.width,
+    height: assets.stages.assemblee.height,
+    floorY: Math.round(assets.stages.assemblee.height * 0.719),
+    floorScreen: 0.719,
+    widthScreens: 1.35,
+    wide: true,
+    crowd: false,
+  },
+  bastille: {
+    image: 'stage_bastille',
+    file: 'stages/bastille/decor.webp',
+    width: assets.stages.bastille.width,
+    height: assets.stages.bastille.height,
+    floorY: Math.round(assets.stages.bastille.height * 0.699),
+    floorScreen: 0.699,
+    widthScreens: 1.35,
+    wide: true,
+    crowd: false,
+  },
 } satisfies Record<string, StageDef>;
 
 export type StageId = keyof typeof STAGES;

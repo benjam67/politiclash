@@ -545,3 +545,10 @@ Retour du propriétaire après une partie à deux : sur iPhone, le plein écran 
 - **Sol** : dans ces images, le sol commence vers 75 % (Élysée) et 79 % (République) de la hauteur, au lieu de 55 % pour le bar. On garde cette position plutôt que de couper le haut de l'image ; les combattants restent sur la pelouse ou les pavés.
 - **Chargement** : les décors larges ne sont chargés qu'à l'écran du choix du lieu (ou au combat lancé par l'URL). Chargement initial inchangé : 3,57 Mo.
 - **Textes** : noms « L'Élysée » et « La République » ; trois répliques qui parlaient du bar sont rendues neutres.
+
+## Deux lieux de plus : l'Assemblée nationale et la place de la Bastille — 2026-10-13
+
+- **Décors larges**, même traitement que l'Élysée et la République (2992 × 1008, niveau de 1,35 écran). Le sol commence à 72 % de la hauteur pour l'Assemblée et à 70 % pour la Bastille.
+- **Choix du lieu** : la grille passe à 3 × 2 cases (5 lieux et une case « Bientôt »).
+- **Commentateur** : quatre répliques qui parlaient du comptoir ou du patron sont rendues neutres.
+- **Vérifications** : 205 tests unitaires et 39 tests navigateur passent. Chargement initial inchangé : 3,57 Mo.

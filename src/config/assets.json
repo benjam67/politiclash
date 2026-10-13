@@ -326,9 +326,19 @@
     }
   },
   "stages": {
+    "assemblee": {
+      "width": 2671,
+      "height": 900,
+      "placeholder": false
+    },
     "bar": {
       "width": 1024,
       "height": 768,
+      "placeholder": false
+    },
+    "bastille": {
+      "width": 2671,
+      "height": 900,
       "placeholder": false
     },
     "elysee": {

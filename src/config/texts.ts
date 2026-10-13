@@ -71,6 +71,8 @@ export const STAGE_TEXTS: Record<StageId, { name: string }> = {
   bar: { name: 'Le bar' },
   elysee: { name: 'L’Élysée' },
   republique: { name: 'La République' },
+  assemblee: { name: 'L’Assemblée' },
+  bastille: { name: 'La Bastille' },
 };
 
 /** Noms des niveaux de difficulté. */
@@ -78,17 +80,17 @@ export const TEXTS_AI = { easy: 'Facile', normal: 'Normal', hard: 'Difficile' };
 
 /** Phrases du commentateur, par situation. Ton absurde et exagéré. */
 export const COMMENTS = {
-  roundStart: ['Mesdames, messieurs, ça va claquer !', 'Le patron siffle, les joues tremblent !', 'Qui repartira avec la joue en feu ?'],
-  crit: ['Il lui a refait le portrait !', 'CLAQUE DU SIÈCLE ! On l’entend jusqu’à la mairie !', 'Une gifle parfaite, à encadrer au-dessus du comptoir !', 'Ça, c’est de la gifle d’artisan !'],
+  roundStart: ['Mesdames, messieurs, ça va claquer !', 'L’arbitre siffle, les joues tremblent !', 'Qui repartira avec la joue en feu ?'],
+  crit: ['Il lui a refait le portrait !', 'CLAQUE DU SIÈCLE ! On l’entend jusqu’à la mairie !', 'Une gifle parfaite, à encadrer !', 'Ça, c’est de la gifle d’artisan !'],
   big: ['Quelle mandale ! Les verres en tremblent !', 'Ça résonne jusqu’au fond de la cave !', 'Ouille ouille ouille, la joue est cuite !'],
-  normal: ['Propre, net, sans bavure.', 'Une bonne gifle de comptoir.', 'Ça claque, mais ça tient debout !', 'Joli revers, tout dans le poignet !'],
+  normal: ['Propre, net, sans bavure.', 'Une bonne gifle à l’ancienne.', 'Ça claque, mais ça tient debout !', 'Joli revers, tout dans le poignet !'],
   grazed: ['Ça a juste effleuré la moustache…', 'Un peu de travers, ça !', 'Un courant d’air, tout au plus.'],
   missed: ['Raté ! Il a giflé le vide !', 'Le ventilateur a pris plus cher que la joue !', 'Visez la joue, pas le plafond !'],
   limp: ['Une gifle molle… le public siffle !', 'C’est une caresse, ça ?', 'Trop lent ! Gifle de dimanche matin.'],
   self: ['Il s’est giflé tout seul ! Magnifique !', 'Surchauffe ! Il se met une claque à lui-même !', 'L’autogifle, une spécialité locale.'],
   buzz: ['Le Buzz est plein ! Attention les yeux !', 'Toute la salle en parle : le Buzz est à fond !', 'Ça buzze, ça buzze ! Le coup spécial est prêt !'],
   parry: ['Paré au dernier moment ! Les dégâts sont limités !', 'Quelle lecture ! Il a senti le coup venir !'],
-  special: ['Coup spécial ! On a senti le courant d’air jusqu’au comptoir !', 'Ça, on ne l’apprend dans aucune école !'],
+  special: ['Coup spécial ! On a senti le courant d’air jusqu’au fond de la salle !', 'Ça, on ne l’apprend dans aucune école !'],
   dodge: ['Esquivé ! La joue a filé comme une savonnette !', 'Il a vu venir la claque !', 'Par-dessous ! La gifle n’a brassé que de l’air !'],
   guard: ['Bloqué ! Une garde en béton armé !', 'Ça tape dans les bras, pas dans la joue !'],
   guardBreak: ['La garde a sauté ! Portes ouvertes !', 'Plus de garde ! La joue est à découvert !'],
