@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ARENA, GABARITS, MOVEMENT, SIM } from '../../src/config/balance';
+import { ARENA, MOVEMENT, SIM, STYLE } from '../../src/config/balance';
 import { ROSTER } from '../../src/config/roster';
 import { actionOf, createFightStarted as createFight, hashState, physicsOf, stageWidth, step, SUB, type FightState } from '../../src/logic/fight';
 import { decodeInput, encodeInput, mergeInputs, noInput, type InputFrame } from '../../src/logic/input';
@@ -25,7 +25,7 @@ describe('entrées', () => {
 });
 
 describe('début du combat', () => {
-  const s = createFight('bernard', 'lola');
+  const s = createFight('aviateur', 'doyen');
   it('place les combattants face à face, de part et d’autre du centre', () => {
     const center = px(stageWidth('bar')) / 2;
     expect(px(s.f[0].x)).toBe(center - ARENA.startDistance / 2);
@@ -48,19 +48,20 @@ describe('début du combat', () => {
 });
 
 describe('marche', () => {
-  it('avance à la vitesse du gabarit, à 2 % près', () => {
-    for (const [id, other] of [['bernard', 'lola'], ['lola', 'bernard']] as const) {
+  it('tous avancent à la même vitesse (200 px/s), à 2 % près', () => {
+    expect(STYLE.walkSpeed).toBe(200);
+    for (const [id, other] of [['aviateur', 'doyen'], ['binocle', 'cadet']] as const) {
       const s = createFight(id, other);
       const t = run(s, 30, press('gauche'));
       // Vers la gauche = en reculant pour le joueur de gauche.
-      const speed = GABARITS[ROSTER[id].gabarit].walkSpeed * MOVEMENT.backWalkFactor;
+      const speed = STYLE.walkSpeed * MOVEMENT.backWalkFactor;
       expect(px(s.f[0].x - t.f[0].x) * 2).toBeCloseTo(speed, -1);
       expect(Math.abs(px(s.f[0].x - t.f[0].x) * 2 - speed) / speed).toBeLessThan(0.02);
     }
   });
 
   it('recule moins vite qu’elle n’avance', () => {
-    const s = createFight('bernard', 'lola');
+    const s = createFight('aviateur', 'doyen');
     const fwd = run(s, 20, press('droite')).f[0].x - s.f[0].x;
     const back = s.f[0].x - run(s, 20, press('gauche')).f[0].x;
     expect(back).toBeLessThan(fwd);
@@ -68,21 +69,21 @@ describe('marche', () => {
   });
 
   it('gauche et droite ensemble : on ne bouge pas', () => {
-    const s = createFight('bernard', 'lola');
+    const s = createFight('aviateur', 'doyen');
     expect(run(s, 20, press('gauche', 'droite')).f[0].x).toBe(s.f[0].x);
   });
 
   it('s’arrête au bord du niveau', () => {
-    let s = createFight('lola', 'bernard');
+    let s = createFight('doyen', 'aviateur');
     // Les deux marchent vers la gauche assez longtemps pour atteindre le mur.
     s = run(s, 900, press('gauche'), press('gauche'));
     expect(px(s.f[0].x)).toBe(ARENA.wallMargin);
-    const right = run(createFight('lola', 'bernard'), 900, press('droite'), press('droite'));
+    const right = run(createFight('doyen', 'aviateur'), 900, press('droite'), press('droite'));
     expect(px(right.f[1].x)).toBe(px(stageWidth('bar')) - ARENA.wallMargin);
   });
 
   it('ne peut pas s’éloigner de plus que la distance maximale', () => {
-    let s = createFight('lola', 'bernard');
+    let s = createFight('doyen', 'aviateur');
     for (let i = 0; i < 600; i++) {
       s = step(s, press('gauche'), press('droite'));
       expect(px(s.f[1].x - s.f[0].x)).toBeLessThanOrEqual(ARENA.maxSeparation);
@@ -95,8 +96,8 @@ describe('marche', () => {
   });
 
   it('deux combattants au sol ne se traversent pas', () => {
-    let s = createFight('bernard', 'lola');
-    const minDist = ROSTER.bernard.body.stand.halfW + ROSTER.lola.body.stand.halfW;
+    let s = createFight('aviateur', 'doyen');
+    const minDist = ROSTER.aviateur.body.stand.halfW + ROSTER.doyen.body.stand.halfW;
     for (let i = 0; i < 300; i++) {
       s = step(s, press('droite'), press('gauche'));
       expect(s.f[0].x).toBeLessThan(s.f[1].x);
@@ -105,9 +106,9 @@ describe('marche', () => {
   });
 
   it('celui qui pousse fait reculer l’autre, jusqu’au mur', () => {
-    let s = createFight('bernard', 'lola');
+    let s = createFight('aviateur', 'doyen');
     s = run(s, 1500, press('droite'));
-    const minDist = ROSTER.bernard.body.stand.halfW + ROSTER.lola.body.stand.halfW;
+    const minDist = ROSTER.aviateur.body.stand.halfW + ROSTER.doyen.body.stand.halfW;
     expect(px(s.f[1].x)).toBe(px(stageWidth('bar')) - ARENA.wallMargin);
     expect(px(s.f[1].x - s.f[0].x)).toBeCloseTo(minDist, 0);
   });
@@ -115,7 +116,7 @@ describe('marche', () => {
 
 describe('accroupi', () => {
   it('on s’accroupit sur place, puis on se relève', () => {
-    const s = createFight('bernard', 'lola');
+    const s = createFight('aviateur', 'doyen');
     const t = run(s, 20, press('bas', 'droite'));
     expect(t.f[0].stance).toBe('crouch');
     expect(actionOf(t.f[0])).toBe('crouch');
@@ -125,11 +126,11 @@ describe('accroupi', () => {
 });
 
 describe('saut', () => {
-  for (const id of ['bernard', 'lola'] as const) {
+  for (const id of ['aviateur', 'tailleur'] as const) {
     it(`${id} : dure le temps prévu, monte à la bonne hauteur et retombe au sol`, () => {
       const n = physicsOf(id).jumpSteps;
-      expect(n).toBe(Math.round((GABARITS[ROSTER[id].gabarit].jumpMs * SIM.stepsPerSecond) / 1000));
-      let s = step(createFight(id, id === 'bernard' ? 'lola' : 'bernard'), press('haut'), none);
+      expect(n).toBe(Math.round((STYLE.jumpMs * SIM.stepsPerSecond) / 1000));
+      let s = step(createFight(id, id === 'aviateur' ? 'tailleur' : 'aviateur'), press('haut'), none);
       let top = 0;
       let steps = 1;
       while (s.f[0].stance === 'jump') {
@@ -146,7 +147,7 @@ describe('saut', () => {
   }
 
   it('saut vertical : on retombe au même endroit ; la direction ne change pas en l’air', () => {
-    const s0 = createFight('bernard', 'lola');
+    const s0 = createFight('aviateur', 'doyen');
     let s = step(s0, press('haut'), none);
     s = run(s, 10, press('droite'));
     expect(s.f[0].x).toBe(s0.f[0].x);
@@ -156,7 +157,7 @@ describe('saut', () => {
   });
 
   it('en sautant par-dessus l’adversaire, on passe de l’autre côté et les deux se retournent', () => {
-    let s = createFight('lola', 'bernard');
+    let s = createFight('doyen', 'aviateur');
     // Lola avance au contact, puis saute vers l'avant.
     s = run(s, 120, press('droite'));
     expect(s.f[0].x).toBeLessThan(s.f[1].x);
@@ -167,7 +168,7 @@ describe('saut', () => {
     expect(s.f[0].facing).toBe(-1);
     expect(s.f[1].facing).toBe(1);
     // Une fois retombés, ils ne se chevauchent plus.
-    const minDist = ROSTER.bernard.body.stand.halfW + ROSTER.lola.body.stand.halfW;
+    const minDist = ROSTER.aviateur.body.stand.halfW + ROSTER.doyen.body.stand.halfW;
     expect(px(s.f[0].x - s.f[1].x)).toBeGreaterThanOrEqual(minDist - 1);
   });
 });
@@ -187,7 +188,7 @@ describe('déterminisme', () => {
     return list;
   };
   const play = (seed: number, n: number) => {
-    let s = createFight('bernard', 'lola', 'bar', 5);
+    let s = createFight('aviateur', 'doyen', 'bar', 5);
     for (const [a, b] of inputsFor(seed, n)) s = step(s, decodeInput(a), decodeInput(b));
     return s;
   };
@@ -209,11 +210,11 @@ describe('déterminisme', () => {
     const copy = JSON.parse(JSON.stringify(s)) as FightState;
     expect(copy).toEqual(s);
     expect(hashState(step(copy, none, none))).toBe(hashState(step(s, none, none)));
-    for (const f of s.f) for (const v of [f.x, f.y, f.t, f.vx, f.hp, f.guard, f.kb, f.mt, f.left]) expect(Number.isInteger(v)).toBe(true);
+    for (const f of s.f) for (const v of [f.x, f.y, f.t, f.vx, f.hp, f.guard, f.kb, f.mt, f.left, f.chg, f.hot, f.buzz, f.dizzy, f.wob]) expect(Number.isInteger(v)).toBe(true);
   });
 
   it('les règles de placement tiennent pendant 10 000 pas d’entrées au hasard', () => {
-    let s = createFight('bernard', 'lola');
+    let s = createFight('aviateur', 'doyen');
     const min = ARENA.wallMargin * SUB;
     const max = stageWidth('bar') - min;
     for (const [a, b] of inputsFor(99, 10_000)) {

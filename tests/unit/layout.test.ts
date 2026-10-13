@@ -43,7 +43,7 @@ describe('placement de la scène', () => {
 
       it('aligne les 8 habitués au fond, à ~45 % de la taille des combattants', () => {
         expect(L.crowd).toHaveLength(8);
-        const fighterFig = assets.fighters.bernard.idle.height * L.fighterScale;
+        const fighterFig = assets.fighters.aviateur.idle.height * L.fighterScale;
         const heights = L.crowd.map((c) => c.y - c.top).sort((a, b) => a - b);
         const median = (heights[3] + heights[4]) / 2;
         expect(median / fighterFig).toBeCloseTo(STAGE.crowdRatio, 2);

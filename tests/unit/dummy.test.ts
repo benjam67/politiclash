@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { SIM } from '../../src/config/balance';
 import { DummySource } from '../../src/input/sources';
 import { createFight, hashState, step, type FightState } from '../../src/logic/fight';
+import type { FighterId } from '../../src/config/roster';
 
 /** Un match complet entre deux mannequins. */
-function playMatch(seed: number, left: 'bernard' | 'lola' = 'bernard', right: 'bernard' | 'lola' = 'lola') {
+function playMatch(seed: number, left: FighterId = 'aviateur', right: FighterId = 'doyen') {
   const a = new DummySource(seed);
   const b = new DummySource(seed + 1000);
   let s: FightState = createFight(left, right, 'bar', seed);
@@ -24,7 +25,7 @@ function playMatch(seed: number, left: 'bernard' | 'lola' = 'bernard', right: 'b
 describe('mannequin', () => {
   it('ne fait rien avant le début du combat', () => {
     const d = new DummySource(1);
-    const s = createFight('bernard', 'lola');
+    const s = createFight('aviateur', 'doyen');
     expect(Object.values(d.read(s, 1)).some(Boolean)).toBe(false);
   });
 
@@ -39,7 +40,7 @@ describe('mannequin', () => {
       all.push(...rounds);
     }
     const mean = all.reduce((x, y) => x + y, 0) / all.length;
-    console.log(`mannequins : ${all.length} rounds, durée moyenne ${mean.toFixed(1)} s, victoires lourd/rapide ${wins.join('/')}`);
+    console.log(`mannequins : ${all.length} rounds, durée moyenne ${mean.toFixed(1)} s, victoires gauche/droite ${wins.join('/')}`);
     expect(mean).toBeGreaterThan(8);
     expect(mean).toBeLessThanOrEqual(60);
   });

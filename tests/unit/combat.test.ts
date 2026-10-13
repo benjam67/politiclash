@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { BIG_SLAP, GABARITS, GUARD, MATCH, MOVES, ROUND, SIM } from '../../src/config/balance';
-import { ROSTER } from '../../src/config/roster';
+import { BIG_SLAP, GUARD, MATCH, MOVES, ROUND, SIM, STYLE } from '../../src/config/balance';
+import type { FighterId } from '../../src/config/roster';
 import {
   actionOf,
   bigDamage,
   chargePct,
+  chipDamage,
   createFight,
   createFightStarted,
   GUARD_MAX,
@@ -34,7 +35,7 @@ function run(s: FightState, n: number, a: InputFrame = none, b: InputFrame = non
 const hitsOf = (ev: FightEvent[]) => ev.filter((e): e is Extract<FightEvent, { t: 'hit' }> => e.t === 'hit');
 
 /** Combat lancé, les deux combattants à `dist` px l'un de l'autre. */
-function close(left: 'bernard' | 'lola' = 'bernard', right: 'bernard' | 'lola' = 'lola', dist = 80): FightState {
+export function close(left: FighterId = 'aviateur', right: FighterId = 'doyen', dist = 80): FightState {
   const s = createFightStarted(left, right);
   const mid = (s.f[0].x + s.f[1].x) / 2;
   s.f[0].x = mid - (dist * SUB) / 2;
@@ -53,11 +54,8 @@ describe('gifle rapide', () => {
   it('se déroule en trois temps : préparation, coup actif, récupération', () => {
     const base = moveSteps('quick');
     expect([base.startup, base.active, base.recovery]).toEqual([st(100), st(70), st(180)]);
-    // La vivacité du gabarit allonge ou raccourcit la préparation et la récupération.
-    const m = moveSteps('quick', 'bernard');
-    expect(m.startup).toBe(st(100 * GABARITS.lourd.tempo));
-    expect(m.recovery).toBe(st(180 * GABARITS.lourd.tempo));
-    let s = createFightStarted('bernard', 'lola');
+    const m = base;
+    let s = createFightStarted('aviateur', 'doyen');
     s = step(s, press('gifle'), none);
     expect(s.f[0].mode).toBe('attack');
     expect(actionOf(s.f[0])).toBe('quickSlap');
@@ -68,21 +66,20 @@ describe('gifle rapide', () => {
     expect(r.ev.filter((e) => e.t === 'swing')).toHaveLength(0);
   });
 
-  it('touche à portée : dégâts × résistance, adversaire figé et repoussé', () => {
+  it('touche à portée : 5 PV pour tous (plus de résistance), adversaire figé et repoussé', () => {
     const { s, ev } = run(close(), 20, press('gifle'));
     const [hit] = hitsOf(ev);
     expect(hitsOf(ev)).toHaveLength(1);
     expect(hit.by).toBe(0);
     expect(hit.blocked).toBe(false);
-    // Arrondi au dixième de PV.
-    expect(hit.dmg).toBe(Math.round((MOVES.quick.damage * HP * Math.round(GABARITS.rapide.resistance * 100)) / 100));
+    expect(hit.dmg).toBe(MOVES.quick.damage * HP);
     expect(s.f[1].hp).toBe(MATCH.hp * HP - hit.dmg);
     expect(s.f[1].x).toBeGreaterThan(close().f[1].x);
   });
 
   it('le coup ne touche qu’une fois, et rate hors de portée', () => {
     expect(hitsOf(run(close(), 60, press('gifle')).ev)).toHaveLength(1);
-    expect(hitsOf(run(close('bernard', 'lola', 200), 60, press('gifle')).ev)).toHaveLength(0);
+    expect(hitsOf(run(close('aviateur', 'doyen', 200), 60, press('gifle')).ev)).toHaveLength(0);
   });
 
   it('fige l’adversaire le temps prévu : il ne peut rien faire', () => {
@@ -98,7 +95,7 @@ describe('gifle rapide', () => {
   });
 
   it('accroupi + Gifle : on se relève pour donner la gifle rapide', () => {
-    const s = step(createFightStarted('bernard', 'lola'), press('bas', 'gifle'), none);
+    const s = step(createFightStarted('aviateur', 'doyen'), press('bas', 'gifle'), none);
     expect(s.f[0].move).toBe('quick');
     expect(s.f[0].stance).toBe('stand');
   });
@@ -118,7 +115,7 @@ describe('gifle rapide', () => {
 
 describe('gifle aérienne', () => {
   it('la gifle aérienne touche un adversaire accroupi, une seule fois par saut', () => {
-    let s = close('lola', 'bernard', 110);
+    let s = close('doyen', 'aviateur', 110);
     const ev: FightEvent[] = [];
     s = step(s, press('haut', 'droite'), press('bas'));
     for (let i = 0; i < 60; i++) {
@@ -131,32 +128,36 @@ describe('gifle aérienne', () => {
   });
 
   it('la gifle aérienne reste active jusqu’à l’atterrissage, puis il faut récupérer', () => {
-    let s = createFightStarted('bernard', 'lola');
+    let s = createFightStarted('aviateur', 'doyen');
     s = step(s, press('haut'), none);
     s = step(s, press('gifle'), none);
     expect(actionOf(s.f[0])).toBe('airSlap');
     while (s.f[0].stance === 'jump') s = step(s, none, none);
     expect(s.f[0].mode).toBe('recover');
-    const rec = moveSteps('air', 'bernard').recovery;
+    const rec = moveSteps('air').recovery;
     expect(s.f[0].left).toBe(rec);
     expect(run(s, rec).s.f[0].mode).toBe('free');
   });
 });
 
 describe('grosse gifle', () => {
-  const lourd = GABARITS.lourd;
-  const chargeSteps = physicsOf('bernard').chargeSteps;
+  const chargeSteps = physicsOf('aviateur').chargeSteps;
   const holdFor = (pct: number) => Math.ceil((pct * chargeSteps) / 100);
 
-  it('la jauge monte de 0 à 100 % dans le temps du gabarit', () => {
-    expect(chargeSteps).toBe(st(lourd.chargeTimeMs));
-    expect(chargePct('bernard', 0)).toBe(0);
-    expect(chargePct('bernard', chargeSteps / 2)).toBe(50);
-    expect(chargePct('bernard', chargeSteps * 2)).toBe(100);
+  it('la jauge monte de 0 à 100 % en 1,2 s, la même pour tous', () => {
+    expect(chargeSteps).toBe(st(STYLE.chargeTimeMs));
+    expect(chargeSteps).toBe(st(1200));
+    // `chg` : centièmes de pas maintenus.
+    expect(chargePct(0)).toBe(0);
+    expect(chargePct((chargeSteps * 100) / 2)).toBe(50);
+    expect(chargePct(chargeSteps * 200)).toBe(100);
+    // Le premier pas (l'appui) lance la charge ; elle monte ensuite d'un pas par pas maintenu.
+    const s = run(createFightStarted('aviateur', 'doyen'), chargeSteps / 2 + 1, press('grosseGifle')).s;
+    expect(chargePct(s.f[0].chg)).toBe(50);
   });
 
   it('on ne peut pas se déplacer pendant la charge', () => {
-    const s0 = createFightStarted('bernard', 'lola');
+    const s0 = createFightStarted('aviateur', 'doyen');
     const s = run(s0, 30, press('grosseGifle', 'droite', 'haut')).s;
     expect(s.f[0].mode).toBe('charge');
     expect(s.f[0].x).toBe(s0.f[0].x);
@@ -169,27 +170,32 @@ describe('grosse gifle', () => {
     expect(s.f[1].hp).toBe(MATCH.hp * HP);
   });
 
-  it('hors zone dorée : D = B × C/100 × R_d', () => {
+  it('hors zone dorée : D = B × C/100, 13 à pleine charge', () => {
     const { ev, charged } = bigSlap(close(), holdFor(50));
-    const pct = chargePct('bernard', charged.f[0].mt);
+    const pct = chargePct(charged.f[0].chg);
     const [hit] = hitsOf(ev);
     expect(hit.crit).toBe(false);
-    expect(hit.dmg / HP).toBeCloseTo(lourd.base * (pct / 100) * GABARITS.rapide.resistance, 0);
+    expect(hit.dmg).toBe(bigDamage(pct, false));
+    expect(hit.dmg / HP).toBeCloseTo(STYLE.base * (pct / 100), 0);
+    expect(bigDamage(100, false)).toBe(13 * HP);
   });
 
   it('en zone dorée : critique ×2, qui met à terre', () => {
-    const { ev, s } = bigSlap(close(), holdFor(85));
+    const { ev, s, charged } = bigSlap(close(), holdFor(84));
+    const pct = chargePct(charged.f[0].chg);
     const [hit] = hitsOf(ev);
     expect(hit.crit).toBe(true);
-    expect(hit.dmg / HP).toBeGreaterThan(lourd.base * 0.8 * BIG_SLAP.criticalMultiplier * GABARITS.rapide.resistance - 0.1);
     expect(hit.knockdown).toBe(true);
-    expect(hit.dmg).toBe(Math.round((bigDamage('bernard', 85, true) * Math.round(GABARITS.rapide.resistance * 100)) / 100));
+    expect(hit.dmg).toBe(bigDamage(pct, true));
+    // 21 à 23 PV en zone dorée (78–90 %).
+    expect(bigDamage(STYLE.goldenZone[0], true) / HP).toBeCloseTo(20.3, 1);
+    expect(bigDamage(STYLE.goldenZone[1], true) / HP).toBeCloseTo(23.4, 1);
     expect(s.f[1].mode === 'down' || s.f[1].mode === 'getup').toBe(true);
   });
 
   it('à terre puis relevé : invulnérable, puis de nouveau libre', () => {
     let { s } = bigSlap(close(), holdFor(85));
-    // Bernard s'acharne : rien ne touche tant que l'adversaire est à terre ou se relève.
+    // Il s'acharne : rien ne touche tant que l'adversaire est à terre ou se relève.
     const hp = s.f[1].hp;
     let i = 0;
     let slaps = 0;
@@ -205,7 +211,7 @@ describe('grosse gifle', () => {
 
   it('surchauffe : rester à 100 % trop longtemps, et on se gifle soi-même', () => {
     const grace = st(BIG_SLAP.overheatGraceMs);
-    const safe = run(createFightStarted('bernard', 'lola'), chargeSteps + grace, press('grosseGifle'));
+    const safe = run(createFightStarted('aviateur', 'doyen'), chargeSteps + grace, press('grosseGifle'));
     expect(safe.s.f[0].mode).toBe('charge');
     const { s, ev } = run(safe.s, 2, press('grosseGifle'));
     expect(ev.some((e) => e.t === 'self')).toBe(true);
@@ -218,28 +224,34 @@ describe('grosse gifle', () => {
     expect(hitsOf(bigSlap(close(), holdFor(85), press('bas')).ev)).toHaveLength(0);
   });
 
-  it('les deux gabarits peuvent mettre l’autre à terre avec un critique', () => {
-    for (const [a, b] of [['bernard', 'lola'], ['lola', 'bernard']] as const) {
-      const g = GABARITS[ROSTER[a].gabarit];
-      const res = GABARITS[ROSTER[b].gabarit].resistance;
-      expect(g.base * (g.goldenZone[0] / 100) * BIG_SLAP.criticalMultiplier * res).toBeGreaterThanOrEqual(BIG_SLAP.knockdownDamage);
-    }
+  it('un critique met toujours à terre, une grosse gifle normale jamais', () => {
+    expect(STYLE.base * (STYLE.goldenZone[0] / 100) * BIG_SLAP.criticalMultiplier).toBeGreaterThanOrEqual(BIG_SLAP.knockdownDamage);
+    expect(STYLE.base).toBeLessThan(BIG_SLAP.knockdownDamage);
   });
 });
 
 describe('garde', () => {
-  it('bloque une gifle : 10 % des dégâts, et la jauge de garde baisse', () => {
+  it('un coup bloqué retire 10 % de ses dégâts, arrondis, au moins 1 PV', () => {
+    expect(chipDamage(5 * HP)).toBe(1 * HP);
+    expect(chipDamage(7 * HP)).toBe(1 * HP);
+    expect(chipDamage(14.9 * HP)).toBe(1 * HP);
+    expect(chipDamage(15 * HP)).toBe(2 * HP);
+    expect(chipDamage(22.1 * HP)).toBe(2 * HP);
+    expect(chipDamage(1)).toBe(GUARD.chipMin * HP);
+  });
+
+  it('bloque une gifle : 1 PV, et la jauge de garde baisse', () => {
     const { s, ev } = run(close(), 20, press('gifle'), press('garde'));
     const [hit] = hitsOf(ev);
     expect(hit.blocked).toBe(true);
-    expect(hit.dmg / HP).toBeCloseTo(MOVES.quick.damage * GUARD.chipRatio, 5);
+    expect(hit.dmg).toBe(1 * HP);
     expect(s.f[1].hp).toBe(MATCH.hp * HP - hit.dmg);
     expect(s.f[1].guard).toBeLessThan(GUARD_MAX);
     expect(actionOf(s.f[1])).toBe('guard');
   });
 
   it('on ne peut pas se déplacer en gardant', () => {
-    const s0 = createFightStarted('bernard', 'lola');
+    const s0 = createFightStarted('aviateur', 'doyen');
     const s = run(s0, 30, press('garde', 'droite', 'haut')).s;
     expect(s.f[0].mode).toBe('guard');
     expect(s.f[0].x).toBe(s0.f[0].x);
@@ -276,7 +288,7 @@ describe('garde', () => {
   });
 
   it('une grosse gifle hors zone dorée est bloquée ; en zone dorée elle brise la garde', () => {
-    const chargeSteps = physicsOf('bernard').chargeSteps;
+    const chargeSteps = physicsOf('aviateur').chargeSteps;
     const normal = hitsOf(bigSlap(close(), Math.ceil(chargeSteps * 0.5), press('garde')).ev)[0];
     expect(normal.blocked).toBe(true);
     const golden = bigSlap(close(), Math.ceil(chargeSteps * 0.85), press('garde'));
@@ -290,7 +302,7 @@ describe('garde', () => {
 
 describe('échange de coups', () => {
   it('deux gifles au même instant touchent les deux', () => {
-    const { ev, s } = run(close('bernard', 'bernard'), 30, press('gifle'), press('gifle'));
+    const { ev, s } = run(close('aviateur', 'aviateur'), 30, press('gifle'), press('gifle'));
     expect(hitsOf(ev).map((h) => h.by).sort()).toEqual([0, 1]);
     expect(s.f[0].hp).toBe(s.f[1].hp);
   });
@@ -298,7 +310,7 @@ describe('échange de coups', () => {
 
 describe('rounds et match', () => {
   it('le round commence par une annonce pendant laquelle personne ne bouge', () => {
-    const s0 = createFight('bernard', 'lola');
+    const s0 = createFight('aviateur', 'doyen');
     expect(s0.phase).toBe('intro');
     expect(s0.ev).toEqual([{ t: 'round', n: 1 }]);
     const { s, ev } = run(s0, st(ROUND.introMs) - 1, press('droite', 'gifle'), press('gauche'));
@@ -321,7 +333,7 @@ describe('rounds et match', () => {
   });
 
   it('égalité au chrono : personne ne marque', () => {
-    const r = run(createFightStarted('bernard', 'lola'), MATCH.roundTimeS * SIM.stepsPerSecond + 5);
+    const r = run(createFightStarted('aviateur', 'doyen'), MATCH.roundTimeS * SIM.stepsPerSecond + 5);
     expect(r.ev.find((e) => e.t === 'roundEnd')).toEqual({ t: 'roundEnd', winner: 2 });
     expect(r.s.wins).toEqual([0, 0]);
   });
@@ -357,14 +369,14 @@ describe('rounds et match', () => {
   });
 
   it('se gifler soi-même à 0 PV donne le round à l’adversaire', () => {
-    const s = createFightStarted('bernard', 'lola');
+    const s = createFightStarted('aviateur', 'doyen');
     s.f[0].hp = 5 * HP;
-    const r = run(s, physicsOf('bernard').chargeSteps + 20, press('grosseGifle'));
+    const r = run(s, physicsOf('aviateur').chargeSteps + 20, press('grosseGifle'));
     expect(r.ev.find((e) => e.t === 'roundEnd')).toEqual({ t: 'roundEnd', winner: 1 });
   });
 
   it('double K.O. : personne ne marque', () => {
-    const s = close('bernard', 'bernard');
+    const s = close('aviateur', 'aviateur');
     s.f[0].hp = s.f[1].hp = 2 * HP;
     const r = run(s, 30, press('gifle'), press('gifle'));
     expect(r.ev.find((e) => e.t === 'ko')).toEqual({ t: 'ko', who: 2 });
@@ -393,9 +405,9 @@ describe('rounds et match', () => {
 
 describe('appui gardé en mémoire', () => {
   it('une gifle demandée juste avant la fin du coup précédent part quand même', () => {
-    const m = moveSteps('quick', 'bernard');
+    const m = moveSteps('quick');
     const total = m.startup + m.active + m.recovery;
-    let s = step(createFightStarted('bernard', 'lola'), press('gifle'), none);
+    let s = step(createFightStarted('aviateur', 'doyen'), press('gifle'), none);
     s = run(s, total - 5).s;
     expect(s.f[0].mode).toBe('attack');
     // Nouvel appui 4 pas avant la fin : la deuxième gifle s'enchaîne.
@@ -405,7 +417,7 @@ describe('appui gardé en mémoire', () => {
   });
 
   it('un appui trop ancien est oublié', () => {
-    let s = step(createFightStarted('bernard', 'lola'), press('gifle'), none);
+    let s = step(createFightStarted('aviateur', 'doyen'), press('gifle'), none);
     s = step(s, none, none);
     s = step(s, press('gifle'), none);
     const r = run(s, 60);
@@ -434,14 +446,14 @@ describe('coup de pied', () => {
     expect(s.f[0].move).toBe('sweep');
     expect(actionOf(s.f[0])).toBe('crouchKick');
     // Balayette contre gifle rapide lancées ensemble : seule la balayette touche.
-    const { ev } = run(close('bernard', 'bernard'), 40, press('bas', 'pied'), press('gifle'));
+    const { ev } = run(close('aviateur', 'aviateur'), 40, press('bas', 'pied'), press('gifle'));
     expect(hitsOf(ev).map((h) => h.move)).toEqual(['sweep']);
   });
 
   it('on peut sauter par-dessus', () => {
     let s = close();
     const ev: FightEvent[] = [];
-    // Lola saute sur place ; le coup de pied part quand elle est en haut.
+    // L'adversaire saute sur place ; le coup de pied part quand elle est en haut.
     s = step(s, none, press('haut'));
     for (let i = 0; i < 6; i++) s = step(s, none, none);
     for (let i = 0; i < 20; i++) {
@@ -452,7 +464,7 @@ describe('coup de pied', () => {
   });
 
   it('n’existe pas en l’air', () => {
-    let s = step(createFightStarted('bernard', 'lola'), press('haut'), none);
+    let s = step(createFightStarted('aviateur', 'doyen'), press('haut'), none);
     s = run(s, 10, press('pied')).s;
     expect(s.f[0].mode).toBe('free');
   });
@@ -460,7 +472,7 @@ describe('coup de pied', () => {
 
 describe('garde haute et garde basse', () => {
   it('Garde seule : garde haute. Garde + bas : garde basse. On peut changer sans lâcher', () => {
-    let s = run(createFightStarted('bernard', 'lola'), 3, press('garde')).s;
+    let s = run(createFightStarted('aviateur', 'doyen'), 3, press('garde')).s;
     expect(actionOf(s.f[0])).toBe('guard');
     s = run(s, 3, press('garde', 'bas')).s;
     expect(s.f[0].mode).toBe('guard');
@@ -475,14 +487,14 @@ describe('garde haute et garde basse', () => {
     const kick = hitsOf(run(close(), 30, press('pied'), press('garde')).ev)[0];
     expect(kick).toMatchObject({ blocked: false, wrongGuard: true });
     // Mauvaise garde : le coup passe en entier.
-    expect(kick.dmg).toBe(Math.round((MOVES.kick.damage * HP * Math.round(GABARITS.rapide.resistance * 100)) / 100));
+    expect(kick.dmg).toBe(MOVES.kick.damage * HP);
   });
 
   it('la garde basse arrête le coup de pied et la balayette, pas la gifle', () => {
     for (const keys of [['pied'], ['bas', 'pied']] as const) {
       const kick = hitsOf(run(close(), 30, press(...keys), press('garde', 'bas')).ev)[0];
       expect(kick).toMatchObject({ blocked: true, wrongGuard: false });
-      expect(kick.dmg).toBe(Math.round(MOVES[keys.length === 2 ? 'sweep' : 'kick'].damage * HP * GUARD.chipRatio));
+      expect(kick.dmg).toBe(chipDamage(MOVES[keys.length === 2 ? 'sweep' : 'kick'].damage * HP));
     }
     // En garde basse, la tête reste à portée : la gifle rapide touche (alors qu'elle rate un adversaire simplement accroupi).
     const slap = hitsOf(run(close(), 30, press('gifle'), press('garde', 'bas')).ev)[0];
@@ -491,7 +503,7 @@ describe('garde haute et garde basse', () => {
 
   it('la gifle aérienne est haute : la garde basse ne l’arrête pas', () => {
     const jumpIn = (guard: InputFrame) => {
-      let s = close('lola', 'bernard', 110);
+      let s = close('doyen', 'aviateur', 110);
       const ev: FightEvent[] = [];
       s = step(s, press('haut', 'droite'), guard);
       for (let i = 0; i < 50; i++) {

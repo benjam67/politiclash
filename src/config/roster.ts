@@ -22,7 +22,8 @@ export interface FighterDef {
   body: { stand: Box; crouch: Box };
 }
 
-const BODY = { stand: { halfW: 26, h: 230 }, crouch: { halfW: 30, h: 142 } };
+// Accroupi : 140 px de haut, sous les gifles debout (la grosse gifle frappe à partir de 141 px).
+const BODY = { stand: { halfW: 26, h: 230 }, crouch: { halfW: 30, h: 140 } };
 
 export const ROSTER = {
   aviateur: { special: 'poudre', voice: 'grave', body: BODY },
