@@ -222,6 +222,17 @@ Ajout demandé par le propriétaire pendant le jalon 2 : chaque combattant a une
 
 Conservé pour mémoire : il décrit le jeu au tour par tour dont PolitiClash est parti.
 
+## Poses des coups spéciaux, accessoires et nouvelles tenues — 2026-10-13
+
+Fournis par le propriétaire.
+
+- **Nouvelles tenues** pour Manu Macs, Narine le Zen, Jordan et JLM : leurs deux planches ont été redécoupées (23 poses chacune, `scripts/decoupe-planches.py`). Ce sont aussi les planches au prompt corrigé (jambes moins écartées, marche à deux temps, coup de pied bas).
+- **Poses des coups spéciaux** pour les six (`special1`, `special2`, `special3`). Elles sont découpées par un nouvel outil, `scripts/decoupe-speciaux.py`, qui recale l'échelle sur la pose d'attente de la 4e case et place les pieds sur ceux de la pose d'attente. Les planches sont en 2:1 et non en 3:2 : aucun problème, l'outil s'adapte. La cinématique les prend automatiquement.
+- **Accessoires** : dans chaque planche, on ne garde qu'une case, comme demandé. Le caca vient de `use only poop.png`, la faucille et le marteau rouges de `don't use emoji.png`. Ils sont dans `raw/props/` et remplacent les projectiles provisoires.
+- L'ancienne pose `special` (élan commun à tous) n'est plus chargée quand les trois vraies poses sont là : le chargement initial passe à 3,6 Mo.
+- **Rapprochement des coups de près** : avec les vraies poses, plus larges, les deux personnages se chevauchaient. L'écart entre les corps passe de 45 à 62 px.
+- **Vérifications** : 185 tests unitaires (un de plus par personnage : ses vraies poses sont utilisées), les six cinématiques photographiées en jeu, chargement initial 3,57 Mo, image calculée en 4,9 ms pendant un coup spécial (processeur ×4).
+
 ## Phase 5 · Style unique, barre Buzz et coups spéciaux — 2026-10-13
 
 Décisions du 13 octobre (roadmap mise à jour, sections 3 et 7). `ROADMAP.md` remplacée par la version du projet ; `GUIDE-DESSINS.md` (version du 13 octobre) et `PROMPTS-SPECIAUX.md` ajoutés au dépôt.

@@ -17,7 +17,6 @@
         "windup",
         "swing",
         "slap",
-        "special",
         "special2",
         "selfslap",
         "hit",
@@ -25,24 +24,26 @@
         "down",
         "getup",
         "dazed",
-        "victory"
+        "victory",
+        "special1",
+        "special3"
       ],
       "width": 617,
       "height": 551,
-      "originX": 0.46882494004796166,
-      "originY": 0.9865771812080537,
+      "originX": 0.47002398081534774,
+      "originY": 0.9865591397849462,
       "idle": {
-        "height": 443,
+        "height": 442,
         "left": -153,
         "right": 167
       },
       "face": {
-        "x": 66,
-        "y": 399
+        "x": 65,
+        "y": 398
       },
       "reach": {
-        "x": 323,
-        "y": 432
+        "x": 322,
+        "y": 429
       }
     },
     "tailleur": {
@@ -61,7 +62,6 @@
         "windup",
         "swing",
         "slap",
-        "special",
         "special2",
         "selfslap",
         "hit",
@@ -69,24 +69,26 @@
         "down",
         "getup",
         "dazed",
-        "victory"
+        "victory",
+        "special1",
+        "special3"
       ],
-      "width": 652,
-      "height": 551,
-      "originX": 0.47219069239500566,
-      "originY": 0.9865771812080537,
+      "width": 648,
+      "height": 549,
+      "originX": 0.4668949771689498,
+      "originY": 0.9865229110512129,
       "idle": {
-        "height": 435,
-        "left": -174,
-        "right": 172
+        "height": 440,
+        "left": -181,
+        "right": 175
       },
       "face": {
-        "x": 65,
-        "y": 409
+        "x": 70,
+        "y": 414
       },
       "reach": {
-        "x": 269,
-        "y": 410
+        "x": 267,
+        "y": 413
       }
     },
     "cadet": {
@@ -105,7 +107,6 @@
         "windup",
         "swing",
         "slap",
-        "special",
         "special2",
         "selfslap",
         "hit",
@@ -113,7 +114,9 @@
         "down",
         "getup",
         "dazed",
-        "victory"
+        "victory",
+        "special1",
+        "special3"
       ],
       "width": 575,
       "height": 539,
@@ -149,7 +152,6 @@
         "windup",
         "swing",
         "slap",
-        "special",
         "special2",
         "selfslap",
         "hit",
@@ -157,11 +159,13 @@
         "down",
         "getup",
         "dazed",
-        "victory"
+        "victory",
+        "special1",
+        "special3"
       ],
-      "width": 609,
+      "width": 604,
       "height": 527,
-      "originX": 0.46780072904009723,
+      "originX": 0.4632352941176471,
       "originY": 0.9859550561797753,
       "idle": {
         "height": 445,
@@ -193,7 +197,6 @@
         "windup",
         "swing",
         "slap",
-        "special",
         "special2",
         "selfslap",
         "hit",
@@ -201,24 +204,26 @@
         "down",
         "getup",
         "dazed",
-        "victory"
+        "victory",
+        "special1",
+        "special3"
       ],
-      "width": 628,
-      "height": 555,
-      "originX": 0.4664310954063604,
-      "originY": 0.9866666666666667,
+      "width": 626,
+      "height": 554,
+      "originX": 0.466903073286052,
+      "originY": 0.986648865153538,
       "idle": {
-        "height": 443,
+        "height": 441,
         "left": -157,
-        "right": 161
+        "right": 162
       },
       "face": {
         "x": 69,
-        "y": 414
+        "y": 415
       },
       "reach": {
-        "x": 286,
-        "y": 397
+        "x": 284,
+        "y": 396
       }
     },
     "binocle": {
@@ -237,7 +242,6 @@
         "windup",
         "swing",
         "slap",
-        "special",
         "special2",
         "selfslap",
         "hit",
@@ -245,24 +249,26 @@
         "down",
         "getup",
         "dazed",
-        "victory"
+        "victory",
+        "special1",
+        "special3"
       ],
-      "width": 646,
-      "height": 553,
-      "originX": 0.46735395189003437,
-      "originY": 0.9866131191432396,
+      "width": 650,
+      "height": 542,
+      "originX": 0.4646924829157175,
+      "originY": 0.9863387978142076,
       "idle": {
-        "height": 450,
-        "left": -130,
-        "right": 137
+        "height": 453,
+        "left": -201,
+        "right": 188
       },
       "face": {
-        "x": 70,
-        "y": 352
+        "x": 84,
+        "y": 413
       },
       "reach": {
-        "x": 303,
-        "y": 419
+        "x": 297,
+        "y": 418
       }
     }
   },
@@ -309,5 +315,14 @@
       "placeholder": false
     }
   },
-  "specialProps": {}
+  "specialProps": {
+    "caca": {
+      "width": 225,
+      "height": 220
+    },
+    "faucille-marteau": {
+      "width": 202,
+      "height": 220
+    }
+  }
 }

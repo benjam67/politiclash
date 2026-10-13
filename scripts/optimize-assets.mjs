@@ -63,7 +63,10 @@ async function rowsMaxX(file, y0, y1) {
 
 for (const name of FIGHTERS) {
   const dir = path.join(RAW, 'fighters', name);
-  const POSES = [...POSES_COMMON, ...POSES_OPTIONAL.filter((p) => fs.existsSync(path.join(dir, `${p}.png`)))];
+  const has = (p) => fs.existsSync(path.join(dir, `${p}.png`));
+  // Avec les 3 vraies poses du coup spécial, l'ancienne pose « special » ne sert plus : on ne la charge pas.
+  const own = has('special1') && has('special3');
+  const POSES = [...POSES_COMMON.filter((p) => !(own && p === 'special')), ...POSES_OPTIONAL.filter(has)];
   const { width: W, height: H } = await sharp(path.join(dir, 'idle.png')).metadata();
   for (const p of POSES) {
     const m = await sharp(path.join(dir, `${p}.png`)).metadata();

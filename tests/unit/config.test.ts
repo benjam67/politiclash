@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { BUZZ, MATCH, MOVES, SPECIAL, STYLE } from '../../src/config/balance';
-import { ACTIONS, frameOf, POSES_COMMON, posesOf, poseFor } from '../../src/config/poses';
+import { ACTIONS, frameOf, hasSpecialPoses, POSES_COMMON, posesOf, poseFor } from '../../src/config/poses';
 import { PROP_FILES, SPECIALS } from '../../src/config/specials';
 import assets from '../../src/config/assets.json';
 import { FIGHTER_IDS, PLAYABLE_IDS, ROSTER, ROSTER_SLOTS, spriteOf } from '../../src/config/roster';
@@ -28,8 +28,9 @@ describe('configuration des combattants', () => {
         for (const v of [t.name, t.short, t.special]) expect(v.length).toBeGreaterThan(0);
       });
 
-      it('a les 23 poses communes, et une image pour chaque pose fournie', () => {
-        for (const pose of POSES_COMMON) expect(posesOf(id)).toContain(pose);
+      it('a ses poses communes, et une image pour chaque pose fournie', () => {
+        // L'ancienne pose « special » n'est plus chargée quand les 3 poses du coup spécial sont là.
+        for (const pose of POSES_COMMON) if (!(pose === 'special' && hasSpecialPoses(id))) expect(posesOf(id)).toContain(pose);
         for (const pose of posesOf(id)) expect(fs.existsSync(path.join(ASSETS, 'fighters', id, `${pose}.webp`)), pose).toBe(true);
       });
 
@@ -116,5 +117,19 @@ describe('niveaux', () => {
 describe('textes', () => {
   it('chaque situation du commentateur a au moins une phrase', () => {
     for (const list of Object.values(COMMENTS)) expect(list.length).toBeGreaterThan(0);
+  });
+});
+
+describe('poses du coup spécial', () => {
+  for (const id of FIGHTER_IDS) {
+    it(`${id} : ses trois vraies poses sont utilisées par la cinématique`, () => {
+      expect(hasSpecialPoses(id)).toBe(true);
+      expect(poseFor(id, 'special1')).toEqual({ pose: 'special1' });
+      expect(poseFor(id, 'special3')).toEqual({ pose: 'special3' });
+    });
+  }
+
+  it('les deux accessoires sont fournis', () => {
+    expect(Object.keys(assets.specialProps).sort()).toEqual([...PROP_FILES].sort());
   });
 });

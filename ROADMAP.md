@@ -4,7 +4,7 @@ Version du 13 octobre 2026 (style de combat unique, barre Buzz et coups spéciau
 
 Ce document contient tout le contexte nécessaire pour qu'une nouvelle discussion code, teste et déploie le jeu en autonomie. Il remplace la roadmap du premier jeu (`soufflet`, gifles au tour par tour), dont il reprend la stack, les assets et la méthode.
 
-> **État** : phases 0 à 5 faites. La phase 5 (13 octobre) a codé les décisions du 13 octobre : un seul style de combat, barre Buzz, coups spéciaux uniques (sections 3 et 7). En attente : les poses des coups spéciaux et les deux accessoires, les noms et répliques définitifs. En cas d'écart, c'est le code qui fait foi et la roadmap s'adapte.
+> **État** : phases 0 à 5 faites. La phase 5 (13 octobre) a codé les décisions du 13 octobre : un seul style de combat, barre Buzz, coups spéciaux uniques (sections 3 et 7). Les poses des coups spéciaux et les deux accessoires ont été intégrés le 13 octobre. En attente : les noms et répliques définitifs. En cas d'écart, c'est le code qui fait foi et la roadmap s'adapte.
 
 ## 1. Contexte et objectif
 
@@ -281,7 +281,7 @@ La liste complète des poses, les tailles, les planches et les règles pour les 
 - **Poses communes** : 21 par personnage. Les six combattants les ont déjà.
 - **Poses du coup spécial** : 3 par personnage (`special1`, `special2`, `special3`), propres à chacun. Elles remplacent les anciennes poses `special` et `special2`, identiques pour tous.
 - **Accessoires** : 2 images séparées, dans `raw/props/` : le projectile de Jordan et la faucille et le marteau de Bompardiou.
-- Manu Macs et Narine le Zen ont encore leurs anciennes planches (jambes très écartées, marche peu animée, coup de pied haut). À refaire avec le prompt corrigé si possible.
+- Les poses du coup spécial et les deux accessoires des six combattants sont intégrés (13 octobre), ainsi que les nouvelles tenues de Manu Macs, Narine le Zen, Jordan et JLM.
 
 ### Les six coups spéciaux
 
@@ -375,7 +375,7 @@ Uniquement aux 3 jalons, ou en cas de choix qui ne peut pas être annulé facile
 
 ### Phase 5 · Style unique, barre Buzz et coups spéciaux ✔
 
-**Faite le 13 octobre 2026.** Détail et réglages dans `CHANGELOG.md`. Poses des spéciaux provisoires, projectiles dessinés en code, noms et répliques provisoires.
+**Faite le 13 octobre 2026.** Détail et réglages dans `CHANGELOG.md`. Poses des spéciaux et accessoires intégrés le même jour ; noms et répliques encore provisoires.
 
 - Fusion des gabarits en un seul style de combat ; arrondi des coups bloqués (minimum 1 PV).
 - Barre Buzz sous la barre de vie, gains sur les coups qui touchent et les esquives réussies.
@@ -419,9 +419,7 @@ Uniquement aux 3 jalons, ou en cas de choix qui ne peut pas être annulé facile
 
 | Quand | Quoi |
 | --- | --- |
-| Avant la phase 6 si possible | Les 3 poses du coup spécial de chaque combattant, et les 2 accessoires (voir `PROMPTS-SPECIAUX.md`) |
 | Quand il veut | Les noms des coups spéciaux et les répliques, dans `texts.ts` |
-| Si possible | Les planches corrigées de Manu Macs et Narine le Zen |
 | Avant le jalon 2 si possible | Un décor en version large (2 écrans) |
 
 ## 11. Instruction du projet Claude

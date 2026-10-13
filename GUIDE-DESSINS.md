@@ -70,9 +70,9 @@ Le jeu dessine lui-même le reste : paillettes, explosion, onde de choc, mousse,
 
 ### Où en sont les six combattants
 
-- **Poses communes** : les six ont leurs 21 poses (planches du 11 octobre).
-- **Manu Macs et Narine le Zen** : anciennes planches, à refaire si possible (jambes trop écartées, marche peu animée, coup de pied trop haut).
-- **Poses du spécial** : à générer pour les six, avec les deux accessoires.
+- **Poses communes** : les six ont leurs 21 poses. Nouvelles tenues pour Manu Macs, Narine le Zen, Jordan et JLM (13 octobre).
+- **Poses du spécial** : fournies pour les six, avec les deux accessoires (13 octobre).
+- **Découpe** : `python3 scripts/decoupe-planches.py` pour les deux planches communes, puis `python3 scripts/decoupe-speciaux.py perso <planche> raw/fighters/<identifiant> <aperçu.jpg>` pour la planche du spécial, et `npm run assets`.
 
 ## 3. Règles pour les images d'un personnage
 
