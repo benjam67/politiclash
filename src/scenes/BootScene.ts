@@ -26,7 +26,8 @@ export class BootScene extends Phaser.Scene {
 
     this.load.setBaseURL(import.meta.env.BASE_URL);
     this.load.setPath('assets/');
-    for (const id of STAGE_IDS) this.load.image(STAGES[id].image, STAGES[id].file);
+    // Décors simples seulement : les décors larges sont chargés à la demande (queueStageImages).
+    for (const id of STAGE_IDS) if (!STAGES[id].wide) this.load.image(STAGES[id].image, STAGES[id].file);
     // Figurants du bar : le patron et les habitués.
     this.load.image('patron', 'stages/bar/patron.webp');
     for (const h of HABITUES) this.load.image(`habitue_${h}`, `stages/bar/habitues/${h}.webp`);

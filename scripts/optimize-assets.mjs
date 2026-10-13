@@ -148,18 +148,24 @@ for (const h of HABITUES) {
   manifest.props.patron = { width: w, height: PATRON_HEIGHT };
 }
 
-// Décor : decor.png s'il est fourni, sinon le décor provisoire dessiné en SVG.
-{
-  const png = path.join(RAW, 'stages/bar/decor.png');
-  const svg = path.join(RAW, 'stages/bar/decor-placeholder.svg');
-  const src = fs.existsSync(png) ? png : svg;
-  const img = sharp(src, { density: 96 });
-  const m = await img.metadata();
+// Décors : raw/stages/<id>/decor.png. Pour le bar, décor provisoire en SVG s'il manque.
+// Les décors larges (plus de 2 fois plus larges que hauts) gardent toute leur largeur.
+manifest.stages = {};
+for (const id of fs.readdirSync(path.join(RAW, 'stages')).sort()) {
+  const png = path.join(RAW, 'stages', id, 'decor.png');
+  const svg = path.join(RAW, 'stages', id, 'decor-placeholder.svg');
+  const src = fs.existsSync(png) ? png : fs.existsSync(svg) ? svg : null;
+  if (!src) continue;
+  const m = await sharp(src, { density: 96 }).metadata();
   const targetH = Math.min(900, m.height);
-  await sharp(src, { density: 96 }).resize({ height: targetH }).webp({ quality: 78, effort: 6 }).toFile(path.join(OUT, 'stages/bar/decor.webp'));
-  const out = await sharp(path.join(OUT, 'stages/bar/decor.webp')).metadata();
-  manifest.props.decor = { width: out.width, height: out.height, placeholder: src === svg };
+  fs.mkdirSync(path.join(OUT, 'stages', id), { recursive: true });
+  const dest = path.join(OUT, 'stages', id, 'decor.webp');
+  await sharp(src, { density: 96 }).resize({ height: targetH }).webp({ quality: 78, effort: 6 }).toFile(dest);
+  const out = await sharp(dest).metadata();
+  manifest.stages[id] = { width: out.width, height: out.height, placeholder: src === svg };
 }
+// Compatibilité : le bar sert aussi de fond aux menus.
+manifest.props.decor = manifest.stages.bar;
 
 fs.mkdirSync(path.join(ROOT, 'src/config'), { recursive: true });
 fs.writeFileSync(path.join(ROOT, 'src/config/assets.json'), JSON.stringify(manifest, null, 2) + '\n');

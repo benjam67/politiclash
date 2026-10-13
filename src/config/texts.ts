@@ -45,11 +45,11 @@ export const FIGHTER_TEXTS: Record<FighterId, FighterTexts> = {
   },
   barbe: {
     name: 'Bompardiou', short: 'Bompardiou', katakana: 'ボンパルディウ', special: 'Le Grand Lancer',
-    specialLines: ['La faucille et le marteau tournoient… en plein dans le mille !', 'Un lancer d’outils, du jamais vu dans ce bar !'],
+    specialLines: ['La faucille et le marteau tournoient… en plein dans le mille !', 'Un lancer d’outils, du jamais vu !'],
   },
   doyen: {
     name: 'JLM', short: 'JLM', katakana: 'ジェイエルエム', special: 'Le Coup de gueule',
-    specialLines: ['Quel coup de gueule ! Les verres ont explosé au fond du bar !', 'Une onde de choc ! On l’a entendu jusqu’au bout de la rue !'],
+    specialLines: ['Quel coup de gueule ! Les vitres en ont tremblé !', 'Une onde de choc ! On l’a entendu jusqu’au bout de la rue !'],
   },
   binocle: {
     name: 'Jordan', short: 'Jordan', katakana: 'ジョルダン', special: 'Le Vent arrière',
@@ -69,6 +69,8 @@ export const BUZZ_TEXTS = {
 
 export const STAGE_TEXTS: Record<StageId, { name: string }> = {
   bar: { name: 'Le bar' },
+  elysee: { name: 'L’Élysée' },
+  republique: { name: 'La République' },
 };
 
 /** Noms des niveaux de difficulté. */
@@ -81,7 +83,7 @@ export const COMMENTS = {
   big: ['Quelle mandale ! Les verres en tremblent !', 'Ça résonne jusqu’au fond de la cave !', 'Ouille ouille ouille, la joue est cuite !'],
   normal: ['Propre, net, sans bavure.', 'Une bonne gifle de comptoir.', 'Ça claque, mais ça tient debout !', 'Joli revers, tout dans le poignet !'],
   grazed: ['Ça a juste effleuré la moustache…', 'Un peu de travers, ça !', 'Un courant d’air, tout au plus.'],
-  missed: ['Raté ! Il a giflé l’air du bar !', 'Le ventilateur a pris plus cher que la joue !', 'Visez la joue, pas le plafond !'],
+  missed: ['Raté ! Il a giflé le vide !', 'Le ventilateur a pris plus cher que la joue !', 'Visez la joue, pas le plafond !'],
   limp: ['Une gifle molle… le public siffle !', 'C’est une caresse, ça ?', 'Trop lent ! Gifle de dimanche matin.'],
   self: ['Il s’est giflé tout seul ! Magnifique !', 'Surchauffe ! Il se met une claque à lui-même !', 'L’autogifle, une spécialité locale.'],
   buzz: ['Le Buzz est plein ! Attention les yeux !', 'Toute la salle en parle : le Buzz est à fond !', 'Ça buzze, ça buzze ! Le coup spécial est prêt !'],

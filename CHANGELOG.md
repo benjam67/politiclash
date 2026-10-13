@@ -537,3 +537,11 @@ Retour du propriétaire après une partie à deux : sur iPhone, le plein écran 
 - **Poids** : les jeux complets sont réduits à 0,74 (perso debout ~440 px) au lieu de 0,85, pour garder le chargement initial sous 4 Mo avec 6 combattants (3,1 Mo d'images de combattants). Au-delà de 6, il faudra charger les poses d'un combattant seulement quand il est choisi.
 - **Dessins** : ces quatre planches utilisent le prompt corrigé (pose d'attente moins écartée, marche à deux temps distincts, coup de pied bas). Les deux premiers combattants gardent leurs anciennes planches.
 - **Vérifications** : 150 tests unitaires, simulation 94 séries sur 94 dans les critères, parcours de sélection au tactile.
+
+## Deux nouveaux lieux : l'Élysée et la place de la République — 2026-10-13
+
+- **Décors larges** : images de 2992 × 1008 (environ 3 × 1), réduites à 2671 × 900 en WebP (`raw/stages/elysee/`, `raw/stages/republique/`). `npm run assets` traite maintenant chaque dossier de `raw/stages/` ; `assets.json` a une rubrique `stages`.
+- **Affichage** : nouveau réglage `wide` dans `stages.ts`. Le décor couvre toute la largeur du niveau et défile avec la caméra, sans miroir. Largeur du niveau : 1,35 écran (au lieu de 2 pour le bar), ce qui laisse voir toute la hauteur de l'image, drapeau et statue compris.
+- **Sol** : dans ces images, le sol commence vers 75 % (Élysée) et 79 % (République) de la hauteur, au lieu de 55 % pour le bar. On garde cette position plutôt que de couper le haut de l'image ; les combattants restent sur la pelouse ou les pavés.
+- **Chargement** : les décors larges ne sont chargés qu'à l'écran du choix du lieu (ou au combat lancé par l'URL). Chargement initial inchangé : 3,57 Mo.
+- **Textes** : noms « L'Élysée » et « La République » ; trois répliques qui parlaient du bar sont rendues neutres.

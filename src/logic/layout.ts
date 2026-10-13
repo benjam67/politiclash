@@ -1,5 +1,5 @@
 // Calcul pur du placement de la scène de combat (sans Phaser), testable seul.
-import { STAGE } from '../config/balance';
+import { SIM, STAGE } from '../config/balance';
 import assets from '../config/assets.json';
 import type { FighterId } from '../config/roster';
 import { STAGES, type StageId } from '../config/stages';
@@ -61,7 +61,9 @@ export function computeLayout(
   const dw = stage.width;
   const dh = stage.height;
   const feet = height * (1 - STAGE.fighterFeetFromBottom);
-  const ds = Math.max(width / dw, height / dh, (height * stage.floorScreen + feet * (1 / zoomMin - 1)) / stage.floorY);
+  // Décor large : l'image couvre aussi toute la largeur du niveau (px logiques × échelle de l'écran).
+  const levelW = stage.wide ? (stage.widthScreens * SIM.screenW * height) / SIM.screenH : 0;
+  const ds = Math.max(width / dw, height / dh, levelW / dw, (height * stage.floorScreen + feet * (1 / zoomMin - 1)) / stage.floorY);
   const floorScale = stage.floorY;
   const decorX = (width - dw * ds) / 2;
   let decorY = height * stage.floorScreen - floorScale * ds;

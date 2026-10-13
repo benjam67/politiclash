@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import type { AiLevel } from '../ai/ai';
 import type { FighterId } from '../config/roster';
-import { STAGE_IDS, STAGES, type StageId } from '../config/stages';
+import { queueStageImages, STAGE_IDS, STAGES, type StageId } from '../config/stages';
 import { STAGE_TEXTS } from '../config/texts';
 import { computeLayout } from '../logic/layout';
 import { sfx } from '../audio/sfx';
@@ -27,6 +27,10 @@ export class StageSelectScene extends Phaser.Scene {
 
   constructor() {
     super('StageSelect');
+  }
+
+  preload() {
+    queueStageImages(this);
   }
 
   init(data: StageSelectData) {

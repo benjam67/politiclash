@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { computeLayout } from '../../src/logic/layout';
-import { STAGE } from '../../src/config/balance';
+import { SIM, STAGE } from '../../src/config/balance';
 import assets from '../../src/config/assets.json';
+import { STAGE_IDS, STAGES } from '../../src/config/stages';
+import { minZoom } from '../../src/logic/camera';
 
 // Formats d'écran en monde Phaser (hauteur 720, largeur étendue selon le ratio).
 const SCREENS: [string, number, number][] = [
@@ -61,5 +63,25 @@ describe('placement de la scène', () => {
         expect(L.decor.y + assets.props.decor.height * L.decor.scale).toBeGreaterThanOrEqual(h - 0.01);
       });
     });
+  }
+});
+
+describe('décors larges (Élysée, République)', () => {
+  for (const id of STAGE_IDS.filter((s) => STAGES[s].wide)) {
+    const st = STAGES[id];
+    for (const [name, w, h] of SCREENS) {
+      it(`${id}, ${name} : l’image couvre l’écran et toute la largeur du niveau, sans miroir`, () => {
+        const L = computeLayout(w, h, 'aviateur', 'tailleur', id, minZoom(w / (h / SIM.screenH)));
+        const k = h / SIM.screenH;
+        const levelW = st.widthScreens * SIM.screenW * k;
+        expect(L.decor.y).toBeLessThanOrEqual(0);
+        expect(L.decor.y + st.height * L.decor.scale).toBeGreaterThanOrEqual(h - 0.01);
+        // Niveau centré sur l'écran : ses bords restent sur l'image.
+        expect(L.decor.x).toBeLessThanOrEqual(w / 2 - levelW / 2 + 0.01);
+        expect(L.decor.x + st.width * L.decor.scale).toBeGreaterThanOrEqual(w / 2 + levelW / 2 - 0.01);
+        // Le sol de l'image est au-dessus des pieds des combattants.
+        expect(L.decor.y + st.floorY * L.decor.scale).toBeLessThan(L.left.y);
+      });
+    }
   }
 });

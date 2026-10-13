@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { BUZZ, GUARD, MATCH, SIM, STAGE, STYLE } from '../config/balance';
 import { PLAYABLE_IDS, ROSTER, spriteOf, type FighterId } from '../config/roster';
 import { CHEEK } from '../config/sprites';
-import { STAGES, type StageId } from '../config/stages';
+import { queueStageImages, STAGES, type StageId } from '../config/stages';
 import { FIGHTER_TEXTS } from '../config/texts';
 import { fighterKey, frameOf, poseFor } from '../config/poses';
 import { computeLayout, HABITUES, type StageLayout } from '../logic/layout';
@@ -168,6 +168,10 @@ export class FightScene extends Phaser.Scene {
     this.specials = 0;
     this.dodges = 0;
     this.darkened = false;
+  }
+
+  preload() {
+    queueStageImages(this, this.stageId);
   }
 
   create() {

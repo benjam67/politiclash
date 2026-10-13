@@ -324,5 +324,22 @@
       "width": 202,
       "height": 220
     }
+  },
+  "stages": {
+    "bar": {
+      "width": 1024,
+      "height": 768,
+      "placeholder": false
+    },
+    "elysee": {
+      "width": 2671,
+      "height": 900,
+      "placeholder": false
+    },
+    "republique": {
+      "width": 2671,
+      "height": 900,
+      "placeholder": false
+    }
   }
 }
