@@ -1,9 +1,9 @@
 // L'IA : elle produit des entrées, comme un joueur. Elle ne triche pas : elle voit l'adversaire
 // avec un temps de réaction (son état d'il y a quelques pas), jamais ses touches.
-import { BIG_SLAP, GABARITS, MOVES } from '../config/balance';
+import { BIG_SLAP, BUZZ, MOVES, STYLE } from '../config/balance';
 import { ROSTER } from '../config/roster';
 import { TEXTS_AI } from '../config/texts';
-import { chargePct, moveSteps, physicsOf, SUB, type FighterState, type FightState } from '../logic/fight';
+import { BUZZ_STEPS, chargePct, moveSteps, PARRY_STEPS, physicsOf, specialOf, SUB, type FighterState, type FightState } from '../logic/fight';
 import { noInput, type InputFrame } from '../logic/input';
 import { createRng } from '../logic/rng';
 import type { InputSource } from '../input/sources';
@@ -35,12 +35,18 @@ export interface AiProfile {
   bigShare: number;
   /** Précision de la grosse gifle : écart type autour du milieu de la zone dorée, en % de charge. */
   aimError: number;
+  /** Barre Buzz pleine : chance de lancer le coup spécial à chaque décision. */
+  buzzUse: number;
+  /** Elle attend un moment sûr (adversaire loin ou occupé) pour remplir son cercle. */
+  buzzSafe: boolean;
+  /** Chance de réussir la garde au bon moment pendant le coup spécial adverse. */
+  parry: number;
 }
 
 export const AI_PROFILES: Record<AiLevel, AiProfile> = {
-  easy: { reaction: 26, think: [26, 60], defend: 0.12, duck: 0, punish: 0.25, combo: 0.3, mix: 0.1, interrupt: 0.15, breakGuard: 0.05, bigShare: 0.3, aimError: 22 },
-  normal: { reaction: 15, think: [12, 32], defend: 0.45, duck: 0.15, punish: 0.6, combo: 0.7, mix: 0.25, interrupt: 0.5, breakGuard: 0.3, bigShare: 0.22, aimError: 9 },
-  hard: { reaction: 8, think: [4, 16], defend: 0.8, duck: 0.4, punish: 0.95, combo: 0.9, mix: 0.4, interrupt: 0.85, breakGuard: 0.6, bigShare: 0.2, aimError: 3.5 },
+  easy: { reaction: 26, think: [26, 60], defend: 0.12, duck: 0, punish: 0.25, combo: 0.3, mix: 0.1, interrupt: 0.15, breakGuard: 0.05, bigShare: 0.3, aimError: 22, buzzUse: 0.4, buzzSafe: false, parry: 0.1 },
+  normal: { reaction: 15, think: [12, 32], defend: 0.45, duck: 0.15, punish: 0.6, combo: 0.7, mix: 0.25, interrupt: 0.5, breakGuard: 0.3, bigShare: 0.22, aimError: 9, buzzUse: 0.6, buzzSafe: true, parry: 0.35 },
+  hard: { reaction: 8, think: [4, 16], defend: 0.8, duck: 0.4, punish: 0.95, combo: 0.9, mix: 0.4, interrupt: 0.85, breakGuard: 0.6, bigShare: 0.2, aimError: 3.5, buzzUse: 0.85, buzzSafe: true, parry: 0.65 },
 };
 
 interface PlanStep {
@@ -73,6 +79,9 @@ export class AiSource implements InputSource {
   private round = 0;
   private lastMode = 'free';
   private now = 0;
+  /** Cinématique en cours (pas de début) et pas où elle met la garde (-1 : jamais). */
+  private cineSeen = -1;
+  private parryAt = -1;
 
   constructor(readonly level: AiLevel, seed = 1) {
     this.profile = AI_PROFILES[level];
@@ -104,6 +113,15 @@ export class AiSource implements InputSource {
     }
     const p = this.profile;
     this.now = state.step;
+    if (state.cine) return this.duringCine(state, me);
+    if (this.cineSeen >= 0) {
+      // Fin de la cinématique : ce qu'elle a vu avant ne compte plus.
+      this.cineSeen = -1;
+      this.plan = [];
+      this.seen = [];
+      this.committed = false;
+      this.wait = 0;
+    }
     this.seen.push(state);
     if (this.seen.length > p.reaction + 1) this.seen.shift();
     const self = state.f[me];
@@ -116,7 +134,7 @@ export class AiSource implements InputSource {
     // Elle ne peut rien décider pendant qu'elle subit.
     const was = this.lastMode;
     this.lastMode = self.mode;
-    if (self.mode !== 'free' && self.mode !== 'guard' && self.mode !== 'charge') {
+    if (self.mode !== 'free' && self.mode !== 'guard' && self.mode !== 'charge' && self.mode !== 'buzz') {
       if (self.mode === 'block') {
         // Elle vient de bloquer : elle garde encore un instant à la même hauteur, le temps de voir venir la suite.
         this.plan = [{ input: self.stance === 'crouch' ? key('garde', 'bas') : key('garde'), steps: 3 }];
@@ -160,7 +178,7 @@ export class AiSource implements InputSource {
       if (id !== this.judged) {
         this.judged = id;
         if (self.mode !== 'charge' && !(this.committed && this.plan.length > 0) && this.rng() < p.defend) {
-          const m = moveSteps(foe.move as keyof typeof MOVES, foe.id);
+          const m = moveSteps(foe.move as keyof typeof MOVES);
           // Elle voit le coup avec du retard : elle se couvre assez longtemps pour arrêter aussi le suivant,
           // si l'adversaire enchaîne les gifles sans réfléchir.
           const left = Math.max(20, m.startup + Math.max(0, m.active) - foe.mt + 4);
@@ -195,6 +213,45 @@ export class AiSource implements InputSource {
   }
 
   /**
+   * Pendant le coup spécial adverse, elle tente la garde au bon moment, d'autant plus souvent que le niveau est élevé :
+   * comme un joueur qui a appris le rythme de la cinématique. Sinon, elle la met trop tôt, ou pas du tout.
+   */
+  private duringCine(state: FightState, me: 0 | 1) {
+    const c = state.cine!;
+    const start = state.step - c.t;
+    if (this.cineSeen !== start) {
+      this.cineSeen = start;
+      this.parryAt = -1;
+      if (c.who !== me) {
+        const sp = specialOf(state.f[c.who].id);
+        if (this.rng() < this.profile.parry) this.parryAt = sp.signal + Math.floor(this.rng() * Math.min(3, PARRY_STEPS));
+        else if (this.rng() < 0.5) this.parryAt = sp.signal - 4 - Math.floor(this.rng() * 20);
+      }
+    }
+    const i = noInput();
+    // Le pas joué est le suivant (`t + 1`) : l'appui doit y être neuf.
+    if (this.parryAt >= 0 && c.t + 1 >= this.parryAt) i.garde = true;
+    return i;
+  }
+
+  /** Lancer le coup spécial : maintenir le bouton le temps du cercle. */
+  private buzzPlan(): PlanStep[] {
+    this.committed = true;
+    return [
+      { input: key('grosseGifle'), steps: BUZZ_STEPS + 8, until: (me) => me.mode !== 'buzz' && me.mt > 0 },
+      { input: noInput(), steps: 2 },
+    ];
+  }
+
+  /** Moment sûr pour remplir le cercle : l'adversaire est loin, ou occupé (au sol, sonné, en fin de coup). */
+  private buzzSafe(self: FighterState, foe: FighterState, dist: number) {
+    if (!this.profile.buzzSafe) return true;
+    if (foe.mode === 'down' || foe.mode === 'getup' || foe.mode === 'stun' || foe.mode === 'self' || foe.mode === 'hit' || foe.mode === 'recover') return true;
+    if (foe.mode === 'attack' || foe.mode === 'charge') return dist > this.range(foe, self) + 80;
+    return dist > this.range(foe, self) + 30;
+  }
+
+  /**
    * L'adversaire (tel qu'elle le voit) est-il ouvert, et a-t-elle le temps de le gifler avant qu'il ne se reprenne ?
    * Elle sait qu'elle le voit avec du retard et en tient compte, comme un joueur qui a pris le rythme.
    */
@@ -202,13 +259,15 @@ export class AiSource implements InputSource {
     const reach = this.range(self, foe);
     if (dist > reach + 30) return false;
     if (foe.mode === 'stun' || foe.mode === 'self') return true;
+    // Il remplit son cercle de Buzz : une gifle l'annule.
+    if (foe.mode === 'buzz') return foe.mt + this.profile.reaction < BUZZ_STEPS + 4;
     if (foe.mode !== 'attack' || foe.move === null || foe.move === 'air') return false;
-    const m = moveSteps(foe.move, foe.id);
+    const m = moveSteps(foe.move);
     if (foe.mt < m.startup) return false;
     // Temps qu'il lui reste avant de pouvoir frapper de nouveau, vu d'aujourd'hui.
     const available = m.startup + Math.max(0, m.active) + m.recovery - (foe.mt + this.profile.reaction) + m.startup;
     const walk = Math.max(0, Math.ceil(((dist - reach + 2) * SUB) / physicsOf(self.id).walk));
-    return walk + moveSteps('quick', self.id).startup + 2 <= available;
+    return walk + moveSteps('quick').startup + 2 <= available;
   }
 
   /**
@@ -225,22 +284,25 @@ export class AiSource implements InputSource {
   }
 
   /** Portée utile de `att` sur `def` : la distance jusqu'où sa gifle rapide touche (px), avec une petite marge. */
-  private range(att: FighterState, def: FighterState) {
-    return MOVES.quick.box.x1 * ROSTER[att.id].reach + ROSTER[def.id].body.stand.halfW - 6;
+  private range(_att: FighterState, def: FighterState) {
+    return MOVES.quick.box.x1 + ROSTER[def.id].body.stand.halfW - 6;
   }
 
   /** Grosse gifle visée : maintenir jusqu'à la charge voulue, puis relâcher. */
   private chargeTo(self: FighterState, pct: number): PlanStep[] {
     const target = Math.max(BIG_SLAP.minChargePct + 2, Math.min(100, pct));
     const mt = Math.ceil((target * physicsOf(self.id).chargeSteps) / 100);
+    // Elle regarde la jauge, pas l'horloge : sonnée, la jauge file ou traîne.
     return [
-      { input: key('grosseGifle'), steps: mt + 4, until: (me) => me.mode === 'charge' && me.mt >= mt },
+      { input: key('grosseGifle'), steps: Math.ceil(mt * 1.5) + 4, until: (me) => me.mode === 'charge' && chargePct(me.chg) >= target },
       { input: noInput(), steps: 2 },
     ];
   }
 
+  /** Grosse gifle visée en zone dorée ; barre Buzz pleine, le bouton lance le coup spécial à la place. */
   private aimed(self: FighterState): PlanStep[] {
-    const [a, b] = GABARITS[ROSTER[self.id].gabarit].goldenZone;
+    if (self.buzz >= BUZZ.max) return this.buzzPlan();
+    const [a, b] = STYLE.goldenZone;
     return this.chargeTo(self, (a + b) / 2 + this.gauss() * this.profile.aimError);
   }
 
@@ -259,6 +321,13 @@ export class AiSource implements InputSource {
     const toward = this.toward(self, foe);
     const away = toward === 'droite' ? 'gauche' : 'droite';
     this.wait = this.between(p.think);
+
+    // Barre Buzz pleine : elle lance son coup spécial quand le moment est sûr.
+    if (self.buzz >= BUZZ.max && this.buzzSafe(self, foe, dist) && this.rng() < p.buzzUse) {
+      this.plan = this.buzzPlan();
+      this.wait = 0;
+      return;
+    }
 
     // 2. Ouverture : adversaire sonné, qui vient de se gifler, ou dont le coup est parti (raté ou non, il doit récupérer).
     if (this.opening(self, foe, dist) && this.rng() < p.punish) {
@@ -347,7 +416,7 @@ export class AiSource implements InputSource {
     step.steps -= 1;
     if (step.steps <= 0 || step.until?.(self, foe)) this.plan.shift();
     // Sécurité : elle ne reste jamais à charger jusqu'à la surchauffe.
-    if (step.input.grosseGifle && self.mode === 'charge' && chargePct(self.id, self.mt) >= 99) return noInput();
+    if (step.input.grosseGifle && self.mode === 'charge' && chargePct(self.chg) >= 99) return noInput();
     return step.input;
   }
 }

@@ -1,45 +1,32 @@
 {
-  "fighterScale": 0.7290400972053463,
+  "fighterScale": 0.74,
   "fighters": {
-    "bernard": {
-      "width": 805,
-      "height": 597,
-      "originX": 0.5869565217391305,
-      "originY": 0.9877899877899878,
-      "idle": {
-        "height": 545,
-        "left": -285,
-        "right": 79
-      },
-      "face": {
-        "x": 0,
-        "y": 425
-      },
-      "reach": {
-        "x": 187,
-        "y": 450
-      }
-    },
-    "lola": {
-      "width": 491,
-      "height": 561,
-      "originX": 0.6716196136701337,
-      "originY": 0.987012987012987,
-      "idle": {
-        "height": 550,
-        "left": -212,
-        "right": 82
-      },
-      "face": {
-        "x": 47,
-        "y": 430
-      },
-      "reach": {
-        "x": 96,
-        "y": 434
-      }
-    },
     "aviateur": {
+      "poses": [
+        "idle",
+        "walk1",
+        "walk2",
+        "jump",
+        "crouch",
+        "guard",
+        "guard_low",
+        "quick",
+        "air_slap",
+        "kick",
+        "crouch_kick",
+        "windup",
+        "swing",
+        "slap",
+        "special",
+        "special2",
+        "selfslap",
+        "hit",
+        "hit_heavy",
+        "down",
+        "getup",
+        "dazed",
+        "victory"
+      ],
       "width": 617,
       "height": 551,
       "originX": 0.46882494004796166,
@@ -59,6 +46,31 @@
       }
     },
     "tailleur": {
+      "poses": [
+        "idle",
+        "walk1",
+        "walk2",
+        "jump",
+        "crouch",
+        "guard",
+        "guard_low",
+        "quick",
+        "air_slap",
+        "kick",
+        "crouch_kick",
+        "windup",
+        "swing",
+        "slap",
+        "special",
+        "special2",
+        "selfslap",
+        "hit",
+        "hit_heavy",
+        "down",
+        "getup",
+        "dazed",
+        "victory"
+      ],
       "width": 652,
       "height": 551,
       "originX": 0.47219069239500566,
@@ -78,6 +90,31 @@
       }
     },
     "cadet": {
+      "poses": [
+        "idle",
+        "walk1",
+        "walk2",
+        "jump",
+        "crouch",
+        "guard",
+        "guard_low",
+        "quick",
+        "air_slap",
+        "kick",
+        "crouch_kick",
+        "windup",
+        "swing",
+        "slap",
+        "special",
+        "special2",
+        "selfslap",
+        "hit",
+        "hit_heavy",
+        "down",
+        "getup",
+        "dazed",
+        "victory"
+      ],
       "width": 575,
       "height": 539,
       "originX": 0.47619047619047616,
@@ -97,6 +134,31 @@
       }
     },
     "barbe": {
+      "poses": [
+        "idle",
+        "walk1",
+        "walk2",
+        "jump",
+        "crouch",
+        "guard",
+        "guard_low",
+        "quick",
+        "air_slap",
+        "kick",
+        "crouch_kick",
+        "windup",
+        "swing",
+        "slap",
+        "special",
+        "special2",
+        "selfslap",
+        "hit",
+        "hit_heavy",
+        "down",
+        "getup",
+        "dazed",
+        "victory"
+      ],
       "width": 609,
       "height": 527,
       "originX": 0.46780072904009723,
@@ -116,6 +178,31 @@
       }
     },
     "doyen": {
+      "poses": [
+        "idle",
+        "walk1",
+        "walk2",
+        "jump",
+        "crouch",
+        "guard",
+        "guard_low",
+        "quick",
+        "air_slap",
+        "kick",
+        "crouch_kick",
+        "windup",
+        "swing",
+        "slap",
+        "special",
+        "special2",
+        "selfslap",
+        "hit",
+        "hit_heavy",
+        "down",
+        "getup",
+        "dazed",
+        "victory"
+      ],
       "width": 628,
       "height": 555,
       "originX": 0.4664310954063604,
@@ -135,6 +222,31 @@
       }
     },
     "binocle": {
+      "poses": [
+        "idle",
+        "walk1",
+        "walk2",
+        "jump",
+        "crouch",
+        "guard",
+        "guard_low",
+        "quick",
+        "air_slap",
+        "kick",
+        "crouch_kick",
+        "windup",
+        "swing",
+        "slap",
+        "special",
+        "special2",
+        "selfslap",
+        "hit",
+        "hit_heavy",
+        "down",
+        "getup",
+        "dazed",
+        "victory"
+      ],
       "width": 646,
       "height": 553,
       "originX": 0.46735395189003437,
@@ -196,5 +308,6 @@
       "height": 768,
       "placeholder": false
     }
-  }
+  },
+  "specialProps": {}
 }

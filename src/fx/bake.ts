@@ -2,7 +2,8 @@
 // éclairs, lignes de focus, trace de main, gouttes, dents, bulles, icônes.
 // Tracer un texte avec un gros contour coûte cher : on ne le fait jamais pendant le combat.
 import Phaser from 'phaser';
-import { COMMENTS, FIGHTER_TEXTS } from '../config/texts';
+import { BUZZ_TEXTS, COMMENTS, FIGHTER_TEXTS } from '../config/texts';
+import { PROP_FILES } from '../config/specials';
 import { FIGHTER_IDS } from '../config/roster';
 import { COLORS, CSS, FONT_TITLE, FONT_UI } from '../ui/theme';
 
@@ -94,7 +95,7 @@ export function bakeAll(scene: Phaser.Scene) {
     const name = FIGHTER_TEXTS[id].short.toUpperCase();
     const special = FIGHTER_TEXTS[id].special.toUpperCase();
     bakeText(scene, `ann_roundfor_${id}`, `ROUND POUR ${name} !`, title(40, CSS.cream, 8));
-    bakeText(scene, `ann_special_${id}`, `${special} !`, title(96, CSS.pink, 15));
+    bakeText(scene, `ann_special_${id}`, `${special} !`, title(66, CSS.pink, 12));
     bakeText(scene, `lbl_ready_${id}`, `${special} PRÊT !`, {
       fontFamily: FONT_TITLE,
       fontSize: '22px',
@@ -126,19 +127,21 @@ export function bakeAll(scene: Phaser.Scene) {
   bakeText(scene, 'lbl_special', 'SPÉCIALE !', tag(CSS.pink));
   bakeText(scene, 'lbl_dodge', 'ESQUIVE !', { ...tag(CSS.cyan), color: CSS.ink });
   bakeText(scene, 'lbl_perfect', 'ESQUIVE PARFAITE !', { ...tag(CSS.yellow), color: CSS.ink });
-  bakeText(scene, 'lbl_guard', 'GARDE DE RAGE !', tag(CSS.pink));
+  bakeText(scene, 'lbl_parried', BUZZ_TEXTS.parried, { ...tag(CSS.yellow), color: CSS.ink });
+  bakeText(scene, 'lbl_early', BUZZ_TEXTS.tooEarly, tag(CSS.red));
   bakeText(scene, 'lbl_block', 'BLOQUÉ !', { ...tag(CSS.cyan), color: CSS.ink });
   bakeText(scene, 'lbl_break', 'GARDE BRISÉE !', tag(CSS.red));
   bakeText(scene, 'lbl_wrong', 'MAUVAISE GARDE !', tag(CSS.red));
   bakeText(scene, 'lbl_down', 'AU TAPIS !', tag(CSS.pink));
   for (const n of [2, 3]) bakeText(scene, `lbl_x${n}`, `×${n}`, title(64, CSS.pink, 11));
-  bakeText(scene, 'lbl_ragemax', 'RAGE MAX !', {
+  bakeText(scene, 'lbl_buzzfull', BUZZ_TEXTS.full, {
     fontFamily: FONT_TITLE,
     fontSize: '15px',
     color: CSS.cream,
     backgroundColor: CSS.pink,
     padding: { x: 6, y: 1 },
   });
+  bakeSpecialFx(scene);
   // Étoile du perso sonné
   bakeGraphics(scene, 'fx_dizzy', 30, 30, (g) => {
     const pts: Phaser.Math.Vector2[] = [];
@@ -172,6 +175,7 @@ export function bakeAll(scene: Phaser.Scene) {
   for (const [kind, list] of Object.entries(COMMENTS)) {
     list.forEach((text, i) => bakeText(scene, commentKey(kind as keyof typeof COMMENTS, i), text, com));
   }
+  for (const id of FIGHTER_IDS) FIGHTER_TEXTS[id].specialLines.forEach((text, i) => bakeText(scene, `com_sp_${id}_${i}`, text, com));
   bakeText(scene, 'com_tag', 'COMMENTATEUR', {
     fontFamily: FONT_TITLE,
     fontSize: '16px',
@@ -322,4 +326,127 @@ export function digitsImage(scene: Phaser.Scene, n: number, variant: DigitVarian
     x += inks[i].right - inks[i].left - overlap;
   });
   return c;
+}
+
+/** Textures des coups spéciaux : paillettes, mousse, éclats de verre, onde, nuage, note, et projectiles provisoires. */
+function bakeSpecialFx(scene: Phaser.Scene) {
+  const starPts = (cx: number, cy: number, r0: number, r1: number, n: number) => {
+    const pts: Phaser.Math.Vector2[] = [];
+    for (let i = 0; i < n * 2; i++) {
+      const a = (i / (n * 2)) * Math.PI * 2 - Math.PI / 2;
+      const r = i % 2 ? r1 : r0;
+      pts.push(new Phaser.Math.Vector2(cx + Math.cos(a) * r, cy + Math.sin(a) * r));
+    }
+    return pts;
+  };
+  // Paillette dorée (étoile à 4 branches).
+  bakeGraphics(scene, 'fx_glitter', 22, 22, (g) => {
+    g.fillStyle(0xffffff, 1);
+    g.fillPoints(starPts(11, 11, 11, 3, 4), true);
+  });
+  // Grande étoile (danse).
+  bakeGraphics(scene, 'fx_bigstar', 64, 64, (g) => {
+    g.fillStyle(COLORS.ink, 1);
+    g.fillPoints(starPts(32, 32, 31, 14, 5), true);
+    g.fillStyle(COLORS.yellow, 1);
+    g.fillPoints(starPts(32, 32, 25, 11, 5), true);
+    g.fillStyle(0xffffff, 0.7);
+    g.fillCircle(26, 24, 5);
+  });
+  // Note de musique (danse).
+  bakeGraphics(scene, 'fx_note', 34, 44, (g) => {
+    g.fillStyle(COLORS.ink, 1);
+    g.fillEllipse(11, 35, 20, 15);
+    g.fillRect(17, 4, 6, 32);
+    g.fillTriangle(17, 4, 33, 12, 23, 20);
+    g.fillStyle(COLORS.pink, 1);
+    g.fillEllipse(11, 35, 14, 10);
+  });
+  // Mousse de bière.
+  bakeGraphics(scene, 'fx_foam', 28, 28, (g) => {
+    g.fillStyle(0xfffbea, 1);
+    g.fillCircle(14, 14, 13);
+    g.fillStyle(0xffffff, 1);
+    g.fillCircle(10, 10, 5);
+  });
+  // Éclat de verre.
+  bakeGraphics(scene, 'fx_shard', 20, 26, (g) => {
+    g.fillStyle(0xcff3ff, 0.95);
+    g.fillTriangle(2, 24, 10, 0, 19, 18);
+    g.fillStyle(0xffffff, 1);
+    g.fillTriangle(8, 16, 10, 4, 12, 14);
+    g.lineStyle(2, 0x5aa7c8, 1);
+    g.strokeTriangle(2, 24, 10, 0, 19, 18);
+  });
+  // Onde de choc (anneau).
+  bakeGraphics(scene, 'fx_ring', 200, 200, (g) => {
+    g.lineStyle(14, 0xffffff, 0.9);
+    g.strokeCircle(100, 100, 88);
+    g.lineStyle(5, COLORS.cyan, 1);
+    g.strokeCircle(100, 100, 80);
+  });
+  // Petit nuage.
+  bakeGraphics(scene, 'fx_cloud', 90, 60, (g) => {
+    g.fillStyle(COLORS.ink, 1);
+    for (const [x, y, r] of [[24, 36, 20], [46, 26, 24], [66, 38, 19], [44, 42, 20]]) g.fillCircle(x, y, r + 3);
+    g.fillStyle(0xd9e7b0, 1);
+    for (const [x, y, r] of [[24, 36, 20], [46, 26, 24], [66, 38, 19], [44, 42, 20]]) g.fillCircle(x, y, r);
+  });
+  // Point d'exclamation du signal.
+  bakeGraphics(scene, 'fx_alert', 60, 110, (g) => {
+    g.fillStyle(COLORS.ink, 1);
+    g.fillRoundedRect(14, 2, 32, 74, 14);
+    g.fillCircle(30, 94, 16);
+    g.fillStyle(COLORS.yellow, 1);
+    g.fillRoundedRect(19, 7, 22, 64, 10);
+    g.fillCircle(30, 94, 11);
+  });
+  // Projectiles provisoires, en attendant les dessins du propriétaire (raw/props/).
+  const placeholders: Record<(typeof PROP_FILES)[number], (g: Phaser.GameObjects.Graphics) => void> = {
+    // Tourbillon brun de dessin animé, avec deux yeux.
+    caca: (g) => {
+      g.fillStyle(COLORS.ink, 1);
+      g.fillEllipse(60, 92, 104, 40);
+      g.fillEllipse(60, 66, 80, 34);
+      g.fillEllipse(60, 42, 54, 28);
+      g.fillTriangle(48, 30, 72, 30, 64, 4);
+      g.fillStyle(0x8a5a2b, 1);
+      g.fillEllipse(60, 92, 96, 32);
+      g.fillEllipse(60, 66, 72, 27);
+      g.fillEllipse(60, 42, 46, 21);
+      g.fillTriangle(52, 30, 68, 30, 63, 9);
+      g.fillStyle(0xffffff, 0.35);
+      g.fillEllipse(44, 86, 30, 9);
+      g.fillStyle(0xffffff, 1);
+      g.fillCircle(48, 64, 8);
+      g.fillCircle(72, 64, 8);
+      g.fillStyle(COLORS.ink, 1);
+      g.fillCircle(50, 66, 4);
+      g.fillCircle(70, 66, 4);
+    },
+    // Faucille et marteau croisés, en métal.
+    'faucille-marteau': (g) => {
+      g.lineStyle(16, COLORS.ink, 1);
+      g.lineBetween(26, 98, 92, 30);
+      g.lineStyle(10, 0x8b5a2b, 1);
+      g.lineBetween(26, 98, 92, 30);
+      g.fillStyle(COLORS.ink, 1);
+      g.fillRoundedRect(68, 8, 46, 30, 6);
+      g.fillStyle(0xc9ced6, 1);
+      g.fillRoundedRect(72, 12, 38, 22, 4);
+      g.lineStyle(16, COLORS.ink, 1);
+      g.beginPath();
+      g.arc(58, 58, 40, Math.PI * 1.05, Math.PI * 0.2, false);
+      g.strokePath();
+      g.lineStyle(9, 0xdfe4ea, 1);
+      g.beginPath();
+      g.arc(58, 58, 40, Math.PI * 1.05, Math.PI * 0.2, false);
+      g.strokePath();
+      g.lineStyle(14, COLORS.ink, 1);
+      g.lineBetween(92, 96, 70, 76);
+      g.lineStyle(8, 0x8b5a2b, 1);
+      g.lineBetween(92, 96, 70, 76);
+    },
+  };
+  for (const name of PROP_FILES) bakeGraphics(scene, `propfx_${name}`, 120, 120, placeholders[name]);
 }

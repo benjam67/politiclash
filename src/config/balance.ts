@@ -46,36 +46,22 @@ export const MATCH = {
 };
 
 /**
- * Gabarits de combattants : des profils de jeu neutres, sans nom ni visage.
- * Chaque combattant de `roster.ts` choisit un gabarit ; son habillage est dans `texts.ts`.
+ * Le style de combat, commun à tous les combattants (décision du 13 octobre : les anciens
+ * gabarits « lourd » et « rapide » sont fusionnés). Seul le coup spécial distingue les combattants
+ * (voir `specials.ts`) ; leurs boîtes de corps peuvent varier pour coller aux dessins (`roster.ts`).
  */
-export interface Gabarit {
+export const STYLE = {
   /** Vitesse de marche (px/s). */
-  walkSpeed: number;
+  walkSpeed: 200,
   /** Durée totale d'un saut (ms). */
-  jumpMs: number;
+  jumpMs: 600,
   /** Base B de la formule de dégâts de la grosse gifle. */
-  base: number;
+  base: 13,
   /** Temps (ms) pour que la jauge monte de 0 à 100 %. */
-  chargeTimeMs: number;
+  chargeTimeMs: 1200,
   /** Zone dorée [min, max] en % de charge. */
-  goldenZone: [number, number];
-  /** Résistance R_d appliquée aux dégâts reçus. */
-  resistance: number;
-  /** Vivacité : multiplie la durée de ses coups (préparation et récupération). Moins de 1 = plus vif. */
-  tempo: number;
-  /** Mécanique de la gifle spéciale : nombre de gifles et multiplicateur de chacune. */
-  special: { hits: number; multiplier: number };
-}
-
-export const GABARITS = {
-  /** Lent, frappe fort, encaisse, avec une grande allonge (voir `roster.ts`). Spéciale : une seule gifle énorme. */
-  lourd: { walkSpeed: 170, jumpMs: 650, base: 14, chargeTimeMs: 1400, goldenZone: [79, 91], resistance: 0.85, tempo: 1, special: { hits: 1, multiplier: 1.8 } },
-  /** Rapide, mobile, fragile. Spéciale : trois gifles enchaînées. */
-  rapide: { walkSpeed: 230, jumpMs: 550, base: 12, chargeTimeMs: 1000, goldenZone: [76, 92], resistance: 1.05, tempo: 1, special: { hits: 3, multiplier: 0.7 } },
-} satisfies Record<string, Gabarit>;
-
-export type GabaritId = keyof typeof GABARITS;
+  goldenZone: [78, 90] as [number, number],
+};
 
 /** Rectangle de frappe, relatif à l'ancrage du combattant : x vers l'avant, y au-dessus des pieds (px logiques). */
 export interface HitBox {
@@ -140,8 +126,9 @@ export const BIG_SLAP = {
 };
 
 export const GUARD = {
-  /** Part des dégâts qui passe à travers la garde. */
+  /** Part des dégâts qui passe à travers la garde (arrondie au PV, au moins `chipMin`). */
   chipRatio: 0.1,
+  chipMin: 1,
   /** Jauge de garde : chaque coup bloqué la vide de `drainBase + dégâts × drainPerDamage`. */
   max: 100,
   drainBase: 12,
@@ -162,13 +149,48 @@ export const ROUND = {
   endMs: 2800,
 };
 
-export const ADVANCED = {
-  rageMax: 100,
-  ragePerDamage: 1,
-  /** Un coup d'au moins ces dégâts sonne la victime. */
-  stunThreshold: 25,
-  stunMs: 3000,
-  stunSpeedVariance: 0.3,
+/**
+ * Sonné : après une garde brisée, ou un coup d'au moins `threshold` dégâts (le coup spécial),
+ * la jauge de grosse gifle monte de façon irrégulière pendant `ms`.
+ */
+export const DIZZY = {
+  threshold: 25,
+  ms: 3000,
+  /** La vitesse de charge varie de ± cette part. */
+  variance: 0.3,
+  /** Elle change de vitesse tous les … pas de simulation. */
+  changeEverySteps: 8,
+};
+
+/** Barre Buzz : elle se remplit en attaquant et en esquivant bien (pas en encaissant). */
+export const BUZZ = {
+  max: 100,
+  /** Gifle rapide, gifle aérienne, coup de pied ou balayette qui touche. */
+  lightHit: 9,
+  /** Grosse gifle qui touche, hors zone dorée. */
+  bigHit: 14,
+  /** Grosse gifle en zone dorée qui touche. */
+  critHit: 25,
+  /** Esquive réussie : accroupi sous une gifle, ou en l'air au-dessus d'un coup de pied, pendant que le coup est actif et à portée. */
+  dodge: 20,
+  /** Durée du cercle à maintenir pour lancer le coup spécial (ms). */
+  holdMs: 500,
+};
+
+/** Le coup spécial (cinématique) : commun à tous ; le déroulé de chacun est dans `specials.ts`. */
+export const SPECIAL = {
+  damage: 35,
+  /** Dégâts si la victime met la garde juste après le signal. */
+  parriedDamage: 18,
+  /** Fenêtre de la garde au bon moment, après le signal (ms). */
+  parryWindowMs: 100,
+  /** Rapprochement des coups spéciaux de près : écart restant entre les deux corps (px), durée (ms). */
+  dashGap: 30,
+  dashMs: 130,
+  /** Recul de la victime à l'impact (px par pas, il s'amortit). */
+  push: 16,
+  /** Arrêt sur image à l'impact (ms). */
+  hitstopMs: 160,
 };
 
 /** Mise en scène (proportions relatives à la hauteur de l'écran). */

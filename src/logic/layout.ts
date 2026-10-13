@@ -42,13 +42,13 @@ export interface StageLayout {
   crowdScale: number;
 }
 
-type FighterAsset = (typeof assets.fighters)['bernard'];
+type FighterAsset = (typeof assets.fighters)['aviateur'];
 
 export function computeLayout(
   width: number,
   height: number,
-  leftId: FighterId = 'bernard',
-  rightId: FighterId = 'lola',
+  leftId: FighterId = 'aviateur',
+  rightId: FighterId = 'tailleur',
   stageId: StageId = 'bar',
   /** Recul maximal de la caméra (1 = aucun) : le décor est agrandi pour ne jamais laisser de vide. */
   zoomMin = 1,

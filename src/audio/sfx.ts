@@ -1,6 +1,7 @@
 // Sons générés en code (Web Audio), en attendant des fichiers définitifs.
 // Aucun fichier à télécharger : tout est synthétisé à la volée.
 import { ROSTER, type FighterId } from '../config/roster';
+import type { SpecialEffect } from '../config/specials';
 import { MusicPlayer } from './music';
 
 const STORAGE_KEY = 'politiclash.muted';
@@ -213,7 +214,7 @@ export class Sfx {
     this.noiseBurst(t, 0.8, { type: 'lowpass', freq: 600, gain: 0.08, attack: 0.15 });
   }
 
-  /** Rage pleine : montée qui grince, façon transformation d'anime. */
+  /** Barre Buzz pleine : montée qui grince, façon transformation d'anime. */
   powerUp() {
     this.log('powerup');
     if (!this.ctx) return;
@@ -232,6 +233,91 @@ export class Sfx {
       const f = 2400 + Math.random() * 900;
       this.tone(t + i * 0.11, 0.08, { type: 'sine', freq: f, freqEnd: f * 1.25, gain: 0.07, attack: 0.005 });
     }
+  }
+
+  /** Le cercle du Buzz se remplit : bourdonnement qui monte (0,5 s). */
+  buzzHold() {
+    this.log('buzz-hold');
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    this.tone(t, 0.5, { type: 'sawtooth', freq: 110, freqEnd: 440, gain: 0.08, attack: 0.04, vibrato: [18, 12] });
+  }
+
+  /** Le signal du coup spécial : un son sec et clair (« garde, maintenant ! »). */
+  signal() {
+    this.log('signal');
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    this.tone(t, 0.16, { type: 'square', freq: 2093, gain: 0.12, attack: 0.002 });
+    this.tone(t, 0.22, { type: 'sine', freq: 3136, gain: 0.1, attack: 0.002 });
+    this.noiseBurst(t, 0.05, { type: 'highpass', freq: 5000, gain: 0.35 });
+  }
+
+  /** Garde au bon moment : choc métallique. */
+  parry() {
+    this.log('parry');
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    for (const f of [880, 1320, 1975]) this.tone(t, 0.45, { type: 'triangle', freq: f, gain: 0.09, attack: 0.002 });
+    this.noiseBurst(t, 0.08, { type: 'bandpass', freq: 4000, q: 2, gain: 0.4 });
+  }
+
+  /** Son propre à chaque coup spécial, joué au début de la cinématique (durée ~1,7 s). */
+  special(effect: SpecialEffect) {
+    this.log(`special-${effect}`);
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    switch (effect) {
+      case 'glitter':
+        // Arpège scintillant puis souffle.
+        [1568, 1976, 2349, 3136, 2637, 3951].forEach((f, i) => this.tone(t + 0.12 + i * 0.07, 0.25, { type: 'sine', freq: f, gain: 0.07, attack: 0.005 }));
+        this.noiseBurst(t + 0.45, 0.5, { type: 'bandpass', freq: 3000, freqEnd: 900, q: 1, gain: 0.18, attack: 0.08 });
+        break;
+      case 'dance':
+        // Petit groove : grosse caisse, claquements de mains, basse qui swingue.
+        for (let i = 0; i < 6; i++) {
+          this.tone(t + i * 0.14, 0.12, { type: 'sine', freq: 120, freqEnd: 50, gain: 0.3 });
+          if (i % 2) this.noiseBurst(t + i * 0.14, 0.06, { type: 'bandpass', freq: 1800, q: 1.4, gain: 0.35 });
+          this.tone(t + i * 0.14, 0.12, { type: 'square', freq: [110, 165, 147, 196, 165, 220][i], gain: 0.05 });
+        }
+        break;
+      case 'beer':
+        // Glouglou : bulles graves qui montent.
+        for (let i = 0; i < 7; i++) this.tone(t + 0.5 + i * 0.09, 0.08, { type: 'sine', freq: 180 + i * 25, freqEnd: 420 + i * 30, gain: 0.16, attack: 0.005 });
+        this.noiseBurst(t + 0.1, 0.25, { type: 'highpass', freq: 3500, gain: 0.08, attack: 0.05 });
+        break;
+      case 'shout':
+        // Inspiration, puis cri saturé.
+        this.noiseBurst(t, 0.45, { type: 'bandpass', freq: 600, freqEnd: 1800, q: 1, gain: 0.12, attack: 0.25 });
+        this.tone(t + 0.5, 0.9, { type: 'sawtooth', freq: 220, freqEnd: 160, gain: 0.22, attack: 0.03, vibrato: [9, 18] });
+        this.tone(t + 0.5, 0.9, { type: 'square', freq: 330, freqEnd: 240, gain: 0.08, attack: 0.03, vibrato: [9, 25] });
+        this.noiseBurst(t + 0.5, 0.9, { type: 'lowpass', freq: 1800, gain: 0.18, attack: 0.03 });
+        break;
+      case 'throw':
+        // Élan, puis l'outil qui tournoie.
+        this.noiseBurst(t + 0.45, 0.2, { type: 'bandpass', freq: 400, freqEnd: 2400, q: 2, gain: 0.25, attack: 0.05 });
+        for (let i = 0; i < 4; i++) this.noiseBurst(t + 0.6 + i * 0.1, 0.08, { type: 'bandpass', freq: 1400, q: 3, gain: 0.2, attack: 0.02 });
+        break;
+      case 'wind':
+        // Pet de dessin animé : basse qui vibre et descend.
+        this.tone(t + 0.55, 0.55, { type: 'sawtooth', freq: 95, freqEnd: 55, gain: 0.3, attack: 0.02, vibrato: [26, 20] });
+        this.noiseBurst(t + 0.55, 0.5, { type: 'lowpass', freq: 400, gain: 0.25, attack: 0.02 });
+        break;
+    }
+  }
+
+  /** Impact du coup spécial : explosion grave, selon l'effet. */
+  specialImpact(effect: SpecialEffect, parried: boolean) {
+    this.log(`special-hit-${effect}`);
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    const g = parried ? 0.5 : 1;
+    this.tone(t, 0.6, { type: 'sine', freq: 140, freqEnd: 35, gain: 0.7 * g });
+    this.noiseBurst(t, 0.5, { type: 'lowpass', freq: 2200, freqEnd: 200, gain: 0.6 * g });
+    if (effect === 'beer') for (let i = 0; i < 6; i++) this.tone(t + i * 0.03, 0.2, { type: 'triangle', freq: 2500 + Math.random() * 2500, gain: 0.08 });
+    if (effect === 'throw') this.tone(t, 0.4, { type: 'triangle', freq: 1240, gain: 0.15 });
+    if (effect === 'wind') this.noiseBurst(t, 0.25, { type: 'bandpass', freq: 300, q: 2, gain: 0.4 });
+    if (effect === 'glitter') [2093, 2637, 3136].forEach((f, i) => this.tone(t + 0.05 + i * 0.05, 0.6, { type: 'sine', freq: f, gain: 0.06 }));
   }
 
   /** Cloche de K.O. */

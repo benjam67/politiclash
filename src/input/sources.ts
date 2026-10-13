@@ -1,6 +1,5 @@
 // Sources d'entrées : chacune produit un InputFrame par pas de simulation.
-import { GABARITS } from '../config/balance';
-import { ROSTER } from '../config/roster';
+import { STYLE } from '../config/balance';
 import { SUB, type FightState } from '../logic/fight';
 import { noInput, type InputFrame } from '../logic/input';
 import { createRng } from '../logic/rng';
@@ -141,7 +140,7 @@ export class DummySource implements InputSource {
       hold = 25 + Math.floor(this.rng() * 40);
     } else if (r < 0.78) {
       // Grosse gifle : il vise autour de la zone dorée, sans la trouver à tous les coups.
-      const g = GABARITS[ROSTER[self.id].gabarit];
+      const g = STYLE;
       const target = (g.goldenZone[0] + g.goldenZone[1]) / 200 + (this.rng() - 0.5) * 0.5;
       i.grosseGifle = true;
       hold = Math.max(8, Math.round((g.chargeTimeMs / 1000) * 60 * Math.min(1.15, Math.max(0.3, target))));

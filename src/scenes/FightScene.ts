@@ -1,20 +1,22 @@
 import Phaser from 'phaser';
-import { GABARITS, GUARD, MATCH, SIM, STAGE } from '../config/balance';
+import { BUZZ, GUARD, MATCH, SIM, STAGE, STYLE } from '../config/balance';
 import { PLAYABLE_IDS, ROSTER, spriteOf, type FighterId } from '../config/roster';
+import { CHEEK } from '../config/sprites';
 import { STAGES, type StageId } from '../config/stages';
 import { FIGHTER_TEXTS } from '../config/texts';
-import { ALT_STEPS, fighterKey, poseFor } from '../config/poses';
+import { fighterKey, frameOf, poseFor } from '../config/poses';
 import { computeLayout, HABITUES, type StageLayout } from '../logic/layout';
 import {
-  actionOf,
+  actionIn,
+  BUZZ_STEPS,
   chargePct,
   createFight,
   createFightStarted,
   GUARD_MAX,
   hashState,
   HP,
-  physicsOf,
   ROUND_STEPS,
+  specialOf,
   step,
   STEP_MS,
   SUB,
@@ -28,6 +30,7 @@ import { DummySource, IdleSource, KeyboardSource, WanderSource, type InputSource
 import { AiSource, levelLabel, type AiLevel } from '../ai/ai';
 import { sfx } from '../audio/sfx';
 import { announceImage, Fx } from '../fx/Fx';
+import { SpecialFx } from '../fx/SpecialFx';
 import { Commentator, Crowd } from '../fx/Crowd';
 import { ChargeGauge } from '../ui/ChargeGauge';
 import { HealthBar } from '../ui/HealthBar';
@@ -55,6 +58,8 @@ export interface FightData {
   /** Faux : pas d'annonce du round, le combat démarre tout de suite (tests). */
   intro?: boolean;
   seed?: number;
+  /** Barres Buzz au départ (essais du coup spécial). */
+  buzz?: number;
 }
 
 interface FighterView {
@@ -67,6 +72,11 @@ interface FighterView {
   guardShown: number;
   /** Éclat blanc sur le sprite juste après un coup reçu (heure de fin). */
   flashUntil: number;
+  /** Cercle du Buzz, autour du combattant (visible des deux joueurs). */
+  ring: Phaser.GameObjects.Graphics;
+  ringShown: number;
+  /** Étoiles qui tournent au-dessus de la tête d'un combattant sonné. */
+  stars: Phaser.GameObjects.Image[];
 }
 
 /**
@@ -94,7 +104,13 @@ export class FightScene extends Phaser.Scene {
   private homeBtn!: Phaser.GameObjects.Image;
   private levelTag!: Phaser.GameObjects.Text;
   private fx!: Fx;
+  private sfxSpecial!: SpecialFx;
   private touch!: TouchControls;
+  /** Ralenti : jusqu'à cette heure (performance.now), le combat avance moins vite. Affichage seulement. */
+  private slowUntil = 0;
+  private specials = 0;
+  private dodges = 0;
+  private darkened = false;
   layout!: StageLayout;
 
   private ids: [FighterId, FighterId] = [PLAYABLE_IDS[0], PLAYABLE_IDS[1] ?? PLAYABLE_IDS[0]];
@@ -105,6 +121,7 @@ export class FightScene extends Phaser.Scene {
   private p1Ai: InputSource | null = null;
   private intro = true;
   private seed = 1;
+  private startBuzz = 0;
 
   private state!: FightState;
   private acc = 0;
@@ -135,6 +152,7 @@ export class FightScene extends Phaser.Scene {
     this.p1Ai = null;
     this.intro = data.intro ?? true;
     this.seed = data.seed ?? Math.floor(Math.random() * 1e9);
+    this.startBuzz = data.buzz ?? 0;
     this.crowd = null;
     this.patron = null;
     this.crowdImgs = [];
@@ -146,6 +164,10 @@ export class FightScene extends Phaser.Scene {
     this.hits = 0;
     this.lastHit = null;
     this.lastTick = -1;
+    this.slowUntil = 0;
+    this.specials = 0;
+    this.dodges = 0;
+    this.darkened = false;
   }
 
   create() {
@@ -153,6 +175,7 @@ export class FightScene extends Phaser.Scene {
     this.tweens.timeScale = 1;
     const stage = STAGES[this.stageId];
     this.state = (this.intro ? createFight : createFightStarted)(this.ids[0], this.ids[1], this.stageId, this.seed);
+    for (const f of this.state.f) f.buzz = this.startBuzz;
 
     this.world = this.add.container(0, 0);
     // Le décor est répété en miroir sur les côtés tant que sa version large n'est pas fournie.
@@ -168,6 +191,7 @@ export class FightScene extends Phaser.Scene {
     this.v = [this.makeFighter(0), this.makeFighter(1)];
 
     this.fx = new Fx(this);
+    this.sfxSpecial = new SpecialFx(this, (name) => (this.textures.exists(`prop_${name}`) ? `prop_${name}` : `propfx_${name}`));
     this.commentator = new Commentator(this);
     this.gauge = new ChargeGauge(this).setDepth(100);
     this.timer = new TimerDiamond(this).setDepth(100);
@@ -235,7 +259,7 @@ export class FightScene extends Phaser.Scene {
     // Simulation à pas fixe, indépendante de la fréquence d'affichage. On mesure le temps réel nous-mêmes :
     // celui que donne Phaser est lissé et plafonné, ce qui ralentirait le combat sur un appareil lent.
     const now = performance.now();
-    const delta = this.lastNow < 0 ? STEP_MS : now - this.lastNow;
+    const delta = (this.lastNow < 0 ? STEP_MS : now - this.lastNow) * (now < this.slowUntil ? 0.35 : 1);
     this.lastNow = now;
     this.acc = Math.min(this.acc + delta, STEP_MS * MAX_STEPS_PER_FRAME);
     while (this.acc >= STEP_MS) {
@@ -265,7 +289,9 @@ export class FightScene extends Phaser.Scene {
     const bar = new HealthBar(this, side, t.name, t.katakana).setDepth(100);
     const pips = new RoundPips(this, side, MATCH.roundsToWin).setDepth(100);
     const guard = this.add.graphics().setDepth(60).setVisible(false);
-    return { id, sprite, bar, pips, guard, guardShown: -1, flashUntil: 0 };
+    const ring = this.add.graphics().setDepth(61);
+    const stars = [0, 1, 2].map(() => this.add.image(0, 0, 'fx_dizzy').setDepth(62).setVisible(false));
+    return { id, sprite, bar, pips, guard, guardShown: -1, flashUntil: 0, ring, ringShown: -1, stars };
   }
 
   private applyLayout() {
@@ -342,17 +368,33 @@ export class FightScene extends Phaser.Scene {
     // Le recul se fait autour de la ligne des pieds, qui ne bouge pas à l'écran.
     this.world.setScale(z).setPosition(width / 2 - this.localX(this.cam.x) * z, this.feetY * (1 - z));
 
-    this.renderFighter(this.v[0], a);
-    this.renderFighter(this.v[1], b);
-    // Devant : celui qui est en l'air, sinon celui qui frappe.
-    const front = a.y !== b.y ? (a.y > b.y ? 0 : 1) : a.mode === 'attack' ? 0 : b.mode === 'attack' ? 1 : -1;
+    this.renderFighter(this.v[0], a, 0);
+    this.renderFighter(this.v[1], b, 1);
+    // Devant : le lanceur d'un coup spécial, celui qui est en l'air, sinon celui qui frappe.
+    const front = s.cine ? s.cine.who : a.y !== b.y ? (a.y > b.y ? 0 : 1) : a.mode === 'attack' ? 0 : b.mode === 'attack' ? 1 : -1;
     if (front === 0 || front === 1) this.world.bringToTop(this.v[front].sprite);
+
+    // Cinématique : le décor s'assombrit, les effets suivent le déroulé de la simulation.
+    const dark = !!s.cine;
+    if (dark !== this.darkened) {
+      this.darkened = dark;
+      for (const d of this.decors) {
+        if (dark) d.setTint(0x6a5878);
+        else d.clearTint();
+      }
+      for (const c of [...this.crowdImgs, ...(this.patron ? [this.patron] : [])]) c.setTint(dark ? 0x5a4a66 : c === this.patron ? STAGE.patronTint : STAGE.crowdTint);
+    }
+    this.sfxSpecial.setScale(this.k * this.world.scaleX);
+    if (s.cine) this.sfxSpecial.update(s, (x, y) => this.toScreen(x, y));
 
     // Interface.
     this.v.forEach((view, i) => {
       view.bar.setValue(s.f[i].hp / (MATCH.hp * HP));
+      view.bar.setBuzz(s.f[i].buzz / BUZZ.max);
       view.pips.setWon(s.wins[i]);
     });
+    this.touch.setBuzz(a.buzz >= BUZZ.max && !s.cine);
+    this.touch.setRing(a.mode === 'buzz' ? a.mt / BUZZ_STEPS : 0);
     this.timer.set(Math.ceil(s.timeLeft / SIM.stepsPerSecond), s.timeLeft / ROUND_STEPS);
     const sec = Math.ceil(s.timeLeft / SIM.stepsPerSecond);
     if (s.phase === 'fight' && sec <= 10 && sec !== this.lastTick && sec > 0) {
@@ -364,14 +406,14 @@ export class FightScene extends Phaser.Scene {
     const charging = a.mode === 'charge';
     if (charging !== this.charging) {
       this.charging = charging;
-      if (charging) this.gauge.setZone(GABARITS[ROSTER[a.id].gabarit].goldenZone);
+      if (charging) this.gauge.setZone(STYLE.goldenZone);
       this.gauge.show(charging);
     }
-    if (charging) this.gauge.setValue(chargePct(a.id, a.mt), a.mt > physicsOf(a.id).chargeSteps);
+    if (charging) this.gauge.setValue(chargePct(a.chg), a.hot > 0);
   }
 
-  private renderFighter(view: FighterView, f: FighterState) {
-    const def = poseFor(f.id, actionOf(f));
+  private renderFighter(view: FighterView, f: FighterState, i: 0 | 1) {
+    const def = poseFor(f.id, actionIn(this.state, i));
     const a = spriteOf(f.id);
     const flip = f.facing === -1;
     const s = this.layout.fighterScale;
@@ -380,11 +422,11 @@ export class FightScene extends Phaser.Scene {
     // pour un perso en miroir, l'ancrage (entre les pieds) passe à 1 - originX.
     const bob = fx.bob ? Math.abs(Math.sin(f.t * 0.3)) * fx.bob * this.k : 0;
     // Tremblement pendant la charge, de plus en plus fort.
-    const shake = f.mode === 'charge' ? Math.sin(f.mt * 1.9) * (1 + chargePct(f.id, f.mt) / 40) : 0;
+    const shake = f.mode === 'charge' ? Math.sin(f.mt * 1.9) * (1 + chargePct(f.chg) / 40) : f.mode === 'buzz' ? Math.sin(f.mt * 2.3) * (1 + f.mt / 12) : 0;
     const x = this.localX(f.x / SUB);
     const y = this.feetY - (f.y / SUB) * this.k;
     view.sprite
-      .setTexture(fighterKey(f.id, def.alt && Math.floor(f.t / ALT_STEPS) % 2 === 1 ? def.alt : def.pose))
+      .setTexture(fighterKey(f.id, frameOf(def, f.t)))
       .setFlipX(flip)
       .setOrigin(flip ? 1 - a.originX : a.originX, a.originY)
       .setPosition(x + shake, y - bob)
@@ -394,8 +436,33 @@ export class FightScene extends Phaser.Scene {
     // Teinte : éclat blanc après un coup reçu ; bleutée pour le second d'un combat miroir.
     const mirror = view === this.v[1] && this.ids[0] === this.ids[1];
     if (this.time.now < view.flashUntil) view.sprite.setTintFill(0xffffff);
+    else if (f.mode === 'buzz') view.sprite.setTint(Math.floor(this.time.now / 90) % 2 ? 0xfff0a0 : 0xffffff);
     else if (mirror) view.sprite.setTint(0x9fc4ff);
     else view.sprite.clearTint();
+
+    // Cercle du Buzz autour du combattant : l'adversaire le voit se remplir, et peut le couper d'une gifle.
+    const ringQ = f.mode === 'buzz' ? Math.min(48, Math.round((f.mt / BUZZ_STEPS) * 48)) : 0;
+    const center = this.toScreen(f.x / SUB, f.y / SUB + ROSTER[f.id].body.stand.h * 0.55);
+    view.ring.setPosition(center.x, center.y);
+    if (ringQ !== view.ringShown) {
+      view.ringShown = ringQ;
+      view.ring.clear();
+      if (ringQ > 0) {
+        const r = ROSTER[f.id].body.stand.h * 0.62 * this.k * this.world.scaleX;
+        view.ring.lineStyle(12, COLORS.ink, 0.7).beginPath().arc(0, 0, r, 0, Math.PI * 2).strokePath();
+        view.ring.lineStyle(7, COLORS.yellow, 1).beginPath().arc(0, 0, r, -Math.PI / 2, -Math.PI / 2 + (ringQ / 48) * Math.PI * 2).strokePath();
+      }
+    }
+
+    // Sonné : trois étoiles tournent au-dessus de sa tête.
+    const dizzy = f.dizzy > 0 && f.mode !== 'down' && f.mode !== 'ko' && f.mode !== 'win';
+    const head = this.toScreen(f.x / SUB, f.y / SUB + ROSTER[f.id].body.stand.h + 6);
+    view.stars.forEach((st, n) => {
+      st.setVisible(dizzy);
+      if (!dizzy) return;
+      const ang = this.time.now / 260 + (n * Math.PI * 2) / 3;
+      st.setPosition(head.x + Math.cos(ang) * 38 * this.k, head.y + Math.sin(ang) * 10 * this.k).setScale(0.9 + Math.sin(ang) * 0.2);
+    });
 
     // Jauge de garde : visible quand on garde ou qu'elle n'est pas pleine.
     const show = f.mode === 'guard' || f.mode === 'block' || f.guard < GUARD_MAX;
@@ -434,6 +501,75 @@ export class FightScene extends Phaser.Scene {
         break;
       case 'swing':
         if (e.move === 'big') sfx.whoosh();
+        break;
+      case 'buzzFull': {
+        sfx.powerUp();
+        this.crowd?.cheer(0.5);
+        if (e.who === 0 || this.autoplay) this.commentator.say('buzz');
+        break;
+      }
+      case 'buzzStart':
+        sfx.buzzHold();
+        break;
+      case 'buzzCancel':
+        break;
+      case 'dodge': {
+        this.dodges += 1;
+        const p = this.toScreen(e.x / SUB, e.y / SUB);
+        this.fx.damageNumber(p.x, p.y - 40, BUZZ.dodge, 'n', 'lbl_dodge');
+        sfx.whoosh();
+        if (this.dodges % 2 === 1) this.commentator.say('dodge');
+        break;
+      }
+      case 'dizzy': {
+        const f = s.f[e.who];
+        const p = this.toScreen(f.x / SUB, ROSTER[f.id].body.stand.h + 30);
+        const tag = this.add.image(p.x, p.y, 'lbl_stun').setDepth(72).setAngle(-6);
+        this.tweens.add({ targets: tag, y: p.y - 40, alpha: 0, delay: 700, duration: 400, onComplete: () => tag.destroy() });
+        sfx.dizzy();
+        this.commentator.say('stun');
+        break;
+      }
+      case 'special': {
+        this.specials += 1;
+        const id = s.f[e.who].id;
+        this.fx.clearTransient();
+        this.sfxSpecial.start();
+        announceImage(this, `ann_special_${id}`, 900, 0.24);
+        this.fx.screenFlash(0.5, COLORS.yellow);
+        this.commentator.sayLine(id);
+        sfx.special(specialOf(id).effect);
+        sfx.crowd(0.8);
+        this.crowd?.cheer(0.8);
+        break;
+      }
+      case 'launch':
+        this.sfxSpecial.launch();
+        break;
+      case 'signal': {
+        const f = s.f[e.who];
+        this.sfxSpecial.signal(this.toScreen(f.x / SUB, ROSTER[f.id].body.stand.h));
+        this.fx.screenFlash(0.4);
+        sfx.signal();
+        break;
+      }
+      case 'parry': {
+        const f = s.f[e.who];
+        const p = this.toScreen(f.x / SUB, ROSTER[f.id].body.stand.h + 40);
+        const tag = this.add.image(p.x, p.y, e.ok ? 'lbl_parried' : 'lbl_early').setDepth(72).setAngle(-6).setScale(0.4);
+        this.tweens.add({ targets: tag, scale: 1, duration: 120, ease: 'Back.Out' });
+        this.tweens.add({ targets: tag, y: p.y - 40, alpha: 0, delay: 650, duration: 350, onComplete: () => tag.destroy() });
+        if (e.ok) {
+          sfx.parry();
+          this.commentator.say('parry');
+        }
+        break;
+      }
+      case 'specialHit':
+        this.onSpecialHit(e);
+        break;
+      case 'cineEnd':
+        this.sfxSpecial.end();
         break;
       case 'hit':
         this.onHit(e);
@@ -518,6 +654,7 @@ export class FightScene extends Phaser.Scene {
     sfx.slap(0.25 + power * 0.75, e.crit);
     sfx.cry(def.id, power);
     if (big) {
+      this.handMark(victim);
       this.fx.onomatopoeia(e.crit ? 'crit' : 'slap', p.x, p.y, dir);
       this.fx.focusLines(p.x, p.y, power);
       this.cameras.main.shake(e.crit ? 260 : 150, e.crit ? 0.012 : 0.006);
@@ -530,6 +667,42 @@ export class FightScene extends Phaser.Scene {
     }
   }
 
+  /** Trace de main rouge sur la joue après une grosse gifle : elle s'efface en une seconde. */
+  private handMark(victim: 0 | 1) {
+    const f = this.state.f[victim];
+    const s = this.layout.fighterScale;
+    const cheek = CHEEK[f.id];
+    // CHEEK est en px de texture, vers l'avant du perso : on le ramène au niveau (px logiques).
+    const p = this.toScreen(f.x / SUB + (f.facing * cheek.x * s) / this.k, f.y / SUB + (cheek.y * s) / this.k);
+    const img = this.add.image(p.x, p.y, 'fx_hand').setDepth(43).setAlpha(0.85).setScale(0.55 * this.world.scaleX).setFlipX(f.facing === -1).setAngle(-f.facing * 12);
+    this.tweens.add({ targets: img, alpha: 0, delay: 500, duration: 700, onComplete: () => img.destroy() });
+  }
+
+  private onSpecialHit(e: Extract<FightEvent, { t: 'specialHit' }>) {
+    const s = this.state;
+    const victim = e.by === 0 ? 1 : 0;
+    const def = s.f[victim];
+    const dir = (def.x >= s.f[e.by].x ? 1 : -1) as 1 | -1;
+    const p = this.toScreen(e.x / SUB, e.y / SUB);
+    const effect = specialOf(s.f[e.by].id).effect;
+    this.hits += 1;
+    this.v[victim].flashUntil = this.time.now + 140;
+    this.sfxSpecial.impact(effect, p, dir, e.parried);
+    this.fx.flash(p.x, p.y, e.parried ? 1 : 1.6);
+    this.fx.focusLines(p.x, p.y, e.parried ? 0.5 : 1);
+    this.fx.onomatopoeia('crit', p.x, p.y, dir);
+    this.fx.damageNumber(p.x, p.y - 70, Math.round(e.dmg / HP), e.parried ? 'n' : 'c', e.parried ? 'lbl_parried' : 'lbl_down');
+    this.fx.debris(p.x, p.y, dir, e.parried ? 4 : 10, e.parried ? 0 : 2);
+    this.fx.screenFlash(e.parried ? 0.3 : 0.7, effect === 'glitter' ? COLORS.yellow : 0xffffff);
+    this.cameras.main.shake(e.parried ? 180 : 340, e.parried ? 0.008 : 0.016);
+    sfx.specialImpact(effect, e.parried);
+    sfx.cry(def.id, 1);
+    sfx.crowd(1, 1.6);
+    this.crowd?.cheer(1);
+    // Ralenti juste après l'impact (affichage seulement : la simulation reste la même, elle avance moins vite).
+    if (!e.parried) this.slowUntil = performance.now() + 420;
+  }
+
   // ── État visible par les tests ─────────────────────────────────────────
 
   private publish() {
@@ -539,12 +712,16 @@ export class FightScene extends Phaser.Scene {
       x: f.x / SUB,
       y: f.y / SUB,
       facing: f.facing,
-      action: actionOf(f),
+      action: actionIn(s, f === s.f[0] ? 0 : 1),
+      pose: frameOf(poseFor(f.id, actionIn(s, f === s.f[0] ? 0 : 1)), f.t),
       mode: f.mode,
       move: f.move,
       hp: f.hp / HP,
       guard: f.guard / (GUARD_MAX / GUARD.max),
-      charge: f.mode === 'charge' ? chargePct(f.id, f.mt) : 0,
+      charge: f.mode === 'charge' ? chargePct(f.chg) : 0,
+      buzz: f.buzz,
+      dizzy: f.dizzy,
+      ring: f.mode === 'buzz' ? Math.min(1, f.mt / BUZZ_STEPS) : 0,
     });
     window.__slap.state = {
       mode: 'fight',
@@ -563,11 +740,15 @@ export class FightScene extends Phaser.Scene {
       p2: one(s.f[1]),
       hits: this.hits,
       guardBreaks: this.breaks,
+      specials: this.specials,
+      dodges: this.dodges,
+      cine: s.cine ? { ...s.cine } : null,
+      buzzButton: this.touch.buzzShown,
       lastHit: this.lastHit,
       camera: { ...this.cam },
       fps: this.game.loop.actualFps,
       timeLeft: Math.ceil(s.timeLeft / SIM.stepsPerSecond),
     };
-    window.__slap.fx = { ...this.fx.stats, ...(this.crowd?.stats ?? {}), ...this.commentator.stats, sounds: sfx.played.slice(-30) };
+    window.__slap.fx = { ...this.fx.stats, special: { ...this.sfxSpecial.stats }, ...(this.crowd?.stats ?? {}), ...this.commentator.stats, sounds: sfx.played.slice(-40) };
   }
 }

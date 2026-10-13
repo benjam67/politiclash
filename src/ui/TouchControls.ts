@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { noInput, type InputFrame, type InputKey } from '../logic/input';
 import type { InputSource } from '../input/sources';
+import { BUZZ_TEXTS } from '../config/texts';
 import { COLORS, CSS, FONT_TITLE } from './theme';
 import type { Insets } from './safe';
 
@@ -30,6 +31,11 @@ export class TouchControls implements InputSource {
   private rest = { x: 0, y: 0 };
   private width = 0;
   private visible = true;
+  /** Barre Buzz pleine : le bouton « Grosse gifle » devient « Buzz ». */
+  private buzz = false;
+  private ring: Phaser.GameObjects.Graphics;
+  private glow: Phaser.GameObjects.Arc;
+  private ringShown = -1;
 
   constructor(private scene: Phaser.Scene) {
     scene.input.addPointer(3);
@@ -48,6 +54,8 @@ export class TouchControls implements InputSource {
     mk('grosseGifle', 'GROSSE\nGIFLE', COLORS.pink, 56, 16);
     mk('garde', 'GARDE', COLORS.cyan, 54, 18);
     mk('pied', 'PIED', COLORS.cream, 56, 20);
+    this.glow = scene.add.circle(0, 0, 70, COLORS.yellow, 0.35).setDepth(119).setVisible(false);
+    this.ring = scene.add.graphics().setDepth(122);
 
     scene.input.on(Phaser.Input.Events.POINTER_DOWN, this.onDown, this);
     scene.input.on(Phaser.Input.Events.POINTER_UP, this.onUp, this);
@@ -76,13 +84,48 @@ export class TouchControls implements InputSource {
       b.circle.setPosition(b.x, b.y);
       b.label.setPosition(b.x, b.y);
     }
+    this.glow.setPosition(big.x, big.y);
+    this.ringShown = -1;
     this.draw(0, 0, noInput());
+  }
+
+  /** Barre Buzz pleine ou non : le bouton change de couleur, brille et affiche « Buzz ». */
+  setBuzz(full: boolean) {
+    if (full === this.buzz) return;
+    this.buzz = full;
+    const big = this.btns[1];
+    big.color = full ? COLORS.yellow : COLORS.pink;
+    big.label.setText(full ? BUZZ_TEXTS.button : 'GROSSE\nGIFLE').setFontSize(full ? 26 : 16);
+    this.scene.tweens.killTweensOf(this.glow);
+    this.glow.setVisible(full && this.visible).setScale(1).setAlpha(0.35);
+    if (full) this.scene.tweens.add({ targets: this.glow, scale: 1.25, alpha: 0.05, duration: 520, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+    this.draw(0, 0, noInput());
+  }
+
+  get buzzShown() {
+    return this.buzz;
+  }
+
+  /** Cercle autour du bouton Buzz, de 0 (vide) à 1 (complet). */
+  setRing(progress: number) {
+    const q = Math.round(Math.max(0, Math.min(1, progress)) * 48);
+    if (q === this.ringShown) return;
+    this.ringShown = q;
+    const big = this.btns[1];
+    const g = this.ring;
+    g.clear();
+    if (q <= 0 || !this.visible) return;
+    const r = big.r + 12;
+    g.lineStyle(13, COLORS.ink, 0.85).beginPath().arc(big.x, big.y, r, 0, Math.PI * 2).strokePath();
+    g.lineStyle(8, COLORS.yellow, 1).beginPath().arc(big.x, big.y, r, -Math.PI / 2, -Math.PI / 2 + (q / 48) * Math.PI * 2).strokePath();
   }
 
   setVisible(v: boolean) {
     this.visible = v;
     this.base.setVisible(v);
     this.knob.setVisible(v);
+    this.glow.setVisible(v && this.buzz);
+    this.ring.setVisible(v);
     for (const b of this.btns) {
       b.circle.setVisible(v);
       b.label.setVisible(v);

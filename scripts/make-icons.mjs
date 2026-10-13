@@ -1,4 +1,4 @@
-// Génère les icônes PWA à partir du visage de Bernard (pose idle).
+// Génère les icônes PWA à partir de raw/icons/visage.png (visage carré, 220 × 220 px).
 import sharp from 'sharp';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -7,8 +7,6 @@ const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
 const OUT = path.join(ROOT, 'public/icons');
 fs.mkdirSync(OUT, { recursive: true });
 
-// Zone du visage dans raw/fighters/bernard/idle.png (1300 × 823).
-const FACE = { left: 425, top: 40, width: 220, height: 220 };
 
 const bg = (size, safe) => {
   const r = safe ? size * 0.5 : size * 0.46;
@@ -26,8 +24,7 @@ const bg = (size, safe) => {
 
 async function make(name, size, safe = false) {
   const faceSize = Math.round(size * (safe ? 0.56 : 0.7));
-  const face = await sharp(path.join(ROOT, 'raw/fighters/bernard/idle.png'))
-    .extract(FACE)
+  const face = await sharp(path.join(ROOT, 'raw/icons/visage.png'))
     .resize(faceSize, faceSize)
     .composite([{
       input: Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${faceSize}" height="${faceSize}"><circle cx="${faceSize / 2}" cy="${faceSize / 2}" r="${faceSize / 2}" fill="#fff"/></svg>`),

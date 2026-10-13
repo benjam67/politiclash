@@ -5,14 +5,15 @@ import { FIGHTER_IDS } from '../../src/config/roster';
 
 // `npm run sim` : 200 matchs IA contre IA par affiche, sans affichage.
 // Critères de la roadmap : un match se termine toujours, un round dure en moyenne entre 20 et 50 s,
-// aucun combattant au-dessus de 60 % de victoires à niveau d'IA égal.
+// un ou deux coups spéciaux par round en moyenne, aucun combattant au-dessus de 60 % de victoires à niveau d'IA égal.
 const MATCHES = 200;
 const line = (name: string, r: SeriesReport) =>
-  console.log(
-    `${name.padEnd(30)} terminés ${r.finished}/${r.matches}  round moyen ${r.meanRound.toFixed(1)} s  au chrono ${Math.round((100 * r.timeouts) / r.totalRounds)} %  ` +
+  process.stderr.write(
+    `${name.padEnd(30)} terminés ${r.finished}/${r.matches}  round moyen ${r.meanRound.toFixed(1)} s  spéciaux/round ${r.specialsPerRound.toFixed(2)}  au chrono ${Math.round((100 * r.timeouts) / r.totalRounds)} %  ` +
       Object.entries(r.wins)
         .map(([k, v]) => `${k} ${Math.round((100 * v) / r.matches)} %`)
-        .join('  '),
+        .join('  ') +
+      '\n',
   );
 
 describe('équilibre à niveau égal', () => {
@@ -26,6 +27,8 @@ describe('équilibre à niveau égal', () => {
           expect(r.finished).toBe(MATCHES);
           expect(r.meanRound).toBeGreaterThanOrEqual(20);
           expect(r.meanRound).toBeLessThanOrEqual(50);
+          expect(r.specialsPerRound).toBeGreaterThanOrEqual(1);
+          expect(r.specialsPerRound).toBeLessThanOrEqual(2);
           for (const w of Object.values(r.wins)) expect(w / MATCHES).toBeLessThanOrEqual(0.6);
         });
       }

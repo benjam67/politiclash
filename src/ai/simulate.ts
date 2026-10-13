@@ -10,6 +10,8 @@ export interface MatchReport {
   /** Durée de chaque round, en secondes. */
   rounds: number[];
   hits: number;
+  /** Coups spéciaux lancés (cinématiques arrivées à l'impact). */
+  specials: number;
   final: FightState;
 }
 
@@ -21,14 +23,18 @@ export function playMatch(left: FighterId, right: FighterId, a: InputSource, b: 
   const rounds: number[] = [];
   let start = 0;
   let hits = 0;
+  let specials = 0;
   while (s.phase !== 'matchEnd' && s.step < MAX_STEPS) {
     const prev = s.phase;
     s = step(s, a.read(s, 0), b.read(s, 1));
-    for (const e of s.ev) if (e.t === 'hit') hits++;
+    for (const e of s.ev) {
+      if (e.t === 'hit') hits++;
+      if (e.t === 'specialHit') specials++;
+    }
     if (prev !== 'fight' && s.phase === 'fight') start = s.step;
     if (prev === 'fight' && s.phase === 'roundEnd') rounds.push((s.step - start) / SIM.stepsPerSecond);
   }
-  return { winner: s.phase === 'matchEnd' ? (s.winner as 0 | 1) : -1, rounds, hits, final: s };
+  return { winner: s.phase === 'matchEnd' ? (s.winner as 0 | 1) : -1, rounds, hits, specials, final: s };
 }
 
 export interface SeriesReport {
@@ -39,6 +45,8 @@ export interface SeriesReport {
   meanRound: number;
   timeouts: number;
   totalRounds: number;
+  /** Coups spéciaux par round, en moyenne (les deux combattants ensemble). */
+  specialsPerRound: number;
 }
 
 /** Série de matchs entre deux combattants, en alternant les côtés pour ne favoriser personne. */
@@ -48,6 +56,7 @@ export function playSeries(x: FighterId, y: FighterId, levelX: AiLevel, levelY: 
   const all: number[] = [];
   let finished = 0;
   let timeouts = 0;
+  let specials = 0;
   for (let i = 0; i < matches; i++) {
     const swap = i % 2 === 1;
     const [l, r] = swap ? [y, x] : [x, y];
@@ -59,7 +68,8 @@ export function playSeries(x: FighterId, y: FighterId, levelX: AiLevel, levelY: 
       wins[first ? x : x === y ? `${y}#2` : y] += 1;
     }
     all.push(...m.rounds);
+    specials += m.specials;
     timeouts += m.rounds.filter((d) => d >= 59.99).length;
   }
-  return { matches, finished, wins, meanRound: all.reduce((p, q) => p + q, 0) / Math.max(1, all.length), timeouts, totalRounds: all.length };
+  return { matches, finished, wins, meanRound: all.reduce((p, q) => p + q, 0) / Math.max(1, all.length), timeouts, totalRounds: all.length, specialsPerRound: specials / Math.max(1, all.length) };
 }

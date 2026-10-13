@@ -3,7 +3,7 @@
 //
 // Combattants : toutes les poses d'un perso sont recadrées sur la même boîte
 // (union des zones non transparentes de toutes les poses), pour garder une
-// ligne de pieds et un ancrage communs. Bernard et Lola sont réduits avec le
+// ligne de pieds et un ancrage communs. Tous les combattants sont réduits avec le
 // MÊME facteur pour conserver leur rapport de taille.
 import sharp from 'sharp';
 import fs from 'node:fs';
@@ -12,24 +12,17 @@ import path from 'node:path';
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const RAW = path.join(ROOT, 'raw');
 const OUT = path.join(ROOT, 'public/assets');
-// Même liste que POSE_FILES dans src/config/poses.ts.
-// Mêmes listes que dans src/config/poses.ts.
-const POSES_V1 = ['idle', 'windup', 'swing', 'slap', 'hit', 'dazed', 'victory', 'selfslap', 'dodge', 'dodge_perfect', 'guard'];
-const POSES_FULL = ['idle', 'walk1', 'walk2', 'jump', 'crouch', 'guard', 'guard_low', 'quick', 'air_slap', 'kick', 'crouch_kick', 'windup', 'swing', 'slap', 'special', 'special2', 'selfslap', 'hit', 'hit_heavy', 'down', 'getup', 'dazed', 'victory'];
-// Bernard (le plus grand canevas) ramené à ~600 px de haut.
-const FIGHTER_SCALE = 600 / 823;
-// Taille du canevas source, poses fournies, facteur de réduction.
-// Les jeux complets (1300 × 820, perso debout ~590 px) sont réduits à ~440 px de haut, pour garder le chargement initial sous 4 Mo.
-const FIGHTERS = {
-  bernard: { size: [1300, 823], poses: POSES_V1, scale: FIGHTER_SCALE },
-  lola: { size: [908, 772], poses: POSES_V1, scale: FIGHTER_SCALE },
-  aviateur: { size: [1300, 820], poses: POSES_FULL, scale: 0.74 },
-  tailleur: { size: [1300, 820], poses: POSES_FULL, scale: 0.74 },
-  cadet: { size: [1300, 820], poses: POSES_FULL, scale: 0.74 },
-  barbe: { size: [1300, 820], poses: POSES_FULL, scale: 0.74 },
-  doyen: { size: [1300, 820], poses: POSES_FULL, scale: 0.74 },
-  binocle: { size: [1300, 820], poses: POSES_FULL, scale: 0.74 },
-};
+// Mêmes listes que dans src/config/poses.ts : les poses communes sont obligatoires,
+// les facultatives (marche à 4 temps, poses du coup spécial) sont prises si le fichier existe.
+const POSES_COMMON = ['idle', 'walk1', 'walk2', 'jump', 'crouch', 'guard', 'guard_low', 'quick', 'air_slap', 'kick', 'crouch_kick', 'windup', 'swing', 'slap', 'special', 'special2', 'selfslap', 'hit', 'hit_heavy', 'down', 'getup', 'dazed', 'victory'];
+const POSES_OPTIONAL = ['walk3', 'walk4', 'special1', 'special3'];
+// Facteur de réduction commun à tous les combattants : même rapport de taille entre eux.
+// Canevas de 1300 × 820 (perso debout ~590 px), réduit à ~440 px de haut pour garder le chargement initial sous 4 Mo.
+const FIGHTER_SCALE = 0.74;
+const FIGHTERS = ['aviateur', 'tailleur', 'cadet', 'barbe', 'doyen', 'binocle'];
+// Accessoires des coups spéciaux (raw/props/<nom>.png), facultatifs : sans eux, le jeu dessine un projectile provisoire.
+const SPECIAL_PROPS = ['caca', 'faucille-marteau'];
+const PROP_HEIGHT = 220;
 const FEET_OFFSET = 10; // pieds à 10 px du bas de l'image source
 const HABITUES = ['vieux_beret', 'fermier', 'grandmere', 'facteur', 'jeune_siffleur', 'mecano', 'boulanger', 'femme_cardigan'];
 const PROP_SCALE = 1; // habitués : déjà petits, gardés en taille native
@@ -51,7 +44,7 @@ async function alphaBox(file) {
   return { x0, y0, x1, y1 };
 }
 
-const manifest = { fighterScale: FIGHTER_SCALE, fighters: {}, props: {} };
+const manifest = { fighterScale: FIGHTER_SCALE, fighters: {}, props: {}, specialProps: {} };
 
 /** Point non transparent le plus à droite entre les lignes y0 et y1. */
 async function rowsMaxX(file, y0, y1) {
@@ -68,8 +61,14 @@ async function rowsMaxX(file, y0, y1) {
   return best;
 }
 
-for (const [name, { size: [W, H], poses: POSES, scale: FIGHTER_SCALE }] of Object.entries(FIGHTERS)) {
+for (const name of FIGHTERS) {
   const dir = path.join(RAW, 'fighters', name);
+  const POSES = [...POSES_COMMON, ...POSES_OPTIONAL.filter((p) => fs.existsSync(path.join(dir, `${p}.png`)))];
+  const { width: W, height: H } = await sharp(path.join(dir, 'idle.png')).metadata();
+  for (const p of POSES) {
+    const m = await sharp(path.join(dir, `${p}.png`)).metadata();
+    if (m.width !== W || m.height !== H) throw new Error(`${name}/${p}.png : ${m.width} × ${m.height}, attendu ${W} × ${H} (même taille que idle.png)`);
+  }
   let u = { x0: W, y0: H, x1: 0, y1: 0 };
   for (const p of POSES) {
     const b = await alphaBox(path.join(dir, `${p}.png`));
@@ -101,6 +100,7 @@ for (const [name, { size: [W, H], poses: POSES, scale: FIGHTER_SCALE }] of Objec
   // Portée de la main en pose slap (point le plus à droite) et sa hauteur.
   const reach = await rowsMaxX(path.join(dir, 'slap.png'), 0, H);
   manifest.fighters[name] = {
+    poses: POSES,
     width: outW,
     height: outH,
     originX: (W / 2 - left) / cw,
@@ -115,6 +115,18 @@ for (const [name, { size: [W, H], poses: POSES, scale: FIGHTER_SCALE }] of Objec
     /** Bout de la main en pose slap : x depuis l'ancrage, y au-dessus des pieds. */
     reach: { x: Math.round((reach.x - W / 2) * FIGHTER_SCALE), y: Math.round((H - FEET_OFFSET - reach.y) * FIGHTER_SCALE) },
   };
+}
+
+// Accessoires : recadrés sur l'objet, ramenés à une hauteur commune.
+fs.rmSync(path.join(OUT, 'props'), { recursive: true, force: true });
+for (const name of SPECIAL_PROPS) {
+  const src = path.join(RAW, 'props', `${name}.png`);
+  if (!fs.existsSync(src)) continue;
+  fs.mkdirSync(path.join(OUT, 'props'), { recursive: true });
+  const out = path.join(OUT, 'props', `${name}.webp`);
+  await sharp(src).trim().resize({ height: PROP_HEIGHT }).webp({ quality: 82, alphaQuality: 90, effort: 6 }).toFile(out);
+  const m = await sharp(out).metadata();
+  manifest.specialProps[name] = { width: m.width, height: m.height };
 }
 
 fs.mkdirSync(path.join(OUT, 'stages/bar/habitues'), { recursive: true });

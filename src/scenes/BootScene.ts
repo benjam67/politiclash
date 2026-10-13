@@ -5,6 +5,7 @@ import { bakeAll } from '../fx/bake';
 import { FIGHTER_IDS, PLAYABLE_IDS, type FighterId } from '../config/roster';
 import { STAGE_IDS, STAGES, type StageId } from '../config/stages';
 import { fighterKey, posesOf } from '../config/poses';
+import assets from '../config/assets.json';
 import type { FightData } from './FightScene';
 
 export class BootScene extends Phaser.Scene {
@@ -29,12 +30,12 @@ export class BootScene extends Phaser.Scene {
     // Figurants du bar : le patron et les habitués.
     this.load.image('patron', 'stages/bar/patron.webp');
     for (const h of HABITUES) this.load.image(`habitue_${h}`, `stages/bar/habitues/${h}.webp`);
-    // Les combattants jouables, plus ceux demandés par l'URL (tests avec les anciens personnages).
-    const asked = fightDataFromUrl(location.search);
-    const ids = new Set<FighterId>([...PLAYABLE_IDS, ...(asked.left ? [asked.left] : []), ...(asked.right ? [asked.right] : [])]);
-    for (const id of ids) {
+    // Les combattants jouables.
+    for (const id of new Set<FighterId>(PLAYABLE_IDS)) {
       for (const pose of posesOf(id)) this.load.image(fighterKey(id, pose), `fighters/${id}/${pose}.webp`);
     }
+    // Accessoires des coups spéciaux, s'ils ont été fournis (sinon : projectiles provisoires dessinés en code).
+    for (const name of Object.keys(assets.specialProps)) this.load.image(`prop_${name}`, `props/${name}.webp`);
   }
 
   async create() {
@@ -49,10 +50,10 @@ export class BootScene extends Phaser.Scene {
 
 /**
  * Accès direct au combat par l'URL (tests, essais) :
- * `?scene=fight&p1=bernard|lola&p2=bernard|lola&stage=bar`, `&level=easy|normal|hard` (niveau de l'IA), `?autoplay=1` (démo : IA contre IA),
+ * `?scene=fight&p1=aviateur&p2=doyen&stage=bar` (identifiants de `roster.ts`), `&level=easy|normal|hard` (niveau de l'IA), `?autoplay=1` (démo : IA contre IA),
  * `&foe=idle|wander|dummy` (adversaire d'essai à la place de l'IA : immobile, promeneur, mannequin),
  * `&intro=0` (sans l'annonce du round),
- * `&seed=42` (adversaire reproductible), `&touch=1` (contrôles tactiles sur ordinateur). Sans paramètre : écran d'accueil.
+ * `&seed=42` (adversaire reproductible), `&buzz=100` (barres Buzz remplies au départ, essais du coup spécial), `&touch=1` (contrôles tactiles sur ordinateur). Sans paramètre : écran d'accueil.
  */
 export function fightDataFromUrl(search: string): FightData {
   const q = new URLSearchParams(search);
@@ -70,5 +71,6 @@ export function fightDataFromUrl(search: string): FightData {
     autoplay: q.get('autoplay') === '1',
     intro: q.get('intro') !== '0',
     seed: q.has('seed') && Number.isFinite(seed) ? seed : undefined,
+    buzz: q.has('buzz') ? Math.max(0, Math.min(100, Number(q.get('buzz')) || 0)) : undefined,
   };
 }

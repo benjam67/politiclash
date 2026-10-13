@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { commentKey } from './bake';
-import { COMMENTS, type CommentKind } from '../config/texts';
+import { COMMENTS, FIGHTER_TEXTS, type CommentKind } from '../config/texts';
+import type { FighterId } from '../config/roster';
 import { COLORS } from '../ui/theme';
 
 interface Person {
@@ -159,7 +160,17 @@ export class Commentator {
     let i = Math.floor(Math.random() * list.length);
     if (list.length > 1 && i === this.last[kind]) i = (i + 1) % list.length;
     this.last[kind] = i;
-    const key = commentKey(kind, i);
+    this.show(commentKey(kind, i));
+  }
+
+  /** Dit une réplique propre au coup spécial d'un combattant (`specialLines` dans `texts.ts`). */
+  sayLine(id: FighterId) {
+    const n = FIGHTER_TEXTS[id].specialLines.length;
+    if (n === 0) return;
+    this.show(`com_sp_${id}_${Math.floor(Math.random() * n)}`);
+  }
+
+  private show(key: string) {
     this.stats.comments++;
     this.stats.lastKey = key;
 
