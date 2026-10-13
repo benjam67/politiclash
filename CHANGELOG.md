@@ -222,6 +222,60 @@ Ajout demandé par le propriétaire pendant le jalon 2 : chaque combattant a une
 
 Conservé pour mémoire : il décrit le jeu au tour par tour dont PolitiClash est parti.
 
+## Phase 5 · Style unique, barre Buzz et coups spéciaux — 2026-10-13
+
+Décisions du 13 octobre (roadmap mise à jour, sections 3 et 7). `ROADMAP.md` remplacée par la version du projet ; `GUIDE-DESSINS.md` (version du 13 octobre) et `PROMPTS-SPECIAUX.md` ajoutés au dépôt.
+
+**Un seul style de combat**
+- Gabarits `lourd` et `rapide` retirés : un seul profil, `STYLE` dans `balance.ts` (marche 200 px/s, saut 600 ms, base 13, charge 1,2 s, zone dorée 78–90 %). Plus de résistance, plus de vivacité, même allonge pour tous.
+- Coup bloqué : 10 % des dégâts, arrondis au PV, au moins 1 PV (`chipDamage`).
+- Correction : accroupi, la boîte de corps des six combattants faisait 142 px de haut, alors que la grosse gifle frappe à partir de 141 px. Elle touchait donc un adversaire accroupi. Ramenée à 140 px.
+
+**Barre Buzz** (la rage est retirée)
+- Sous la barre de vie. Gains : coup léger qui touche +9, grosse gifle +14, zone dorée +25, esquive réussie +20 (accroupi sous une gifle, ou en l'air au-dessus d'un coup de pied, quand le coup est actif et aurait touché ; une fois par coup). Rien pour un coup bloqué ou reçu.
+- Valeurs de départ de la roadmap (6 / 10 / 20 / 15) relevées : elles donnaient 0,6 à 1 coup spécial par round, sous l'objectif.
+- Gardée d'un round à l'autre, remise à 0 au nouveau match.
+
+**Bouton Buzz et cercle**
+- Barre pleine : le bouton « Grosse gifle » devient jaune, brille et affiche « BUZZ ». Au clavier, toujours K.
+- Maintenu : un cercle se remplit en 0,5 s, autour du bouton et autour du combattant (l'adversaire le voit, et peut le couper d'une gifle). Relâché ou touché avant la fin : annulé, la barre reste pleine. Le combattant ne bouge pas pendant le cercle.
+
+**Cinématiques** (`src/config/specials.ts`, déroulé fixe en pas, partie de la simulation)
+- Le coup touche toujours : 35 PV, met à terre et rend sonné. Le chrono s'arrête, le lanceur est intouchable, le décor s'assombrit.
+- Coups de près (poudre, danse, pinte) : le lanceur se colle à l'adversaire en 130 ms (écart de 45 px entre les corps). Coups à distance (hurlement, lancer, tir) : il reste où il est, le projectile ou l'onde traverse l'écran.
+- Signal (éclair, point d'exclamation, son sec) 8 pas avant l'impact. Garde appuyée dans les 6 pas qui suivent : 18 PV seulement. Appui trop tôt, trop tard, ou garde déjà tenue au signal : 35 PV.
+- Durées : 100 à 108 pas (1,7 à 1,8 s). Barre remise à 0 à l'impact.
+
+**Poses et accessoires : il n'y a plus qu'à les déposer**
+- `npm run assets` relève les poses présentes dans `raw/fighters/<id>/` (dans `assets.json`). Dès que `special1.png` et `special3.png` sont là (avec le nouveau `special2.png`), la cinématique les prend, sans toucher au code.
+- En attendant : armement (`windup`), puis les anciennes `special` et `special2`.
+- Accessoires : `raw/props/caca.png` et `raw/props/faucille-marteau.png`, pris automatiquement par `npm run assets`. En attendant, projectiles provisoires dessinés en code.
+- `npm run assets` vérifie aussi que toutes les poses d'un combattant ont la même taille d'image.
+
+**Sonné**
+- Après une garde brisée ou un coup de 25 PV ou plus (le coup spécial) : 3 s pendant lesquelles la vitesse de charge de la grosse gifle change tous les 8 pas, entre 70 et 130 %. Étoiles au-dessus de la tête.
+
+**Effets et sons**
+- Effets tracés en code : paillettes et explosion dorée, notes et étoiles, mousse et éclats de verre, anneaux d'onde de choc, projectile qui tournoie, petit nuage. Bandeau du nom du coup, réplique du commentateur, ralenti juste après l'impact (affichage seulement), tremblement, arrêt sur image. Trace de main rouge sur la joue après une grosse gifle.
+- Sons : un par coup spécial (arpège scintillant, petit groove, glouglou, cri, outil qui tournoie, pet de dessin animé), un pour l'impact, le signal, la garde au bon moment, la barre pleine, le cercle.
+
+**IA**
+- Barre pleine : elle lance son coup spécial quand l'adversaire est loin ou occupé (Facile : n'importe quand).
+- Elle coupe le cercle adverse d'une gifle quand elle le voit se remplir.
+- Garde au bon moment : réussie 10 % (Facile), 35 % (Normal), 65 % (Difficile) du temps, comme un joueur qui a appris le rythme ; sinon trop tôt ou pas du tout.
+
+**Textes provisoires** (`texts.ts`, à remplacer) : Poudre de perlimpinpin, Le Déhanché zen, La Tournée générale, Le Grand Lancer, Le Coup de gueule, Le Vent arrière, deux répliques chacun, et le mot « BUZZ ».
+
+**Ménage**
+- Bernard et Lola retirés du code, des images et des tests. Le visage des icônes est gardé dans `raw/icons/visage.png`.
+- Progression (XP, niveaux, tenues), mise de côté depuis la phase 0 et entièrement liée à Bernard et Lola : retirée. Elle reste dans l'historique du dépôt si on la reprend en phase 6.
+
+**Vérifications**
+- 178 tests unitaires (dont 32 sur le Buzz, le cercle, les cinématiques, la garde au bon moment, le sonné ; déterminisme sur 10 000 pas avec coups spéciaux).
+- Simulation (`npm run sim`, 200 matchs par affiche, 53 séries) : tous les matchs se terminent ; round moyen 21 à 27 s ; 1,05 à 1,35 coup spécial par round ; aucun combattant au-dessus de 57 % (le plus grand écart : 57 / 43 en Difficile entre deux coups à distance).
+- Playwright (mobile en paysage) : nouveau fichier `phase5.spec.ts` (bouton Buzz au tactile, cercle annulé, barre remplie en giflant, les six cinématiques photographiées, garde au bon moment, démo IA, image calculée en 4,2 ms en moyenne pendant les coups spéciaux avec processeur ×4, chargement initial 3,3 Mo).
+- Tests navigateur qui échouaient déjà : ils attendaient des images très brèves (une gifle de 350 ms) ou une caméra arrivée après un délai fixe, en sondant l'état ; sur une machine lente, le sondage les ratait. Ils guettent maintenant l'instant pas à pas.
+
 ## Premier jeu · Phase 0 · Mise en place — 2026-10-01
 
 **Fait**

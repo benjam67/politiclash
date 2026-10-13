@@ -43,10 +43,10 @@ test('la scène de combat s’affiche sans erreur en paysage', async ({ page }) 
 
 test('on peut choisir les combattants par l’URL, y compris en combat miroir', async ({ page }) => {
   const errors = collectErrors(page);
-  await page.goto('./?scene=fight&p1=lola&p2=lola');
+  await page.goto('./?scene=fight&p1=doyen&p2=doyen');
   await waitReady(page, 'Fight');
   const ids = await page.evaluate(() => (window.__slap!.state as { ids: unknown }).ids);
-  expect(ids).toEqual({ left: 'lola', right: 'lola' });
+  expect(ids).toEqual({ left: 'doyen', right: 'doyen' });
   await page.screenshot({ path: `${SHOTS}/phase0-miroir.png` });
   await expectNoErrors(errors);
 });

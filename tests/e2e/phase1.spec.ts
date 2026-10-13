@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { collectErrors, cssPoint, expectNoErrors, getState, SHOTS, waitReady, waitState } from './helpers';
 
-const URL = './?scene=fight&p1=bernard&p2=lola&foe=idle&intro=0';
+const URL = './?scene=fight&p1=aviateur&p2=doyen&foe=idle&intro=0';
 
 test.describe('phase 1 : déplacements en temps réel', () => {
   test('au clavier : marche, saut, accroupi, et l’image change', async ({ page }) => {
@@ -96,7 +96,7 @@ test.describe('phase 1 : déplacements en temps réel', () => {
 
   test('l’adversaire se promène, les deux se font face, la caméra suit', async ({ page }) => {
     const errors = collectErrors(page);
-    await page.goto('./?scene=fight&p1=bernard&p2=lola&foe=wander&intro=0&seed=3');
+    await page.goto('./?scene=fight&p1=aviateur&p2=doyen&foe=wander&intro=0&seed=3');
     await waitReady(page, 'Fight');
     const start = await getState(page);
     await waitState(page, `Math.abs(s.p2.x - ${start.p2.x}) > 40`, 15_000);
@@ -113,7 +113,8 @@ test.describe('phase 1 : déplacements en temps réel', () => {
     // Les deux partent vers la droite jusqu'au mur : la caméra les suit et s'arrête au bord du niveau.
     await page.evaluate(() => (window.__slap!.inputs = { p1: { droite: true }, p2: { droite: true } }));
     await waitState(page, `s.p1.x === 1548`, 20_000);
-    await page.waitForTimeout(600);
+    // La caméra rattrape en douceur : on attend qu'elle soit arrivée, plutôt qu'un délai fixe (trop court sur une machine lente).
+    await waitState(page, `Math.abs(s.camera.x - (1688 - 422)) < 0.5`, 10_000);
     const end = await getState(page);
     expect(end.camera.x).toBeCloseTo(1688 - 422, 0);
     expect(end.camera.x).toBeGreaterThan(start.camera.x + 300);
@@ -126,7 +127,7 @@ test.describe('phase 1 : déplacements en temps réel', () => {
   // (logique + préparation de l'affichage), processeur ralenti 4 fois : il doit tenir largement dans
   // les 16,7 ms d'une image à 60 par seconde.
   test('une image se calcule en moins de 8 ms avec un processeur ralenti 4 fois', async ({ page }) => {
-    await page.goto('./?scene=fight&p1=bernard&p2=lola&intro=0&seed=3');
+    await page.goto('./?scene=fight&p1=aviateur&p2=doyen&intro=0&seed=3');
     await waitReady(page, 'Fight');
     const cdp = await page.context().newCDPSession(page);
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });

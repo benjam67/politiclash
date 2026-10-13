@@ -31,7 +31,7 @@ async function approach(page: Page, p2: Record<string, boolean> = {}) {
   await setInputs(page, {}, p2);
 }
 
-const IDLE = './?scene=fight&p1=bernard&p2=lola&foe=idle&intro=0';
+const IDLE = './?scene=fight&p1=aviateur&p2=doyen&foe=idle&intro=0';
 
 test.describe('phase 2 : coups, garde, rounds', () => {
   test('gifle rapide au clavier : l’image change, les PV baissent, effets et son', async ({ page }) => {
@@ -39,20 +39,23 @@ test.describe('phase 2 : coups, garde, rounds', () => {
     await page.goto(IDLE);
     await waitReady(page, 'Fight');
     await approach(page);
+    // L'image de la gifle ne dure que 350 ms : on la guette pas à pas (un sondage la raterait sur une machine chargée).
+    const seen = freezeWhen(page, `s.p1.action === 'quickSlap'`);
     await page.keyboard.down('KeyJ');
-    await waitState(page, `s.p1.action === 'quickSlap'`);
+    await seen;
+    await resume(page);
     await waitState(page, `s.hits === 1`);
     await page.keyboard.up('KeyJ');
     const s = await state(page);
     expect(s.lastHit).toMatchObject({ move: 'quick', blocked: false, crit: false });
-    // 5 dégâts × 1,05 (résistance du gabarit rapide), arrondi au dixième.
-    expect(s.p2.hp).toBeCloseTo(100 - 5.3, 5);
+    // 5 dégâts, les mêmes pour tous.
+    expect(s.p2.hp).toBeCloseTo(100 - 5, 5);
     await waitState(page, `s.p2.mode === 'free' && s.p1.mode === 'free'`);
     const f = await fx(page);
     expect(f.flashes).toBe(1);
     expect(f.numbers).toBe(1);
     expect(f.sounds).toContain('slap');
-    expect(f.sounds).toContain('cry-lola');
+    expect(f.sounds).toContain('cry-doyen');
     await expectNoErrors(errors);
   });
 
@@ -61,13 +64,13 @@ test.describe('phase 2 : coups, garde, rounds', () => {
     await page.goto(IDLE);
     await waitReady(page, 'Fight');
     await approach(page);
-    // On maintient jusqu'à la zone dorée (80–90 % pour Bernard), puis on relâche.
-    // Le relâchement est décidé pas par pas (84 pas de charge pour Bernard : le pas 70 est à 83 %).
+    // On maintient jusqu'à la zone dorée (78–90 %), puis on relâche.
+    // Le relâchement est décidé pas par pas, d'après la charge (72 pas pour 100 % : 84 % = 6048 centièmes de pas).
     await page.evaluate(() => {
       let released = false;
       window.__slap!.inputs = {
         p1: (st) => {
-          if (st.f[0].mode === 'charge' && st.f[0].mt >= 70) released = true;
+          if (st.f[0].mode === 'charge' && st.f[0].chg >= 84 * 72) released = true;
           return released ? {} : { grosseGifle: true };
         },
       };
@@ -80,7 +83,8 @@ test.describe('phase 2 : coups, garde, rounds', () => {
     await freezeWhen(page, `s.hits === 1`);
     const s = await state(page);
     expect(s.lastHit).toMatchObject({ move: 'big', crit: true, knockdown: true, blocked: false });
-    expect(s.lastHit!.dmg / 10).toBeGreaterThan(23);
+    // 13 × 84 % × 2 ≈ 21,8 PV.
+    expect(s.lastHit!.dmg / 10).toBeGreaterThan(20);
     // L'adversaire est mis à terre dès l'impact.
     expect(s.p2.action).toBe('down');
     await page.screenshot({ path: `${SHOTS}/phase2-impact-critique.png` });
@@ -120,7 +124,8 @@ test.describe('phase 2 : coups, garde, rounds', () => {
     await waitState(page, `s.hits === 1`);
     let s = await state(page);
     expect(s.lastHit).toMatchObject({ blocked: true });
-    expect(s.p2.hp).toBe(99.5);
+    // Coup bloqué : 10 % arrondis, au moins 1 PV.
+    expect(s.p2.hp).toBe(99);
     expect(s.p2.guard).toBeLessThan(100);
     await page.screenshot({ path: `${SHOTS}/phase2-garde.png` });
     await waitState(page, `s.guardBreaks === 1`, 15_000);
@@ -135,8 +140,10 @@ test.describe('phase 2 : coups, garde, rounds', () => {
     const cdp = await page.context().newCDPSession(page);
     const slap = await cssPoint(page, 'sc.touch.btns[0]');
     const guard = await cssPoint(page, 'sc.touch.btns[2]');
+    let seen = freezeWhen(page, `s.p1.action === 'quickSlap'`);
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ ...slap, id: 1 }] });
-    await waitState(page, `s.p1.action === 'quickSlap'`);
+    await seen;
+    await resume(page);
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     await waitState(page, `s.p1.mode === 'free'`);
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ ...guard, id: 1 }] });
@@ -187,13 +194,17 @@ test.describe('phase 2 : coups, garde, rounds', () => {
   test('au clavier : I donne un coup de pied, bas + I une balayette', async ({ page }) => {
     await page.goto(IDLE);
     await waitReady(page, 'Fight');
+    let seen = freezeWhen(page, `s.p1.action === 'kick'`);
     await page.keyboard.down('KeyI');
-    await waitState(page, `s.p1.action === 'kick'`);
+    await seen;
+    await resume(page);
     await page.keyboard.up('KeyI');
     await waitState(page, `s.p1.mode === 'free'`);
     await page.keyboard.down('ArrowDown');
+    seen = freezeWhen(page, `s.p1.action === 'crouchKick'`);
     await page.keyboard.down('KeyI');
-    await waitState(page, `s.p1.action === 'crouchKick'`);
+    await seen;
+    await resume(page);
     await page.keyboard.up('KeyI');
     await page.keyboard.up('ArrowDown');
   });
@@ -201,7 +212,7 @@ test.describe('phase 2 : coups, garde, rounds', () => {
   test('un match complet : annonces, K.O., deux rounds, écran de résultat, revanche', async ({ page }) => {
     test.setTimeout(150_000);
     const errors = collectErrors(page);
-    await page.goto('./?scene=fight&p1=bernard&p2=lola&foe=idle');
+    await page.goto('./?scene=fight&p1=aviateur&p2=doyen&foe=idle');
     await waitReady(page, 'Fight');
     expect((await state(page)).phase).toBe('intro');
     await page.waitForTimeout(500);
@@ -239,7 +250,7 @@ test.describe('phase 2 : coups, garde, rounds', () => {
       return { state: window.__slap!.state, title: find('result-title').text, score: find('result-score').text, again: { x: find('btn-REVANCHE').x / k.x, y: find('btn-REVANCHE').y / k.y } };
     });
     expect(res.state).toMatchObject({ mode: 'result', winner: 0, wins: [2, 0] });
-    expect(res.title).toBe('VICTOIRE : BERNARD !');
+    expect(res.title).toBe('VICTOIRE : MANU !');
     expect(res.score).toBe('2 – 0');
     await page.touchscreen.tap(res.again.x, res.again.y);
     await waitReady(page, 'Fight');
@@ -251,7 +262,7 @@ test.describe('phase 2 : coups, garde, rounds', () => {
 
   test('contre le mannequin : il attaque, des coups sont échangés, aucune erreur', async ({ page }) => {
     const errors = collectErrors(page);
-    await page.goto('./?scene=fight&p1=bernard&p2=lola&foe=dummy&intro=0&seed=11');
+    await page.goto('./?scene=fight&p1=aviateur&p2=doyen&foe=dummy&intro=0&seed=11');
     await waitReady(page, 'Fight');
     await setInputs(page, { droite: true });
     await waitState(page, `s.p1.hp < 100`, 40_000);

@@ -185,7 +185,7 @@ export const SPECIAL = {
   /** Fenêtre de la garde au bon moment, après le signal (ms). */
   parryWindowMs: 100,
   /** Rapprochement des coups spéciaux de près : écart restant entre les deux corps (px), durée (ms). */
-  dashGap: 30,
+  dashGap: 45,
   dashMs: 130,
   /** Recul de la victime à l'impact (px par pas, il s'amortit). */
   push: 16,

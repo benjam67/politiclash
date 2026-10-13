@@ -4,7 +4,7 @@ Version du 13 octobre 2026 (style de combat unique, barre Buzz et coups spéciau
 
 Ce document contient tout le contexte nécessaire pour qu'une nouvelle discussion code, teste et déploie le jeu en autonomie. Il remplace la roadmap du premier jeu (`soufflet`, gifles au tour par tour), dont il reprend la stack, les assets et la méthode.
 
-> **État** : phases 0 à 4 bis faites, six combattants intégrés le 11 octobre. Les décisions du 13 octobre (un seul style de combat, barre Buzz, coups spéciaux uniques, voir sections 3 et 7) **ne sont pas encore codées** : elles le seront en phase 5. En cas d'écart, c'est le code qui fait foi et la roadmap s'adapte.
+> **État** : phases 0 à 5 faites. La phase 5 (13 octobre) a codé les décisions du 13 octobre : un seul style de combat, barre Buzz, coups spéciaux uniques (sections 3 et 7). En attente : les poses des coups spéciaux et les deux accessoires, les noms et répliques définitifs. En cas d'écart, c'est le code qui fait foi et la roadmap s'adapte.
 
 ## 1. Contexte et objectif
 
@@ -53,7 +53,7 @@ Les personnalités, les idées de coups, les noms et les répliques viennent du 
 | JLM | `doyen` | Hurlement |
 | Jordan | `binocle` | Dos tourné, tir par les fesses |
 
-Les six ont leurs 23 poses communes. Ils tournent pour l'instant avec l'ancien gabarit `rapide`. Bernard et Lola ne sont plus proposés dans le jeu ; ils restent dans le code pour les tests, à retirer quand les tests seront réécrits.
+Les six ont leurs 23 poses communes et le même style de combat. Bernard et Lola ont été retirés du code et des tests en phase 5.
 
 ### Ce qui est conservé du premier jeu (constaté à l'audit)
 
@@ -64,7 +64,7 @@ Les six ont leurs 23 poses communes. Ils tournent pour l'instant avec l'ancien g
 | Scènes Boot et Title | Conservées, simplifiées |
 | Interface (barres de vie, jauge de charge, chrono, losanges de rounds, bandeaux, onomatopées) et effets (impact, tremblement, particules, foule, commentateur) | Conservés, rebranchés sur le nouveau combat |
 | Sons et musique générés en code | Conservés |
-| Progression (XP, niveaux, tenues) | Mise de côté, sans branchement ; à reprendre ou retirer en phase 6 |
+| Progression (XP, niveaux, tenues) | Retirée en phase 5 (liée à Bernard et Lola), reste dans l'historique |
 | Vitest, Playwright, chaîne d'images (`npm run assets`) | Conservés |
 | `src/logic/`, scène Fight, contrôles tactiles, IA, `src/net/` | Réécrits |
 
@@ -196,6 +196,8 @@ La barre Buzz remplace la rage. Elle récompense celui qui attaque et esquive bi
 | Esquive réussie : s'accroupir sous une gifle, sauter par-dessus un coup de pied, pendant que le coup est actif et à portée | +15 |
 | Coup bloqué en garde | 0 |
 | Coup reçu | 0 |
+
+Réglage de la phase 5 (simulation) : +9, +14, +25 et +20, pour 1,1 à 1,3 coup spécial par round.
 
 - **D'un round à l'autre** : la barre se garde (décision du 13 octobre). Elle repart à 0 seulement au début d'un nouveau match.
 
@@ -371,7 +373,9 @@ Uniquement aux 3 jalons, ou en cas de choix qui ne peut pas être annulé facile
 
 **Faite le 11 octobre 2026**, à la demande du propriétaire.
 
-### Phase 5 · Style unique, barre Buzz et coups spéciaux
+### Phase 5 · Style unique, barre Buzz et coups spéciaux ✔
+
+**Faite le 13 octobre 2026.** Détail et réglages dans `CHANGELOG.md`. Poses des spéciaux provisoires, projectiles dessinés en code, noms et répliques provisoires.
 
 - Fusion des gabarits en un seul style de combat ; arrondi des coups bloqués (minimum 1 PV).
 - Barre Buzz sous la barre de vie, gains sur les coups qui touchent et les esquives réussies.
