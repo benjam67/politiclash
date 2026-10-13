@@ -1,17 +1,17 @@
 # PolitiClash – Roadmap de développement
 
-Version du 11 octobre 2026 (mise à jour après la phase 0).
+Version du 13 octobre 2026 (style de combat unique, barre Buzz et coups spéciaux propres à chaque personnage).
 
 Ce document contient tout le contexte nécessaire pour qu'une nouvelle discussion code, teste et déploie le jeu en autonomie. Il remplace la roadmap du premier jeu (`soufflet`, gifles au tour par tour), dont il reprend la stack, les assets et la méthode.
 
-> **État** : la phase 0 est faite. Le code copié a été audité et cette roadmap a été recalée sur ce qui existe réellement (voir `CHANGELOG.md`). En cas d'écart, c'est le code qui fait foi et la roadmap s'adapte.
+> **État** : phases 0 à 4 bis faites, six combattants intégrés le 11 octobre. Les décisions du 13 octobre (un seul style de combat, barre Buzz, coups spéciaux uniques, voir sections 3 et 7) **ne sont pas encore codées** : elles le seront en phase 5. En cas d'écart, c'est le code qui fait foi et la roadmap s'adapte.
 
 ## 1. Contexte et objectif
 
 Objectif : transformer le jeu de gifles au tour par tour en **vrai jeu de combat en temps réel**, avec déplacements, choix du personnage et choix du niveau.
 
 - **Pitch** : des femmes et des hommes politiques français, de tous les partis, règlent leurs comptes à coups de gifles. Ils se déplacent, sautent, s'accroupissent, se protègent et se giflent en temps réel. Ton absurde et exagéré, dans la tradition française de la caricature. Tous les bords sont représentés et tous en prennent pour leur grade.
-- **Mise au point du moteur** : tant que le combat n'est pas validé, on garde Bernard, Lola et le bar du premier jeu. L'habillage politique (personnages, décors) arrive ensuite, sans toucher au moteur.
+- **Un seul style de combat** : tous les combattants se déplacent et frappent de la même façon. Seul leur **coup spécial** les distingue.
 - **Plateforme** : jeu web (PWA) en mode paysage, jouable sur iOS et Android depuis un navigateur. Jouable aussi au clavier sur ordinateur (indispensable pour les tests).
 - **Modes** : d'abord **solo contre l'IA**. Dès que le solo fonctionne bien, **deux joueurs en ligne**. Pas de mode deux joueurs sur le même téléphone.
 - **Équipe** : un seul développeur, en vibecoding. Claude code, teste et déploie en autonomie ; le propriétaire du projet ne teste qu'aux jalons indiqués.
@@ -24,40 +24,49 @@ Le jeu sépare strictement le **moteur** de l'**habillage**.
 
 | | Claude | Le propriétaire du projet |
 | --- | --- | --- |
-| Moteur : déplacements, coups, garde, IA, écrans, jeu en ligne | ✔ | |
-| **Gabarits** de combattants : des profils de jeu neutres, sans nom ni visage (le lourd qui frappe fort, la rapide fragile, le défenseur…), équilibrés par simulation | ✔ | |
-| Mécaniques des coups spéciaux, sans habillage (« un coup qui traverse la garde », « trois gifles enchaînées ») | ✔ | |
+| Moteur : déplacements, coups, garde, barre Buzz, IA, écrans, jeu en ligne | ✔ | |
+| Réglages du style de combat commun, équilibrés par simulation | ✔ | |
+| Programmation des cinématiques des coups spéciaux | ✔ | |
+| Prompts de génération des planches, à partir des idées et des références du propriétaire | ✔ | |
 | Décors en tant que lieux (hémicycle, plateau télé, marché…) : intégration technique | ✔ | |
-| Dessins des personnages et des décors | | ✔ |
+| Choix des personnalités, idée de chaque coup spécial | | ✔ |
+| Génération ou dessin des personnages, des décors et des accessoires | | ✔ |
 | Noms, surnoms, noms des coups spéciaux, répliques du commentateur | | ✔ |
-| Choix de quel personnage reçoit quel gabarit | | ✔ |
 
-Claude n'écrit et ne dessine aucune caricature de personne réelle. Tout l'habillage tient dans **un fichier de textes** (`src/config/texts.ts`) et **un dossier d'images** (`raw/`), que le propriétaire remplit lui-même sans toucher au reste du code. Le reste du code ne contient aucun nom de personnage.
+Les personnalités, les idées de coups, les noms et les répliques viennent du propriétaire. Claude n'invente aucune caricature et écarte ce qui prêterait un délit ou un fait précis inventé à une personne réelle (décision du 13 octobre : le déclencheur du spécial de Manu Macs a été changé pour cette raison). Tout l'habillage tient dans **un fichier de textes** (`src/config/texts.ts`) et **un dossier d'images** (`raw/`). Le reste du code ne contient aucun nom de personnage.
 
 ## 2. Dépôt et point de départ
 
 - **Dépôt** : `benjam67/politiclash`, public. Il a été créé par import du dépôt du premier jeu, `benjam67/soufflet`.
 - **Le dépôt `soufflet` ne doit jamais être modifié.** Il reste en ligne tel quel à son adresse.
 - **Adresse du jeu** : https://benjam67.github.io/politiclash/
-- **Déploiement** : à chaque push sur `main`, GitHub Actions lance les tests, construit le jeu et le publie sur la branche `gh-pages`, que GitHub Pages sert (Settings → Pages → branche `gh-pages`).
+- **Déploiement** : à chaque push sur `main`, GitHub Actions lance les tests, construit le jeu et le publie sur la branche `gh-pages`, que GitHub Pages sert.
+
+### Combattants intégrés (11 octobre 2026)
+
+| Nom affiché | Identifiant | Coup spécial (voir section 7) |
+| --- | --- | --- |
+| Manu Macs | `aviateur` | Poudre de perlimpinpin et explosion dorée |
+| Narine le Zen | `tailleur` | Petite danse et coup de hanche |
+| Baby | `cadet` | Pinte bue cul sec et cassée sur la tête |
+| Bompardiou | `barbe` | Faucille et marteau lancés |
+| JLM | `doyen` | Hurlement |
+| Jordan | `binocle` | Dos tourné, tir par les fesses |
+
+Les six ont leurs 23 poses communes. Ils tournent pour l'instant avec l'ancien gabarit `rapide`. Bernard et Lola ne sont plus proposés dans le jeu ; ils restent dans le code pour les tests, à retirer quand les tests seront réécrits.
 
 ### Ce qui est conservé du premier jeu (constaté à l'audit)
 
 | Élément | Sort |
 | --- | --- |
 | Phaser 3 + TypeScript + Vite, GitHub Pages, PWA, écran « tourne ton téléphone » | Conservé tel quel |
-| Sprites de Bernard et Lola (11 poses chacun, dont garde et esquive), décor du bar, patron, 8 habitués | Conservés, complétés par de nouvelles poses |
 | Conventions d'ancrage, d'échelle et de miroir des sprites | Conservées |
-| Scènes Boot et Title | Conservées, simplifiées (il n'y avait pas de scène Result : le résultat s'affichait dans la scène de combat) |
-| Interface (barres de vie, jauge de charge, chrono, losanges de rounds, bandeaux, onomatopées) et effets (impact, tremblement, particules, foule, commentateur) | Conservés, à rebrancher sur le nouveau combat |
+| Scènes Boot et Title | Conservées, simplifiées |
+| Interface (barres de vie, jauge de charge, chrono, losanges de rounds, bandeaux, onomatopées) et effets (impact, tremblement, particules, foule, commentateur) | Conservés, rebranchés sur le nouveau combat |
 | Sons et musique générés en code | Conservés |
 | Progression (XP, niveaux, tenues) | Mise de côté, sans branchement ; à reprendre ou retirer en phase 6 |
 | Vitest, Playwright, chaîne d'images (`npm run assets`) | Conservés |
-| `balance.ts` | Réécrit avec les valeurs du combat en temps réel |
-| `src/logic/` (tours, jauge, swipe) | **Supprimé** en phase 0, réécrit à partir de la phase 1 (restent le placement et le générateur aléatoire) |
-| Scène Fight et contrôles tactiles | **Réécrits** (scène statique en phase 0) |
-| IA et simulation de matchs | **Supprimées**, réécrites en phase 3 |
-| `src/net/` (PeerJS, salon à code, fondé sur un journal de tours) | **Supprimé**, réécrit en phase 7. L'ancien code reste lisible dans l'historique et dans `soufflet` |
+| `src/logic/`, scène Fight, contrôles tactiles, IA, `src/net/` | Réécrits |
 
 ### Structure du dépôt
 
@@ -65,13 +74,15 @@ Claude n'écrit et ne dessine aucune caricature de personne réelle. Tout l'habi
 politiclash/
   raw/                    images sources (PNG) : c'est ici qu'on dépose les dessins
     fighters/<perso>/     une image par pose
+    props/                accessoires des coups spéciaux (projectiles)
     stages/<niveau>/      décor et figurants
   public/assets/          images optimisées, produites par `npm run assets`
   src/
     config/
       texts.ts            TOUS les textes : titre, noms, coups spéciaux, répliques
-      balance.ts          toutes les valeurs de réglage, dont les gabarits
-      roster.ts           liste des combattants (gabarit, voix, boîtes de collision)
+      balance.ts          toutes les valeurs de réglage
+      roster.ts           liste des combattants (coup spécial, voix, boîtes de collision)
+      specials.ts         déroulé des cinématiques des coups spéciaux
       stages.ts           liste des niveaux (image, ligne de sol, largeur)
       poses.ts            table « action → image », avec poses provisoires
       assets.json         mesures des images, écrit par `npm run assets`
@@ -79,8 +90,8 @@ politiclash/
     input/                tactile, clavier, IA, réseau : une seule interface
     ai/                   IA (produit des entrées, comme un joueur)
     scenes/               Boot, Title, CharacterSelect, StageSelect, Fight, Result
-    ui/                   barres de vie, jauges, chrono, bandeaux, contrôles tactiles
-    fx/                   impact, tremblement, particules, foule
+    ui/                   barres de vie, barre Buzz, jauges, chrono, bandeaux, contrôles tactiles
+    fx/                   impact, tremblement, particules, foule, effets des spéciaux
     audio/                sons et musique générés en code
     net/                  jeu en ligne (phase 7)
   tests/unit/             Vitest
@@ -91,7 +102,7 @@ politiclash/
 
 ## 3. Règles du jeu
 
-Un match se joue en 2 rounds gagnants (3 au maximum). Chaque round : 100 PV par combattant et 60 secondes au chrono. À la fin du chrono, celui qui a le plus de PV gagne le round.
+Un match se joue en 2 rounds gagnants (3 au maximum). Chaque round : 100 PV par combattant et 60 secondes au chrono. Les PV repartent à 100 à chaque round. À la fin du chrono, celui qui a le plus de PV gagne le round.
 
 ### Déplacements
 
@@ -103,18 +114,17 @@ Un match se joue en 2 rounds gagnants (3 au maximum). Chaque round : 100 PV par 
 
 ### Coups
 
-Chaque combattant a une gifle, un coup de pied et un coup spécial. Les gifles sont **hautes**, les coups de pied sont **bas** : c'est ce qui décide de la garde à tenir.
+Chaque combattant a les mêmes gifles et coups de pied, plus un coup spécial qui lui est propre. Les gifles sont **hautes**, les coups de pied sont **bas** : c'est ce qui décide de la garde à tenir.
 
-| Coup | Commande | Hauteur | Rôle |
-| --- | --- | --- | --- |
-| Gifle rapide | Appui sur « Gifle » | Haute | Rapide, peu de dégâts, sert à interrompre. Passe au-dessus d'un adversaire accroupi |
-| Grosse gifle | Maintenir « Grosse gifle », relâcher pour frapper | Haute | Reprend la jauge du premier jeu : charge, zone dorée, surchauffe |
-| Gifle aérienne | « Gifle » en l'air | Haute | Touche un adversaire accroupi, punit les grosses gifles en charge |
-| Coup de pied | Appui sur « Pied » | Bas | Plus lent, plus long. Touche un adversaire accroupi ; on peut sauter par-dessus |
-| Balayette | « Pied » en étant accroupi | Bas | Passe sous les gifles hautes |
-| Gifle spéciale | « Grosse gifle » avec la rage pleine | Haute | Selon le gabarit : une gifle énorme, ou trois gifles enchaînées |
-
-Le coup de pied et la garde haute ou basse ont été ajoutés le 11 octobre 2026 à la demande du propriétaire (phase 4 bis). La balayette remplace l'ancienne gifle accroupie.
+| Coup | Commande | Hauteur | Dégâts | Rôle |
+| --- | --- | --- | --- | --- |
+| Gifle rapide | Appui sur « Gifle » | Haute | 5 | Rapide, sert à interrompre. Passe au-dessus d'un adversaire accroupi |
+| Grosse gifle | Maintenir « Grosse gifle », relâcher pour frapper | Haute | selon la charge, 13 à pleine charge, 21 à 23 en zone dorée | Charge, zone dorée, surchauffe |
+| Gifle aérienne | « Gifle » en l'air | Haute | 7 | Touche un adversaire accroupi, punit les grosses gifles en charge |
+| Coup de pied | Appui sur « Pied » | Bas | 7 | Plus lent, plus long. Touche un adversaire accroupi ; on peut sauter par-dessus |
+| Balayette | « Pied » en étant accroupi | Bas | 6 | Passe sous les gifles hautes |
+| Coup spécial | Maintenir « Buzz » (le bouton « Grosse gifle » quand la barre Buzz est pleine) | Imblocable | 35 (18 avec une garde au bon moment) | Cinématique propre à chaque personnage, voir « Barre Buzz et coup spécial » |
+| Autogifle | Surchauffe de la grosse gifle | – | 8, à soi-même | Punit la charge trop longue |
 
 **Grosse gifle, héritage du premier jeu :**
 - La jauge monte de 0 à 100 % tant que le bouton est maintenu. Le combattant ne peut pas se déplacer pendant la charge et reste vulnérable.
@@ -127,31 +137,36 @@ Le coup de pied et la garde haute ou basse ont été ajoutés le 11 octobre 2026
 - **Garde haute** : maintenir « Garde ». Bloque les gifles, sauf une grosse gifle en zone dorée.
 - **Garde basse** : maintenir « Garde » en tenant le stick vers le bas. Bloque les coups de pied.
 - **Mauvaise hauteur** : le coup passe en entier, comme sans garde. En garde basse, la tête reste à portée de gifle.
-- Un coup bloqué inflige 10 % de ses dégâts.
+- Un coup bloqué inflige 10 % de ses dégâts, **arrondis, avec un minimum de 1 PV** (une gifle rapide bloquée retire 1 PV).
 - **Jauge de garde** : chaque coup bloqué la vide un peu ; elle se recharge hors garde. Vide, la garde est brisée et le combattant est sonné 1 seconde.
 - **Accroupi** (sans garde) : esquive la gifle rapide et la grosse gifle, mais prend les coups de pied.
+- **Coup spécial** : ne se bloque pas. Une garde mise au bon moment réduit seulement ses dégâts (voir plus bas).
 
 ### Dégâts
 
 ```
-Gifles, coups de pied :              D = dégâts du coup × R_d
-Grosse gifle :                       D = B × (C / 100) × K × R_d
+Gifles, coups de pied :   D = dégâts du coup
+Grosse gifle :            D = B × (C / 100) × K
+Coup bloqué :             D = arrondi(10 % des dégâts), au moins 1
 ```
 
-- B = base du perso, C = charge en %, K = 2 en zone dorée sinon 1, R_d = résistance de celui qui reçoit.
+- B = base de la grosse gifle, C = charge en %, K = 2 en zone dorée sinon 1.
+- La résistance R_d des anciens gabarits disparaît : elle vaut 1 pour tout le monde.
 
-### Gabarits (réglés par simulation en phase 3)
+### Un seul style de combat
 
-Un gabarit est un profil de jeu neutre. Chaque combattant en reçoit un (choix du propriétaire, dans `roster.ts`). D'autres gabarits s'ajouteront en phase 8 (le défenseur, le technicien fragile, celui qui se relève toujours…).
+Les gabarits `lourd` et `rapide` sont fusionnés en un seul profil, commun à tous. Valeurs de départ (moyenne des deux gabarits), à régler par simulation :
 
-Les distances sont en pixels pour un écran logique de 844 × 390 : la logique travaille dans ce repère, l'affichage convertit vers la taille réelle (monde Phaser de 720 de haut, largeur étendue).
+| Réglage | Valeur |
+| --- | --- |
+| Vitesse de marche | 200 px/s |
+| Durée du saut | 600 ms |
+| Base B de la grosse gifle | 13 |
+| Charge 0 → 100 % | 1,2 s |
+| Zone dorée | 78–90 % |
+| Allonge | identique pour tous |
 
-| Gabarit | Style | Vitesse de marche | Durée du saut | Base B | Charge 0 → 100 % | Zone dorée | Résistance R_d | Mécanique de la spéciale | Porté pour l'instant par |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `lourd` | Lent, frappe fort, encaisse, bonne allonge (×1,08) | 170 px/s | 650 ms | 14 | 1,4 s | 79–91 % | 0,85 | Une gifle ×1,8 | Big Bernard |
-| `rapide` | Rapide, mobile, fragile | 230 px/s | 550 ms | 12 | 1,0 s | 76–92 % | 1,05 | 3 gifles à ×0,7 | Lola Tornade |
-
-Ces valeurs sont celles réglées par simulation, la dernière fois après l'ajout des coups de pied.
+Les distances sont en pixels pour un écran logique de 844 × 390 : la logique travaille dans ce repère, l'affichage convertit vers la taille réelle (monde Phaser de 720 de haut, largeur étendue). Seules les boîtes de collision peuvent varier d'un personnage à l'autre, pour coller à leurs dessins.
 
 ### Durées des coups
 
@@ -163,28 +178,62 @@ Ces valeurs sont celles réglées par simulation, la dernière fois après l'ajo
 | Balayette | 130 ms | 70 ms | 250 ms | 6 | 250 ms |
 | Grosse gifle (après relâchement) | 60 ms | 90 ms | 350 ms | selon formule | 450 ms, recul important |
 
-Une grosse gifle de 14 dégâts ou plus **met l'adversaire à terre** ; il se relève après 800 ms, invulnérable au sol et pendant le relevé. *(Valeur de départ : 25, hors d'atteinte pour le gabarit `rapide` ; ramenée à 14 en phase 2.)*
+Une grosse gifle de 14 dégâts ou plus **met l'adversaire à terre** (en pratique : la zone dorée) ; il se relève après 800 ms, invulnérable au sol et pendant le relevé.
 
-### Mécaniques avancées (phase 5)
+### Barre Buzz et coup spécial (phase 5)
 
-- **Rage** : +1 point par dégât reçu, 100 maximum. Pleine, elle transforme la prochaine grosse gifle en gifle spéciale, puis retombe à 0.
-- **Sonné** : après une garde brisée, ou un coup de 25 dégâts ou plus : pendant 3 secondes, la jauge de grosse gifle de la victime monte de façon irrégulière (vitesse ±30 %).
+La barre Buzz remplace la rage. Elle récompense celui qui attaque et esquive bien, pas celui qui encaisse.
+
+**La barre**
+- Petite barre sous la barre de vie, de 0 à 100.
+- Gains (valeurs de départ, à régler pour obtenir **un ou deux spéciaux par round**) :
+
+| Action | Gain |
+| --- | --- |
+| Gifle rapide, gifle aérienne, coup de pied ou balayette qui touche | +6 |
+| Grosse gifle qui touche | +10 |
+| Grosse gifle en zone dorée | +20 |
+| Esquive réussie : s'accroupir sous une gifle, sauter par-dessus un coup de pied, pendant que le coup est actif et à portée | +15 |
+| Coup bloqué en garde | 0 |
+| Coup reçu | 0 |
+
+- **D'un round à l'autre** : la barre se garde (décision du 13 octobre). Elle repart à 0 seulement au début d'un nouveau match.
+
+**Le déclenchement**
+- Barre pleine : le bouton « Grosse gifle » change de couleur, brille et affiche « Buzz ». La grosse gifle n'est plus disponible tant que le spécial n'est pas utilisé.
+- Le joueur maintient le bouton : un cercle se remplit autour, en 0,5 s. Pendant ce temps, il ne peut pas bouger.
+- Relâché avant la fin : rien ne se passe, la barre reste pleine.
+- Touché pendant que le cercle se remplit : le cercle s'annule, la barre reste pleine.
+- Cercle complet : la cinématique du coup spécial se lance.
+
+**La cinématique**
+- Le coup spécial **touche toujours** : une fois lancé, il ne peut ni être évité ni bloqué.
+- Les personnages dont le spécial frappe de près (Narine le Zen, Baby, Manu Macs) **se collent automatiquement à l'adversaire** au début de la cinématique. Ceux qui frappent à distance (JLM, Bompardiou, Jordan) restent où ils sont.
+- Le chrono s'arrête pendant la cinématique. Le lanceur est invulnérable.
+- **Dégâts : 35 PV.** Le coup met à terre et rend sonné.
+- **Garde au bon moment** : un signal (éclair et son sec) précède l'impact. Si la victime met la garde dans les 100 ms (6 pas) qui suivent le signal, elle ne perd que 18 PV. Trop tôt ou trop tard : 35 PV.
+- Après l'impact, la barre Buzz retombe à 0 et la grosse gifle redevient disponible.
+- La cinématique fait partie de la simulation (durée fixe en pas, pas d'animation qui décide de quoi que ce soit), pour rester synchrone en ligne.
+
+### Autres mécaniques (phase 5)
+
+- **Sonné** : après une garde brisée, ou un coup de 25 dégâts ou plus (dont le coup spécial) : pendant 3 secondes, la jauge de grosse gifle de la victime monte de façon irrégulière (vitesse ±30 %).
 - **KO** : à 0 PV, pose « dazed » pour le perdant, « victory » pour le gagnant.
 
-Toutes ces valeurs vivent dans `src/config/balance.ts` et `src/config/roster.ts`, pour être réglées sans toucher à la logique. Aucun texte affiché n'y figure : les noms sont dans `src/config/texts.ts`.
+Toutes ces valeurs vivent dans `src/config/balance.ts`, `src/config/roster.ts` et `src/config/specials.ts`, pour être réglées sans toucher à la logique. Aucun texte affiché n'y figure : les noms et le mot « Buzz » sont dans `src/config/texts.ts`.
 
 ## 4. Contrôles
 
 ### Tactile (mobile, paysage)
 
 - **Moitié gauche de l'écran** : stick virtuel. Gauche et droite pour marcher, haut pour sauter, bas pour s'accroupir.
-- **Moitié droite** : quatre boutons, « Gifle », « Pied », « Grosse gifle » (à maintenir), « Garde » (à maintenir ; avec le stick vers le bas : garde basse).
+- **Moitié droite** : quatre boutons, « Gifle », « Pied », « Grosse gifle » (à maintenir ; devient « Buzz » quand la barre est pleine), « Garde » (à maintenir ; avec le stick vers le bas : garde basse).
 - Les contrôles ne doivent jamais masquer les combattants ni les barres de vie.
 
 ### Clavier (ordinateur et tests)
 
 - Flèches ou ZQSD : déplacements, saut, accroupi.
-- J : gifle, I : pied, K : grosse gifle, L : garde.
+- J : gifle, I : pied, K : grosse gifle et Buzz, L : garde.
 
 ### Une seule interface d'entrée
 
@@ -194,7 +243,7 @@ Le joueur, l'IA et plus tard le joueur distant produisent tous le même objet d'
 { gauche, droite, haut, bas, gifle, grosseGifle, garde, pied }
 ```
 
-La logique ne sait pas d'où viennent les entrées. C'est ce qui permet de tester par simulation et de brancher le jeu en ligne sans réécrire le combat.
+La logique ne sait pas d'où viennent les entrées. Le Buzz n'ajoute pas d'entrée : c'est `grosseGifle` maintenu avec la barre pleine.
 
 ## 5. Contraintes techniques du combat
 
@@ -205,65 +254,66 @@ Ces règles s'appliquent dès la phase 1. Elles conditionnent le jeu en ligne de
 - **Déterminisme** : générateur aléatoire à graine stocké dans l'état ; pas de fonctions trigonométriques dans la logique ; valeurs entières dès que possible. Deux exécutions avec les mêmes entrées donnent exactement le même état.
 - **État sérialisable** : l'état complet du combat est un objet simple, copiable et comparable (empreinte de contrôle).
 - **Collisions par rectangles** : chaque pose a une boîte de corps, une boîte vulnérable et, pour les coups, une boîte de frappe. Elles sont décrites dans `roster.ts`.
-- **Affichage séparé** : la scène Fight lit l'état et l'affiche (pose, position, effets). Elle ne décide de rien.
+- **Affichage séparé** : la scène Fight lit l'état et l'affiche (pose, position, effets). Elle ne décide de rien. Les cinématiques des spéciaux suivent la même règle : la logique avance la cinématique pas à pas, l'affichage montre les poses et les effets.
 
 ## 6. Direction artistique
 
-Style anime de baston des années 90, comique et exagéré, identique au premier jeu. Les personnages politiques sont dessinés par le propriétaire dans ce même style, en caricature. La référence visuelle de l'interface et des effets reste la [maquette Slap Fighter](https://claude.ai/artifact/993HtiDhMQQGK2257KPoG2).
+Style anime de baston des années 90, comique et exagéré, identique au premier jeu. Les personnages politiques sont générés par le propriétaire dans ce même style, en caricature. La référence visuelle de l'interface et des effets reste la [maquette Slap Fighter](https://claude.ai/artifact/993HtiDhMQQGK2257KPoG2).
 
-Les animations fonctionnent par **changement de pose**, sans animation fluide : une pose par action, deux à quatre pour la marche. De petits mouvements codés (rebond, étirement, pas en avant, tremblement) donnent la vie.
+Les animations fonctionnent par **changement de pose**, sans animation fluide : une pose par action, deux à quatre pour la marche, trois pour un coup spécial. De petits mouvements codés (rebond, étirement, pas en avant, tremblement) et les effets du jeu (paillettes, explosion, onde de choc, éclats de verre) donnent la vie.
 
 ## 7. Assets
 
 ### Conventions (inchangées)
 
-- Tous les combattants sont dessinés **tournés vers la droite**. Celui de droite est affiché en miroir horizontal.
+- Tous les combattants sont dessinés **tournés vers la droite**. Celui de droite est affiché en miroir horizontal. Exceptions : quelques poses de coup spécial (dos tourné, face au joueur), indiquées dans `GUIDE-DESSINS.md`.
 - **Point d'ancrage** : centre horizontal de l'image, pieds à 10 px au-dessus du bas de l'image.
 - **Même facteur d'échelle** pour tous les combattants, afin de garder leur rapport de taille.
 - Toutes les poses d'un perso ont **la même taille d'image et la même ligne de pieds**. On change de texture sans recalage.
-- Fond transparent. Optimisation : environ 600 px de haut, format WebP.
+- Fond transparent. Optimisation : environ 440 px de haut (réduit le 11 octobre pour tenir sous 4 Mo avec six combattants), format WebP.
 
 ### Poses
 
-La liste complète des poses (22 obligatoires par personnage), les tailles, les planches de plusieurs poses et les règles pour les décors sont dans **`GUIDE-DESSINS.md`**, le document de référence pour les dessins.
+La liste complète des poses, les tailles, les planches et les règles pour les décors sont dans **`GUIDE-DESSINS.md`**. Les prompts des planches des coups spéciaux sont dans **`PROMPTS-SPECIAUX.md`**.
 
-- Bernard et Lola ont 9 des 22 poses : `idle`, `guard`, `windup`, `swing`, `slap`, `selfslap`, `hit`, `dazed`, `victory`. Il leur en manque 13 chacun.
-- Les deux poses d'esquive du premier jeu (`dodge`, `dodge_perfect`) ne font plus partie de la liste ; `dodge` sert de coup de pied provisoire.
+- **Poses communes** : 21 par personnage. Les six combattants les ont déjà.
+- **Poses du coup spécial** : 3 par personnage (`special1`, `special2`, `special3`), propres à chacun. Elles remplacent les anciennes poses `special` et `special2`, identiques pour tous.
+- **Accessoires** : 2 images séparées, dans `raw/props/` : le projectile de Jordan et la faucille et le marteau de Bompardiou.
+- Manu Macs et Narine le Zen ont encore leurs anciennes planches (jambes très écartées, marche peu animée, coup de pied haut). À refaire avec le prompt corrigé si possible.
+
+### Les six coups spéciaux
+
+| Perso | Portée | Déroulé | Poses | Effets tracés par le jeu |
+| --- | --- | --- | --- | --- |
+| Narine le Zen | Près | Petite danse (une main à la taille, l'autre bras à l'horizontale, avant-bras vers le ciel), puis coup de hanche | danse 1, danse 2, coup de hanche | Étoiles, recul |
+| Baby | Près | Sort une pinte, la boit cul sec, la casse sur la tête de l'adversaire | pinte en main, boit, frappe | Mousse, éclats de verre |
+| Manu Macs | Près | Souffle de la poudre de perlimpinpin, se tourne face au joueur bras levés, explosion | poudre dans la main, souffle, bras levés face au joueur | Nuage de paillettes dorées, explosion dorée |
+| JLM | Distance | Inspire, puis hurle sur l'adversaire | inspire, hurle, hurle bras écartés | Onde de choc, adversaire repoussé |
+| Bompardiou | Distance | Lance une faucille et un marteau | élan, lancer, fier | Projectile qui tournoie (image fournie) |
+| Jordan | Distance | Se retourne dos à l'adversaire et tire par les fesses | se retourne, penché dos tourné, se redresse | Projectile (image fournie), petit nuage |
+
+Les noms des coups spéciaux et les répliques du commentateur restent à écrire par le propriétaire dans `texts.ts`.
 
 ### Poses provisoires : le code n'attend pas les dessins
 
-Le fichier `src/config/poses.ts` associe chaque action à une image. Tant qu'une pose n'est pas fournie, une pose existante la remplace :
-
-| Action | Pose provisoire |
-| --- | --- |
-| Marche | Attente, avec un léger rebond |
-| Saut | Attente, déplacée vers le haut |
-| Accroupi | Attente, écrasée verticalement (remarque du jalon 1 : le personnage paraît rétrécir) |
-| Garde basse | Garde, écrasée |
-| Gifle rapide, aérienne, spéciale | Gifle |
-| Coup de pied | Ancienne pose d'esquive |
-| Balayette | Ancienne pose d'esquive, écrasée |
-| Coup reçu lourd | Coup reçu, incliné |
-| À terre, relevé | Sonné, incliné |
+Le fichier `src/config/poses.ts` associe chaque action à une image. Tant qu'une pose n'est pas fournie, une pose existante la remplace. Pour les coups spéciaux, en attendant leurs trois poses, la cinématique utilise les anciennes poses `special` et `special2`.
 
 Quand une vraie pose arrive : déposer le PNG dans `raw/fighters/<perso>/`, l'ajouter à la liste des poses, lancer `npm run assets` et modifier une ligne dans `poses.ts`.
 
 ### Niveaux
 
 - Un niveau est une image de décor d'environ **2 écrans de large**, avec la ligne de sol à la même hauteur pour tous les niveaux.
-- **Niveau 1 : le bar**, en version élargie. En attendant, le décor actuel est étiré ou répété sur les bords.
+- **Niveau 1 : le bar**, en version élargie. En attendant, le décor actuel est répété en miroir sur les bords.
 - Niveaux suivants à fournir, sur le thème politique : l'hémicycle, le plateau télé d'un débat, le marché en campagne électorale, le Salon de l'agriculture.
-- Le patron et les habitués restent en fond de scène dans le bar, comme dans le premier jeu (environ 45 % de la taille des combattants, légèrement assombris). Chaque nouveau décor peut avoir ses propres figurants (députés, public du plateau, badauds du marché).
+- Chaque décor peut avoir ses propres figurants (députés, public du plateau, badauds du marché).
 
-### Futurs combattants : l'habillage politique
+### Nouveaux combattants
 
-Les combattants définitifs sont des caricatures de personnalités politiques françaises, sous de faux noms, tous partis confondus. Ils sont entièrement fournis par le propriétaire :
-
-1. **Les dessins** : un dossier `raw/fighters/<identifiant>/` avec le jeu de poses. L'identifiant est un mot neutre en minuscules.
+1. **Les dessins** : un dossier `raw/fighters/<identifiant>/` avec les 21 poses communes et les 3 poses du spécial. L'identifiant est un mot neutre en minuscules.
 2. **Les textes** : une entrée dans `src/config/texts.ts` (nom, nom court, nom du coup spécial, répliques).
-3. **Le gabarit** : une ligne dans `src/config/roster.ts` qui dit quel profil de jeu il reçoit.
+3. **Le coup spécial** : son déroulé, décrit par le propriétaire, programmé dans `specials.ts`.
 
-Claude fournit les gabarits, vérifie l'équilibre par simulation et règle les boîtes de collision sur les dessins. L'écran de sélection est prévu pour 6 combattants, avec des cases « Bientôt » pour ceux qui manquent.
+La grille de sélection a 6 cases, toutes occupées. Un septième combattant demandera une grille plus grande et le chargement des images d'un combattant seulement quand il est choisi (le chargement initial est à la limite des 4 Mo).
 
 Deux précautions, qui relèvent du propriétaire : taper sur tous les bords, comme le veut la tradition ; et, avant une diffusion large, demander un avis juridique (l'exception de caricature existe en droit français, mais elle a des limites).
 
@@ -282,12 +332,12 @@ Claude enchaîne les phases seul et vérifie lui-même chaque étape. Le propri�
 ### Vérifications automatiques
 
 - **Build et types** : `npm run build` sans erreur, TypeScript strict.
-- **Tests unitaires (Vitest)** : déplacements, saut, collisions, chaque coup (préparation, coup actif, récupération), garde, jauge de garde, grosse gifle (zone dorée, surchauffe), mise à terre, chrono, fin de round et de match, rage, sonné.
-- **Test de déterminisme** : rejouer deux fois la même séquence d'entrées sur 10 000 pas et vérifier que l'empreinte de l'état final est identique.
-- **Simulation de matchs** : mode `?autoplay=1` où deux IA s'affrontent. Lancer 200 matchs sans affichage : un match se termine toujours, la durée moyenne d'un round est comprise entre 20 et 50 secondes, aucun perso au-dessus de 60 % de victoires à niveau d'IA égal.
+- **Tests unitaires (Vitest)** : déplacements, saut, collisions, chaque coup (préparation, coup actif, récupération), garde, jauge de garde, arrondi des coups bloqués, grosse gifle (zone dorée, surchauffe), mise à terre, chrono, fin de round et de match, barre Buzz (gains, esquive réussie), cercle du Buzz (annulation au relâchement et sur coup reçu), cinématique (touche toujours, rapprochement des spéciaux de près, garde au bon moment), sonné.
+- **Test de déterminisme** : rejouer deux fois la même séquence d'entrées sur 10 000 pas, avec des coups spéciaux, et vérifier que l'empreinte de l'état final est identique.
+- **Simulation de matchs** : mode `?autoplay=1` où deux IA s'affrontent. Lancer 200 matchs sans affichage : un match se termine toujours, la durée moyenne d'un round est comprise entre 20 et 50 secondes, un ou deux spéciaux par round en moyenne, aucun perso au-dessus de 60 % de victoires à niveau d'IA égal.
 - **Tests Playwright sur mobile émulé** : téléphone en paysage (844 × 390, tactile). Simuler stick et boutons, vérifier que le perso se déplace, que les PV baissent, que les poses changent et qu'il n'y a **aucune erreur dans la console**.
-- **Contrôle visuel** : captures d'écran Playwright aux moments clés (sélection du perso, sélection du niveau, marche, saut, garde, impact, mise à terre, fin de round). Les regarder pour repérer persos coupés, contrôles qui masquent l'action, textes illisibles.
-- **Performance** : chargement initial de moins de 4 Mo ; une image calculée en moins de 8 ms sur mobile émulé avec ralentissement du processeur ×4 (soit de la marge pour 60 images par seconde).
+- **Contrôle visuel** : captures d'écran Playwright aux moments clés (sélection, marche, saut, garde, impact, mise à terre, bouton Buzz et cercle, chaque cinématique, fin de round).
+- **Performance** : chargement initial de moins de 4 Mo ; une image calculée en moins de 8 ms sur mobile émulé avec ralentissement du processeur ×4.
 
 ### Quand s'arrêter pour demander
 
@@ -299,111 +349,76 @@ Uniquement aux 3 jalons, ou en cas de choix qui ne peut pas être annulé facile
 
 ### Phase 0 · Mise en place ✔
 
-**Faite le 11 octobre 2026** (détail dans `CHANGELOG.md`).
-
-- Dépôt `politiclash` créé par import de `soufflet`. Rien de modifié dans `soufflet`.
-- **Code copié audité** : ce qui existe réellement, ce qui est gardé et ce qui est retiré est noté dans `CHANGELOG.md`.
-- Logique au tour par tour, contrôles au swipe, ancienne IA et ancien code réseau retirés.
-- `texts.ts`, `roster.ts`, `stages.ts` et `poses.ts` en place avec Bernard, Lola et le bar ; gabarits dans `balance.ts`.
-- Jeu renommé (titre, manifest PWA), adresse du site corrigée.
-- *Validé quand* : le site en ligne affiche la scène de combat statique (décor, Bernard, Lola) sans erreur, et les tests conservés passent.
+**Faite le 11 octobre 2026.** Dépôt créé, code copié audité, logique au tour par tour retirée, fichiers de configuration en place, jeu renommé.
 
 ### Phase 1 · Temps réel et déplacements ✔
 
-**Faite le 11 octobre 2026** (détail dans `CHANGELOG.md`).
-
-- Boucle de logique à pas fixe, fonction `step` pure et déterministe, état sérialisable.
-- Interface d'entrée unique ; contrôles clavier et tactiles (stick et boutons).
-- Marche, saut, accroupi, retournement automatique, collision entre combattants, limites du niveau, caméra.
-- Poses provisoires pour toutes les actions.
-- *Validé quand* : les deux combattants se déplacent au clavier et au tactile, le test de déterminisme passe, 60 images par seconde sur mobile émulé. *(Le bac à sable de test n'ayant pas de carte graphique, on y mesure le temps de calcul d'une image, processeur ralenti 4 fois ; les 60 images par seconde réelles se vérifient sur téléphone au jalon 1.)*
+**Faite le 11 octobre 2026.** Boucle à pas fixe, fonction `step` pure et déterministe, contrôles clavier et tactiles, marche, saut, accroupi, collisions, caméra.
 
 ### Phase 2 · Coups et collisions ✔
 
-**Faite le 11 octobre 2026** (détail dans `CHANGELOG.md`). **Jalon 1 validé** par le propriétaire le 11 octobre : contrôles, plaisir de la gifle et rythme jugés bons. Seule remarque : accroupi, le personnage « rétrécit » (pose provisoire écrasée) ; les vraies poses accroupies sont à dessiner.
-
-- Boîtes de frappe et boîtes vulnérables par pose.
-- Gifle rapide, gifle accroupie (remplacée depuis par la balayette), gifle aérienne, grosse gifle avec jauge (zone dorée, surchauffe).
-- Garde, jauge de garde, garde brisée, coup reçu, recul, mise à terre et relevé.
-- PV, KO, chrono, rounds, fin de match, écran Result.
-- Adversaire provisoire : un mannequin qui avance, garde et gifle au hasard.
-- Effets d'impact et onomatopées rebranchés.
-- *Validé quand* : un match complet se joue contre le mannequin, tous les tests unitaires des coups passent.
-- **Jalon 1 : le propriétaire joue.** Questions à lui poser : les contrôles sont-ils agréables au pouce ? La gifle fait-elle plaisir ? Le rythme est-il bon ?
+**Faite le 11 octobre 2026. Jalon 1 validé** : contrôles, plaisir de la gifle et rythme jugés bons. Remarque : accroupi, le personnage « rétrécissait » (pose provisoire), réglé par les vraies poses.
 
 ### Phase 3 · IA ✔
 
-**Faite le 11 octobre 2026** (détail et tableau d'équilibrage dans `CHANGELOG.md`).
-
-- IA qui produit des entrées comme un joueur, avec un temps de réaction (elle ne lit pas les entrées du joueur à l'instant même).
-- Trois niveaux : Facile (lente, garde peu), Normal, Difficile (punit les grosses gifles ratées, vise la zone dorée).
-- Mode `?autoplay=1` et simulation de 200 matchs.
-- *Validé quand* : la simulation respecte les critères de durée et d'équilibre, et l'IA Facile perd contre une suite d'entrées simple scriptée.
+**Faite le 11 octobre 2026.** Trois niveaux, mode `?autoplay=1`, simulation de 200 matchs.
 
 ### Phase 4 · Choix du personnage et du niveau ✔
 
-**Faite le 11 octobre 2026** (détail dans `CHANGELOG.md`). En attente du jalon 2.
-
-- Scène **CharacterSelect** : grille de 6 cases, les combattants disponibles jouables, cases « Bientôt » pour les autres. Le joueur choisit son perso, puis son adversaire (ou « Au hasard »), puis la difficulté.
-- Scène **StageSelect** : vignettes des niveaux disponibles, option « Au hasard ».
-- Enchaînement Title → CharacterSelect → StageSelect → Fight → Result → revanche ou retour au choix.
-- Combat miroir autorisé (même perso des deux côtés), avec une teinte différente pour le second.
-- *Validé quand* : tout le parcours se fait au tactile sans erreur, captures d'écran correctes.
-- **Jalon 2 : le propriétaire joue.** Le solo est jouable de bout en bout.
+**Faite le 11 octobre 2026.** Parcours Title → CharacterSelect → StageSelect → Fight → Result. En attente du jalon 2.
 
 ### Phase 4 bis · Coups de pied et garde haute ou basse ✔
 
-**Faite le 11 octobre 2026**, à la demande du propriétaire (détail dans `CHANGELOG.md`).
+**Faite le 11 octobre 2026**, à la demande du propriétaire.
 
-- Bouton « Pied » : coup de pied debout, balayette accroupi. La balayette remplace la gifle accroupie.
-- Garde haute contre les gifles, garde basse (Garde + stick vers le bas) contre les coups de pied. Mauvaise hauteur : le coup passe en entier.
-- IA, simulation et équilibrage refaits.
+### Phase 5 · Style unique, barre Buzz et coups spéciaux
 
-### Phase 5 · Mécaniques avancées et sensations
-
-- Rage et gifles spéciales (une mécanique par gabarit), sonné.
+- Fusion des gabarits en un seul style de combat ; arrondi des coups bloqués (minimum 1 PV).
+- Barre Buzz sous la barre de vie, gains sur les coups qui touchent et les esquives réussies.
+- Bouton « Buzz » et cercle de déclenchement, annulable.
+- Six cinématiques de coups spéciaux, qui touchent toujours : rapprochement automatique pour les spéciaux de près, projectiles et ondes pour ceux à distance, garde au bon moment.
+- Sonné. Rage retirée.
 - Ralenti et tremblement sur les gros coups, arrêt sur image à l'impact, traces de main, foule qui réagit.
-- Sons : gifles, garde, foule, annonces de round.
-- *Validé quand* : tests unitaires de la rage et du sonné, équilibre toujours sous 60 % en simulation.
+- Sons : gifles, garde, foule, annonces de round, un son par coup spécial.
+- IA : remplit sa barre, lance son spécial, tente la garde au bon moment selon son niveau.
+- *Validé quand* : tests unitaires du Buzz, des cinématiques et du sonné ; équilibre toujours sous 60 % en simulation, un ou deux spéciaux par round.
 
 ### Phase 6 · Finition du solo
 
-- Tutoriel court au premier lancement (se déplacer, gifler, charger, garder).
+- Tutoriel court au premier lancement (se déplacer, gifler, charger, garder, lancer le Buzz).
 - Sauvegarde locale : difficulté choisie, victoires, dernier perso utilisé.
-- Intégration des vraies poses et des vrais décors déjà fournis, réglage des boîtes de collision sur ces poses.
+- Intégration des poses des spéciaux et des vrais décors déjà fournis, réglage des boîtes de collision.
 - Passe de performance et de taille de chargement.
 - *Validé quand* : toutes les vérifications passent sur la version en ligne.
 
 ### Phase 7 · Deux joueurs en ligne
 
-- Connexion directe entre deux téléphones avec **PeerJS** et un code de salon (le premier jeu le faisait déjà : son salon et son écran de code peuvent servir de modèle).
+- Connexion directe entre deux téléphones avec **PeerJS** et un code de salon.
 - Synchronisation par **échange des entrées** avec un petit retard d'entrée fixe (3 à 4 pas) : les deux téléphones font tourner la même simulation déterministe.
 - Détection de désynchronisation par comparaison régulière des empreintes d'état ; en cas d'écart, resynchronisation sur l'état de l'hôte.
 - Parcours en ligne : créer ou rejoindre un salon, chacun choisit son perso, l'hôte choisit le niveau, revanche.
 - Gestion des coupures : pause, tentative de reconnexion, puis abandon propre.
-- Si le retard d'entrée fixe ne suffit pas à rendre le jeu fluide, passer à une synchronisation avec retour en arrière (rollback), rendue possible par l'état sérialisable.
+- Si le retard d'entrée fixe ne suffit pas, passer à une synchronisation avec retour en arrière (rollback).
 - Tests Playwright avec deux navigateurs connectés, et avec une latence simulée de 100 ms.
 - *Validé quand* : deux navigateurs jouent un match complet sans désynchronisation, y compris avec 100 ms de latence.
 - **Jalon 3 : le propriétaire joue en ligne avec un ami.**
 
 > **Risque connu** : une connexion directe entre deux téléphones échoue sur certains réseaux mobiles sans serveur relais (TURN). Si le cas se présente au jalon 3, il faudra choisir un service relais, gratuit ou payant. C'est un choix à soumettre au propriétaire.
 
-### Phase 8 · Contenu : l'habillage politique
+### Phase 8 · Contenu
 
-- Nouveaux gabarits neutres, pour que chaque combattant ait un style propre.
-- Nouveaux combattants, au rythme des dessins et des textes fournis par le propriétaire : ajout dans `roster.ts`, réglage des boîtes de collision, passage en simulation.
-- Nouveaux niveaux, au rythme des décors fournis : ajout dans `stages.ts`.
-- Bernard, Lola et le bar peuvent alors être retirés ou gardés en bonus, au choix du propriétaire.
+- Six combattants déjà intégrés le 11 octobre.
+- Nouveaux combattants et nouveaux niveaux, au rythme des dessins fournis (grille agrandie et chargement à la demande au-delà de 6).
 - *Validé quand* : chaque ajout garde l'équilibre sous 60 % en simulation.
 
 ## 10. Ce que le propriétaire du projet doit fournir
 
 | Quand | Quoi |
 | --- | --- |
-| Après le premier envoi | Activer GitHub Pages sur le dépôt (Settings → Pages → branche `gh-pages`) |
-| Dès que possible, sans bloquer le code | Les 13 poses qui manquent à Bernard et Lola, priorité 1 puis 2 puis 3 (voir `GUIDE-DESSINS.md`) |
+| Avant la phase 6 si possible | Les 3 poses du coup spécial de chaque combattant, et les 2 accessoires (voir `PROMPTS-SPECIAUX.md`) |
+| Quand il veut | Les noms des coups spéciaux et les répliques, dans `texts.ts` |
+| Si possible | Les planches corrigées de Manu Macs et Narine le Zen |
 | Avant le jalon 2 si possible | Un décor en version large (2 écrans) |
-| Quand le moteur est validé | Les dessins des personnages politiques et des décors, leurs textes dans `texts.ts`, et le gabarit choisi pour chacun |
 
 ## 11. Instruction du projet Claude
 
@@ -412,8 +427,8 @@ Ce projet développe « PolitiClash », un jeu de combat de gifles en temps rée
 caricatures de personnalités politiques françaises, dans le dépôt GitHub benjam67/politiclash.
 Il part d'une copie du dépôt soufflet, qui ne doit jamais être modifié.
 Le document ROADMAP.md fait référence : règles, contraintes techniques, méthode, phases.
-Claude code le moteur et des gabarits neutres ; l'habillage (dessins, noms, répliques) est
-fait par moi dans src/config/texts.ts et raw/.
+Claude code le moteur ; l'habillage (dessins, noms, répliques, idées de coups spéciaux)
+vient de moi, dans src/config/texts.ts et raw/.
 Claude code, teste et déploie en autonomie. Je ne joue qu'aux 3 jalons (fin des phases 2, 4 et 7).
 Réponds-moi en français, simplement, sans jargon technique.
 ```
