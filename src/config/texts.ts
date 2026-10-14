@@ -83,31 +83,31 @@ export interface FighterTexts {
   specialLines: string[];
 }
 
-// Noms des coups spéciaux et répliques : PROVISOIRES, écrits pour tester. À remplacer par le propriétaire.
+// Noms des coups spéciaux et répliques : choisis par le propriétaire (14 octobre). Répliques dites par l’éditorialiste.
 export const FIGHTER_TEXTS: Record<FighterId, FighterTexts> = {
   aviateur: {
     name: 'Manu Macs', short: 'Manu', katakana: 'マニュ', special: 'Poudre de perlimpinpin', elected: 'ÉLU',
-    specialLines: ['Un nuage doré… et BOUM ! Le public est ébloui !', 'De la poudre aux yeux, et une explosion en prime !'],
+    specialLines: ['C’est de la poudre de perlimpinpin !', 'Parce que c’est SON PROJET !'],
   },
   tailleur: {
     name: 'Narine le Zen', short: 'Narine', katakana: 'ナリーヌ', special: 'Coupé-Décalé', elected: 'ÉLUE',
-    specialLines: ['Un petit pas de danse… et le coup de hanche part !', 'Tout en souplesse, tout dans la hanche !'],
+    specialLines: ['C’est entraînant ça… Qu’est-ce que c’est ?', 'Dis donc, ça déménage !'],
   },
   cadet: {
     name: 'Baby', short: 'Baby', katakana: 'ベビー', special: 'La Tournée générale', elected: 'ÉLU',
-    specialLines: ['Cul sec ! Et la pinte finit sur le crâne !', 'C’est sa tournée ! Personne n’a pu refuser !'],
+    specialLines: ['Cul sec ! Et la pinte finit sur le crâne !', 'C’est sa tournée, c’était dans son programme !', 'Promesse tenue !'],
   },
   barbe: {
     name: 'Bompardiou', short: 'Bompardiou', katakana: 'ボンパルディウ', special: 'Le Kapital', elected: 'ÉLU',
-    specialLines: ['La faucille et le marteau tournoient… en plein dans le mille !', 'Un lancer d’outils, du jamais vu !'],
+    specialLines: ['La faucille et le marteau tournoient… en plein dans le mille !', 'C’est pour vous, camarades !'],
   },
   doyen: {
     name: 'JLM', short: 'JLM', katakana: 'ジェイエルエム', special: 'La Perquis’', elected: 'ÉLU',
-    specialLines: ['Quel coup de gueule ! Les vitres en ont tremblé !', 'Une onde de choc ! On l’a entendu jusqu’au bout de la rue !'],
+    specialLines: ['La République, c’est lui !', 'Pas besoin de micro, on l’entend jusqu’à l’hémicycle !'],
   },
   binocle: {
     name: 'Jordan', short: 'Jordan', katakana: 'ジョルダン', special: 'Le Secret de Tolbiac', elected: 'ÉLU',
-    specialLines: ['Dos tourné… et tir par l’arrière ! Quelle indignité !', 'Ça sent mauvais pour l’adversaire !'],
+    specialLines: ['C’était donc vrai !', 'Le secret de Tolbiac est enfin révélé… et ça sent mauvais !'],
   },
 };
 
