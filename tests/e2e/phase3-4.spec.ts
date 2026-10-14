@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { collectErrors, expectNoErrors, namesIn, SHOTS, tapNamed, waitReady, waitScene, waitState } from './helpers';
+import { collectErrors, expectNoErrors, namesIn, SHOTS, skipTutorial, tapNamed, waitReady, waitScene, waitState } from './helpers';
 
 const st = <T = Record<string, unknown>>(page: Page) => page.evaluate(() => window.__slap!.state as unknown) as Promise<T>;
 
@@ -31,6 +31,8 @@ test.describe('phase 3 : IA', () => {
 });
 
 test.describe('phase 4 : choix du personnage et du niveau', () => {
+  test.beforeEach(({ page }) => skipTutorial(page));
+
   test('parcours complet au tactile : accueil → personnage → adversaire → difficulté → lieu → combat', async ({ page }) => {
     const errors = collectErrors(page);
     await page.goto('./');

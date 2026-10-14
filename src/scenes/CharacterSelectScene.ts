@@ -10,6 +10,7 @@ import { makeCard } from '../ui/card';
 import { safeInsets } from '../ui/safe';
 import { COLORS, CSS, FONT_TITLE, FONT_UI } from '../ui/theme';
 import type { StageSelectData } from './StageSelectScene';
+import { loadSave, updateSave } from '../logic/save';
 
 type Step = 'p1' | 'p2' | 'level';
 
@@ -46,10 +47,12 @@ export class CharacterSelectScene extends Phaser.Scene {
   init(data: CharacterSelectData) {
     this.items = [];
     this.step = 'p1';
-    this.left = data?.left ?? null;
+    // Par défaut, les choix du dernier match (sauvegardés sur l'appareil).
+    const save = loadSave();
+    this.left = data?.left ?? save.lastFighter;
     this.right = null;
     this.random = false;
-    this.level = data?.level ?? 'normal';
+    this.level = data?.level ?? save.level;
   }
 
   create() {
@@ -126,13 +129,26 @@ export class CharacterSelectScene extends Phaser.Scene {
 
     const cx = width / 2;
     if (this.step === 'level') {
+      const record = loadSave().record;
       AI_LEVELS.forEach((lv, i) => {
         const colors = [COLORS.cyan, COLORS.yellow, COLORS.pink];
+        const y = height * 0.34 + i * 96;
+        // Le niveau du dernier match est entouré ; sous chaque bouton, victoires et défaites à ce niveau.
+        if (lv === this.level) add(this.add.rectangle(cx, y, 344, 96, COLORS.cream, 0).setStrokeStyle(5, COLORS.cream).setAngle(-3).setName('level-current'));
         add(
-          makeButton(this, cx, height * 0.34 + i * 96, levelLabel(lv).toUpperCase(), colors[i], () => this.finish(lv), { w: 320, h: 74, font: 32 })
+          makeButton(this, cx, y, levelLabel(lv).toUpperCase(), colors[i], () => this.finish(lv), { w: 320, h: 74, font: 32 })
             .setDepth(4)
             .setName(`btn-level-${lv}`),
         );
+        const r = record[lv];
+        if (r.w + r.l > 0) {
+          add(
+            this.add
+              .text(cx + 186, y, `${r.w} V · ${r.l} D`, { fontFamily: FONT_UI, fontStyle: '800', fontSize: '18px', color: CSS.cream, stroke: CSS.ink, strokeThickness: 5 })
+              .setOrigin(0, 0.5)
+              .setName(`record-${lv}`),
+          );
+        }
       });
     } else {
       // Grille de 6 cases, 3 par ligne.
@@ -204,6 +220,7 @@ export class CharacterSelectScene extends Phaser.Scene {
   private finish(level: AiLevel) {
     this.level = level;
     const right = this.right ?? PLAYABLE_IDS[Math.floor(Math.random() * PLAYABLE_IDS.length)];
+    updateSave((sv) => ({ ...sv, level, lastFighter: this.left }));
     const data: StageSelectData = { left: this.left as FighterId, right, level };
     this.scene.start('StageSelect', data);
   }

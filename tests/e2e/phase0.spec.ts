@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { collectErrors, expectNoErrors, SHOTS, tapNamed, waitReady, waitScene } from './helpers';
+import { collectErrors, expectNoErrors, SHOTS, tapNamed, waitReady, waitScene, skipTutorial } from './helpers';
 
 test('la scène de combat s’affiche sans erreur en paysage', async ({ page }) => {
   const errors = collectErrors(page);
@@ -53,6 +53,7 @@ test('on peut choisir les combattants par l’URL, y compris en combat miroir', 
 
 test('l’accueil porte le nouveau nom et le bouton JOUER mène au choix du personnage', async ({ page }) => {
   const errors = collectErrors(page);
+  await skipTutorial(page);
   await page.goto('./');
   await waitReady(page, 'Title');
   await expect(page).toHaveTitle('PolitiClash');

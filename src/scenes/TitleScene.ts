@@ -6,7 +6,9 @@ import { COLORS, CSS, FONT_TITLE, FONT_UI } from '../ui/theme';
 import { fighterKey } from '../config/poses';
 import { needsInstallHint, safeInsets } from '../ui/safe';
 import { PLAYABLE_IDS, spriteOf } from '../config/roster';
-import { GAME } from '../config/texts';
+import { GAME, TUTORIAL } from '../config/texts';
+import { loadSave, totalWins } from '../logic/save';
+import type { FightData } from './FightScene';
 
 /** Écran d'accueil : le bouton JOUER mène au choix du personnage. */
 export class TitleScene extends Phaser.Scene {
@@ -35,6 +37,13 @@ export class TitleScene extends Phaser.Scene {
       window.__slap.scene = 'Title';
       window.__slap.state = { mode: 'title' };
     }
+  }
+
+  private startTutorial() {
+    const save = loadSave();
+    const left = save.lastFighter ?? PLAYABLE_IDS[0];
+    const data: FightData = { left, right: PLAYABLE_IDS.find((id) => id !== left) ?? left, stage: 'bar', tutorial: true };
+    this.scene.start('Fight', data);
   }
 
   private build() {
@@ -83,7 +92,20 @@ export class TitleScene extends Phaser.Scene {
         .setDepth(3),
     );
 
-    add(makeButton(this, width / 2, height * 0.6, 'JOUER', COLORS.yellow, () => this.scene.start('CharacterSelect', {}), { w: 320, h: 84, font: 38 }).setDepth(4));
+    // Premier lancement : JOUER commence par le tutoriel.
+    const save = loadSave();
+    add(makeButton(this, width / 2, height * 0.6, 'JOUER', COLORS.yellow, () => (save.tutorialDone ? this.scene.start('CharacterSelect', {}) : this.startTutorial()), { w: 320, h: 84, font: 38 }).setDepth(4));
+    if (save.tutorialDone) add(makeButton(this, width / 2, height * 0.6 + 86, TUTORIAL.replay, COLORS.cream, () => this.startTutorial(), { w: 210, h: 50, font: 20 }).setDepth(4).setName('btn-tutorial'));
+    const wins = totalWins(save);
+    if (wins > 0) {
+      add(
+        this.add
+          .text(width / 2, height * 0.6 - 62, TUTORIAL.wins(wins).toUpperCase(), { fontFamily: FONT_TITLE, fontSize: '22px', color: CSS.cream, stroke: CSS.ink, strokeThickness: 6 })
+          .setOrigin(0.5)
+          .setDepth(3)
+          .setName('title-wins'),
+      );
+    }
 
     add(
       this.add

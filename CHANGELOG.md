@@ -287,6 +287,34 @@ Décisions du 13 octobre (roadmap mise à jour, sections 3 et 7). `ROADMAP.md` r
 - Playwright (mobile en paysage) : nouveau fichier `phase5.spec.ts` (bouton Buzz au tactile, cercle annulé, barre remplie en giflant, les six cinématiques photographiées, garde au bon moment, démo IA, image calculée en 4,2 ms en moyenne pendant les coups spéciaux avec processeur ×4, chargement initial 3,3 Mo).
 - Tests navigateur qui échouaient déjà : ils attendaient des images très brèves (une gifle de 350 ms) ou une caméra arrivée après un délai fixe, en sondant l'état ; sur une machine lente, le sondage les ratait. Ils guettent maintenant l'instant pas à pas.
 
+## Phase 6 · Finition du solo — 2026-10-13
+
+**Tutoriel** (`src/logic/tutorial.ts`, textes dans `texts.ts` → `TUTORIAL`)
+- Au premier lancement, JOUER ouvre le tutoriel. Ensuite, JOUER mène directement au choix du combattant, et un bouton TUTORIEL sur l'accueil permet de le refaire. Bouton PASSER à tout moment. Accès direct : `?scene=tuto`.
+- 7 exercices, joués dans un vrai combat au bar contre un partenaire d'entraînement : marcher, sauter et s'accroupir, gifler (2 fois), coup de pied (2 fois), grosse gifle, garde (bloquer 2 gifles), Buzz. Consigne au doigt ou au clavier selon l'appareil, barre de progrès, « BIEN ! » entre deux exercices, puis « TU ES PRÊT ! » avec l'astuce de la garde basse.
+- Le partenaire ne bouge pas, sauf à l'exercice de garde, où il s'approche et gifle toutes les 1,3 s. Le chrono est arrêté, les PV sont remis quand ils passent sous la moitié : personne n'est K.O. La barre Buzz ne se remplit pas avant le dernier exercice, où elle est pleine d'office.
+- Le moteur ne change pas : le tutoriel lit l'état et les événements de la simulation, comme l'affichage.
+
+**Sauvegarde sur le téléphone** (`src/logic/save.ts`, clé `politiclash.save`)
+- Tutoriel vu, dernier combattant choisi, dernière difficulté, dernier lieu, victoires et défaites contre l'IA par difficulté (la démo et les adversaires d'essai ne comptent pas).
+- Le choix du combattant propose le dernier utilisé ; à l'écran des difficultés, la dernière est entourée, et chaque bouton affiche ses victoires et défaites. Le dernier lieu est entouré. L'accueil affiche le nombre de victoires.
+- Sauvegarde absente, abîmée, d'une autre version ou navigation privée : le jeu repart d'une sauvegarde neuve, sans planter.
+
+**Boîtes de collision réglées sur les vraies poses**
+- Mesure des six jeux de poses (silhouette des images, ramenée en px du jeu) : hauteur debout 227 à 234 px (boîte : 230, inchangée) ; accroupi 140 à 156 px en comptant les cheveux (boîte : 140, inchangée, les gifles hautes passent juste au-dessus) ; main de la gifle rapide 112 à 136 px devant l'ancrage (allonge commune inchangée, comme le veut la roadmap).
+- Largeur du corps : 26 → **38 px** de part et d'autre (42 accroupi). Les torses dessinés font ±48 à ±68 px : à 26, deux combattants au contact se chevauchaient de moitié. Simulation refaite : 53 séries sur 53 dans les critères (round moyen 23 à 27 s, 1,1 à 1,3 spécial par round, aucun combattant au-dessus de 57 %).
+- Les boîtes restent les mêmes pour les six : les adapter à chaque dessin (Jordan accroupi est plus haut que les autres) donnerait un avantage ou un handicap qui ne tient qu'au dessin.
+
+**Chargement**
+- Au démarrage, seules les poses d'attente des six combattants sont chargées (portraits, accueil). Les 23 autres poses de chacun sont chargées au lancement du combat, avec une barre de chargement : environ 1 Mo pour deux combattants.
+- Chargement initial : **3,57 Mo → 0,71 Mo**. La limite des 4 Mo ne bloque plus l'ajout d'un septième combattant.
+
+**Vérifications**
+- 212 tests unitaires (7 de plus : sauvegarde ; un joueur scripté finit le tutoriel dans l'ordre en moins d'une minute ; chrono arrêté et pas de K.O. pendant le tutoriel ; pas de Buzz avant le dernier exercice ; pause entre deux exercices).
+- 43 tests navigateur, dont `phase6.spec.ts` : tutoriel complet au premier lancement puis plus proposé, bouton PASSER, sauvegarde retrouvée après rechargement. Captures regardées.
+- Image calculée en 3,8 ms en moyenne (9,9 ms au pire) avec processeur ×4.
+- Lancés à plusieurs en parallèle, quelques tests navigateur dépassent leurs délais sur la machine de test (trop lente) ; ils passent tous lancés un par un.
+
 ## Premier jeu · Phase 0 · Mise en place — 2026-10-01
 
 **Fait**

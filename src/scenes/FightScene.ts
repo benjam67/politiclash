@@ -3,7 +3,7 @@ import { BUZZ, GUARD, MATCH, SIM, STAGE, STYLE } from '../config/balance';
 import { PLAYABLE_IDS, ROSTER, spriteOf, type FighterId } from '../config/roster';
 import { CHEEK } from '../config/sprites';
 import { queueStageImages, STAGES, type StageId } from '../config/stages';
-import { FIGHTER_TEXTS } from '../config/texts';
+import { FIGHTER_TEXTS, TUTORIAL } from '../config/texts';
 import { fighterKey, frameOf, poseFor } from '../config/poses';
 import { computeLayout, HABITUES, type StageLayout } from '../logic/layout';
 import {
@@ -39,6 +39,12 @@ import { safeInsets } from '../ui/safe';
 import { COLORS, CSS, FONT_TITLE } from '../ui/theme';
 import { TouchControls } from '../ui/TouchControls';
 import type { ResultData } from './ResultScene';
+import { queueFighterImages } from './BootScene';
+import { showLoadingBar } from '../ui/loading';
+import { createTuto, TUTO_STEPS, tutoAfterStep, tutoDone, tutoPartner, tutoProgress, tutoStep, type Tuto } from '../logic/tutorial';
+import { updateSave } from '../logic/save';
+import { makeButton } from '../ui/button';
+import { FONT_UI } from '../ui/theme';
 
 export type Side = 'left' | 'right';
 /** Qui joue un combattant : l'IA, ou un adversaire d'essai (mannequin, promeneur, immobile). */
@@ -60,6 +66,8 @@ export interface FightData {
   seed?: number;
   /** Barres Buzz au départ (essais du coup spécial). */
   buzz?: number;
+  /** Tutoriel : exercices guidés contre un partenaire d'entraînement. */
+  tutorial?: boolean;
 }
 
 interface FighterView {
@@ -122,6 +130,12 @@ export class FightScene extends Phaser.Scene {
   private intro = true;
   private seed = 1;
   private startBuzz = 0;
+  /** Tutoriel en cours (null : combat normal). */
+  private tuto: Tuto | null = null;
+  private tutoUi: Phaser.GameObjects.GameObject[] = [];
+  /** Ce que montre le panneau du tutoriel (pour ne le redessiner que quand ça change). */
+  private tutoShown = '';
+  private touchMode = false;
 
   private state!: FightState;
   private acc = 0;
@@ -153,6 +167,14 @@ export class FightScene extends Phaser.Scene {
     this.intro = data.intro ?? true;
     this.seed = data.seed ?? Math.floor(Math.random() * 1e9);
     this.startBuzz = data.buzz ?? 0;
+    this.tuto = data.tutorial ? createTuto() : null;
+    this.tutoUi = [];
+    this.tutoShown = '';
+    if (this.tuto) {
+      this.p2Kind = 'idle';
+      this.intro = false;
+      this.autoplay = false;
+    }
     this.crowd = null;
     this.patron = null;
     this.crowdImgs = [];
@@ -172,6 +194,8 @@ export class FightScene extends Phaser.Scene {
 
   preload() {
     queueStageImages(this, this.stageId);
+    queueFighterImages(this, this.ids);
+    showLoadingBar(this);
   }
 
   create() {
@@ -215,7 +239,7 @@ export class FightScene extends Phaser.Scene {
     this.homeBtn.on('pointerup', () => this.scene.start('Title'));
     // Niveau de l'IA, discret, sous le chrono.
     this.levelTag = this.add
-      .text(0, 0, this.p2Kind === 'ai' ? (this.autoplay ? `DÉMO · ${levelLabel(this.level).toUpperCase()}` : `IA ${levelLabel(this.level).toUpperCase()}`) : '', { fontFamily: FONT_TITLE, fontSize: '15px', color: CSS.cream, stroke: CSS.ink, strokeThickness: 5 })
+      .text(0, 0, this.tuto ? '' : this.p2Kind === 'ai' ? (this.autoplay ? `DÉMO · ${levelLabel(this.level).toUpperCase()}` : `IA ${levelLabel(this.level).toUpperCase()}`) : '', { fontFamily: FONT_TITLE, fontSize: '15px', color: CSS.cream, stroke: CSS.ink, strokeThickness: 5 })
       .setOrigin(0.5, 0)
       .setDepth(100);
 
@@ -225,8 +249,15 @@ export class FightScene extends Phaser.Scene {
     const q = new URLSearchParams(location.search);
     const isTouch = matchMedia('(pointer: coarse)').matches || q.get('touch') === '1';
     this.touch.setVisible(isTouch);
+    this.touchMode = isTouch;
     // Un écran tactile détecté après coup (ordinateur hybride) : les contrôles apparaissent au premier toucher.
-    const reveal = () => this.touch.setVisible(!this.autoplay);
+    const reveal = () => {
+      this.touch.setVisible(!this.autoplay);
+      if (!this.autoplay && !this.touchMode) {
+        this.touchMode = true;
+        this.tutoShown = '';
+      }
+    };
     window.addEventListener('touchstart', reveal, { once: true });
     const k = this.p2Kind;
     this.p2 = k === 'idle' ? new IdleSource() : k === 'wander' ? new WanderSource(this.seed + 6) : k === 'dummy' ? new DummySource(this.seed + 6) : new AiSource(this.level, this.seed + 6);
@@ -272,12 +303,14 @@ export class FightScene extends Phaser.Scene {
       const f1 = typeof forced.p1 === 'function' ? forced.p1(this.state) : forced.p1;
       const f2 = typeof forced.p2 === 'function' ? forced.p2(this.state) : forced.p2;
       const in0 = this.p1Ai ? this.p1Ai.read(this.state, 0) : mergeInputs(this.keyboard.read(), this.touch.read(), f1 ?? {});
-      const in1: InputFrame = f2 ? mergeInputs(f2) : this.p2.read(this.state, 1);
+      const in1: InputFrame = f2 ? mergeInputs(f2) : this.tuto ? tutoPartner(this.tuto, this.state) : this.p2.read(this.state, 1);
       this.state = step(this.state, in0, in1);
+      if (this.tuto) this.tuto = tutoAfterStep(this.tuto, this.state);
       for (const e of this.state.ev) this.onEvent(e);
       if (this.state.phase === 'matchEnd') break;
     }
     this.crowd?.update(time);
+    if (this.tuto) this.renderTuto();
     this.render(false);
     this.publish();
   }
@@ -326,7 +359,7 @@ export class FightScene extends Phaser.Scene {
     this.v[1].bar.layout(width - margin, 16, barW);
     this.v[0].pips.setPosition(width / 2 - centerGap - 20, 66);
     this.v[1].pips.setPosition(width / 2 + centerGap + 20, 66);
-    this.timer.setPosition(width / 2, 48);
+    this.timer.setPosition(width / 2, 48).setVisible(!this.tuto);
     this.levelTag.setPosition(width / 2, 104);
     // Sous le bouton d'accueil, au-dessus du stick.
     this.gauge.layout(margin + 6, 204, Math.max(160, height - safe.bottom - 213 - 204 - 60));
@@ -337,6 +370,7 @@ export class FightScene extends Phaser.Scene {
     this.touch.layout(width, height, safe);
 
     if (window.__slap) window.__slap.layout = L;
+    this.tutoShown = '';
     if (this.state) {
       this.v.forEach((view, i) => view.bar.setValue(this.state.f[i].hp / (MATCH.hp * HP), true));
       this.render(true);
@@ -707,6 +741,90 @@ export class FightScene extends Phaser.Scene {
     if (!e.parried) this.slowUntil = performance.now() + 420;
   }
 
+  // ── Tutoriel ───────────────────────────────────────────────────────────
+
+  /** Panneau de consigne sous les barres de vie, puis écran de fin. Redessiné seulement quand il change. */
+  private renderTuto() {
+    const t = this.tuto as Tuto;
+    const id = tutoStep(t);
+    // Pendant la cinématique d'un coup spécial, le panneau s'efface pour laisser voir le nom du coup.
+    const cine = !!this.state.cine;
+    const key = `${t.i}|${Math.round(tutoProgress(t) * 20)}|${t.pause > 0}|${this.touchMode}|${cine}|${this.scale.width}x${this.scale.height}`;
+    if (key === this.tutoShown) return;
+    this.tutoShown = key;
+    for (const o of this.tutoUi) o.destroy();
+    this.tutoUi = [];
+    const add = <T extends Phaser.GameObjects.GameObject>(o: T) => (this.tutoUi.push(o), o);
+    const { width, height } = this.scale;
+    const cx = width / 2;
+    const side = Math.max(safeInsets(this).left, safeInsets(this).right);
+
+    if (!id) {
+      // Fin : grand bandeau, astuce, et le bouton pour aller choisir son combattant.
+      add(this.add.rectangle(0, 0, width, height, COLORS.ink, 0.55).setOrigin(0).setDepth(150));
+      add(this.add.rectangle(cx, height * 0.3, width * 1.3, 130, COLORS.red).setStrokeStyle(8, COLORS.ink).setAngle(-3).setDepth(151));
+      const title = add(
+        this.add
+          .text(cx, height * 0.29, TUTORIAL.done, { fontFamily: FONT_TITLE, fontSize: '76px', color: CSS.yellow, stroke: CSS.ink, strokeThickness: 14 })
+          .setOrigin(0.5)
+          .setAngle(-3)
+          .setDepth(152)
+          .setName('tuto-done'),
+      );
+      if (title.width > width * 0.8) title.setScale((width * 0.8) / title.width);
+      const tip = add(
+        this.add
+          .text(cx, height * 0.47, this.touchMode ? TUTORIAL.doneHelp.touch : TUTORIAL.doneHelp.keys, { fontFamily: FONT_UI, fontStyle: '800', fontSize: '22px', color: CSS.cream, stroke: CSS.ink, strokeThickness: 6, align: 'center', wordWrap: { width: width * 0.7 } })
+          .setOrigin(0.5)
+          .setDepth(152),
+      );
+      tip.setName('tuto-tip');
+      add(makeButton(this, cx, height * 0.66, TUTORIAL.go, COLORS.yellow, () => this.endTuto(), { w: 340, h: 80, font: 34 }).setDepth(153).setName('btn-tuto-go'));
+      this.touch.setVisible(false);
+      return;
+    }
+
+    if (cine) return;
+    const txt = TUTORIAL.steps[id];
+    const top = 112;
+    const w = Math.min(width - 2 * (150 + side), 680);
+    add(this.add.rectangle(cx, top + 44, w, 92, COLORS.ink, 0.72).setStrokeStyle(4, t.pause > 0 ? COLORS.yellow : COLORS.cream).setDepth(140));
+    add(
+      this.add
+        .text(cx, top + 18, `${t.i + 1}/${TUTO_STEPS.length} · ${txt.title.toUpperCase()}`, { fontFamily: FONT_TITLE, fontSize: '28px', color: CSS.yellow, stroke: CSS.ink, strokeThickness: 7 })
+        .setOrigin(0.5)
+        .setDepth(141)
+        .setName('tuto-title'),
+    );
+    const line = add(
+      this.add
+        .text(cx, top + 54, t.pause > 0 ? TUTORIAL.good : this.touchMode ? txt.touch : txt.keys, {
+          fontFamily: t.pause > 0 ? FONT_TITLE : FONT_UI,
+          fontStyle: '800',
+          fontSize: t.pause > 0 ? '30px' : '20px',
+          color: t.pause > 0 ? CSS.yellow : CSS.cream,
+          stroke: CSS.ink,
+          strokeThickness: 5,
+        })
+        .setOrigin(0.5)
+        .setDepth(141)
+        .setName('tuto-line'),
+    );
+    if (line.width > w - 24) line.setScale((w - 24) / line.width);
+    // Barre de progrès de l'exercice.
+    const bw = w - 60;
+    const bar = add(this.add.graphics().setDepth(141));
+    bar.fillStyle(COLORS.cream, 0.25).fillRect(cx - bw / 2, top + 78, bw, 6);
+    bar.fillStyle(COLORS.yellow, 1).fillRect(cx - bw / 2, top + 78, bw * tutoProgress(t), 6);
+    add(makeButton(this, width - 92 - side, 190, TUTORIAL.skip, COLORS.cream, () => this.endTuto(), { w: 130, h: 44, font: 17 }).setDepth(142).setName('btn-tuto-skip'));
+  }
+
+  /** Tutoriel fini ou passé : il ne sera plus proposé ; on va choisir son combattant. */
+  private endTuto() {
+    updateSave((sv) => ({ ...sv, tutorialDone: true }));
+    this.scene.start('CharacterSelect', { left: this.ids[0] });
+  }
+
   // ── État visible par les tests ─────────────────────────────────────────
 
   private publish() {
@@ -752,6 +870,7 @@ export class FightScene extends Phaser.Scene {
       camera: { ...this.cam },
       fps: this.game.loop.actualFps,
       timeLeft: Math.ceil(s.timeLeft / SIM.stepsPerSecond),
+      tuto: this.tuto ? { step: tutoStep(this.tuto), index: this.tuto.i, n: this.tuto.n, pause: this.tuto.pause, done: tutoDone(this.tuto) } : null,
     };
     window.__slap.fx = { ...this.fx.stats, special: { ...this.sfxSpecial.stats }, ...(this.crowd?.stats ?? {}), ...this.commentator.stats, sounds: sfx.played.slice(-40) };
   }

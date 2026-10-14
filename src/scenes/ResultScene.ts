@@ -10,6 +10,7 @@ import { safeInsets } from '../ui/safe';
 import { COLORS, CSS, FONT_TITLE } from '../ui/theme';
 import type { FightData, FoeKind } from './FightScene';
 import type { AiLevel } from '../ai/ai';
+import { updateSave, withResult } from '../logic/save';
 
 export interface ResultData {
   ids: [FighterId, FighterId];
@@ -42,6 +43,9 @@ export class ResultScene extends Phaser.Scene {
     this.scale.on(Phaser.Scale.Events.RESIZE, this.build, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.scale.off(Phaser.Scale.Events.RESIZE, this.build, this));
     sfx.crowd(0.8, 1.6);
+    // Victoires et défaites contre l'IA, gardées sur l'appareil (pas la démo).
+    const r = this.result;
+    if (r.p2 === 'ai' && !r.autoplay) updateSave((sv) => withResult(sv, r.level, r.winner === 0));
     if (window.__slap) {
       window.__slap.ready = true;
       window.__slap.scene = 'Result';

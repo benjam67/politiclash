@@ -10,6 +10,7 @@ import { makeCard } from '../ui/card';
 import { safeInsets } from '../ui/safe';
 import { COLORS, CSS, FONT_TITLE } from '../ui/theme';
 import type { FightData } from './FightScene';
+import { loadSave, updateSave } from '../logic/save';
 
 export interface StageSelectData {
   left: FighterId;
@@ -81,6 +82,7 @@ export class StageSelectScene extends Phaser.Scene {
     const ch = 172;
     const gap = 18;
     const rows = SLOTS / COLS;
+    const last = loadSave().lastStage;
     const top = 118;
     const y0 = top + ch / 2;
     const yLast = y0 + (rows - 1) * (ch + gap);
@@ -97,6 +99,7 @@ export class StageSelectScene extends Phaser.Scene {
             h: ch,
             label: STAGE_TEXTS[id].name.toUpperCase(),
             image: { key: st.image, cx: st.width / 2, cy: st.floorY - st.height * 0.12, size: st.height * 0.62 },
+            selected: id === last,
             onClick: () => this.start(id),
           }),
         );
@@ -115,6 +118,7 @@ export class StageSelectScene extends Phaser.Scene {
   }
 
   private start(stage: StageId) {
+    updateSave((sv) => ({ ...sv, lastStage: stage }));
     const data: FightData = { ...this.choice, stage, p2: 'ai' };
     this.scene.start('Fight', data);
   }

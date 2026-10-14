@@ -31,10 +31,10 @@ export class BootScene extends Phaser.Scene {
     // Figurants du bar : le patron et les habitués.
     this.load.image('patron', 'stages/bar/patron.webp');
     for (const h of HABITUES) this.load.image(`habitue_${h}`, `stages/bar/habitues/${h}.webp`);
-    // Les combattants jouables.
-    for (const id of new Set<FighterId>(PLAYABLE_IDS)) {
-      for (const pose of posesOf(id)) this.load.image(fighterKey(id, pose), `fighters/${id}/${pose}.webp`);
-    }
+    // Les combattants : au démarrage, seulement la pose d'attente (portraits du choix, accueil) et la pose
+    // de victoire des deux de l'accueil. Le reste est chargé quand le combat commence (queueFighterImages).
+    for (const id of new Set<FighterId>(PLAYABLE_IDS)) this.load.image(fighterKey(id, 'idle'), `fighters/${id}/idle.webp`);
+    for (const id of PLAYABLE_IDS.slice(0, 2)) this.load.image(fighterKey(id, 'victory'), `fighters/${id}/victory.webp`);
     // Accessoires des coups spéciaux, s'ils ont été fournis (sinon : projectiles provisoires dessinés en code).
     for (const name of Object.keys(assets.specialProps)) this.load.image(`prop_${name}`, `props/${name}.webp`);
   }
@@ -44,14 +44,15 @@ export class BootScene extends Phaser.Scene {
     // Tous les textes à gros contour et les effets sont tracés une fois ici, jamais pendant le jeu.
     bakeAll(this);
     const q = new URLSearchParams(location.search);
-    if (q.get('scene') === 'fight' || q.get('autoplay') === '1') this.scene.start('Fight', fightDataFromUrl(location.search));
+    if (q.get('scene') === 'tuto') this.scene.start('Fight', { ...fightDataFromUrl(location.search), tutorial: true });
+    else if (q.get('scene') === 'fight' || q.get('autoplay') === '1') this.scene.start('Fight', fightDataFromUrl(location.search));
     else this.scene.start('Title');
   }
 }
 
 /**
  * Accès direct au combat par l'URL (tests, essais) :
- * `?scene=fight&p1=aviateur&p2=doyen&stage=bar` (identifiants de `roster.ts`), `&level=easy|normal|hard` (niveau de l'IA), `?autoplay=1` (démo : IA contre IA),
+ * `?scene=tuto` (le tutoriel), `?scene=fight&p1=aviateur&p2=doyen&stage=bar` (identifiants de `roster.ts`), `&level=easy|normal|hard` (niveau de l'IA), `?autoplay=1` (démo : IA contre IA),
  * `&foe=idle|wander|dummy` (adversaire d'essai à la place de l'IA : immobile, promeneur, mannequin),
  * `&intro=0` (sans l'annonce du round),
  * `&seed=42` (adversaire reproductible), `&buzz=100` (barres Buzz remplies au départ, essais du coup spécial), `&touch=1` (contrôles tactiles sur ordinateur). Sans paramètre : écran d'accueil.
@@ -74,4 +75,16 @@ export function fightDataFromUrl(search: string): FightData {
     seed: q.has('seed') && Number.isFinite(seed) ? seed : undefined,
     buzz: q.has('buzz') ? Math.max(0, Math.min(100, Number(q.get('buzz')) || 0)) : undefined,
   };
+}
+
+/** Met en file les images de ces combattants qui ne sont pas encore chargées (à appeler dans un `preload`). */
+export function queueFighterImages(scene: Phaser.Scene, ids: FighterId[]) {
+  scene.load.setBaseURL(import.meta.env.BASE_URL);
+  scene.load.setPath('assets/');
+  for (const id of new Set(ids)) {
+    for (const pose of posesOf(id)) {
+      const key = fighterKey(id, pose);
+      if (!scene.textures.exists(key)) scene.load.image(key, `fighters/${id}/${pose}.webp`);
+    }
+  }
 }

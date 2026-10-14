@@ -4,7 +4,7 @@ Version du 13 octobre 2026 (style de combat unique, barre Buzz et coups spéciau
 
 Ce document contient tout le contexte nécessaire pour qu'une nouvelle discussion code, teste et déploie le jeu en autonomie. Il remplace la roadmap du premier jeu (`soufflet`, gifles au tour par tour), dont il reprend la stack, les assets et la méthode.
 
-> **État** : phases 0 à 5 faites. La phase 5 (13 octobre) a codé les décisions du 13 octobre : un seul style de combat, barre Buzz, coups spéciaux uniques (sections 3 et 7). Les poses des coups spéciaux et les deux accessoires ont été intégrés le 13 octobre. En attente : les noms et répliques définitifs. En cas d'écart, c'est le code qui fait foi et la roadmap s'adapte.
+> **État** : phases 0 à 6 faites : le solo est complet (tutoriel, sauvegarde, boîtes de collision réglées sur les vraies poses, chargement à la demande). Prochaine étape : la phase 7, décrite dans `ROADMAP-EN-LIGNE.md`, qui remplace la phase 7 ci-dessous. En attente : les noms et répliques définitifs. En cas d'écart, c'est le code qui fait foi et la roadmap s'adapte.
 
 ## 1. Contexte et objectif
 
@@ -315,7 +315,7 @@ Quand une vraie pose arrive : déposer le PNG dans `raw/fighters/<perso>/`, l'aj
 2. **Les textes** : une entrée dans `src/config/texts.ts` (nom, nom court, nom du coup spécial, répliques).
 3. **Le coup spécial** : son déroulé, décrit par le propriétaire, programmé dans `specials.ts`.
 
-La grille de sélection a 6 cases, toutes occupées. Un septième combattant demandera une grille plus grande et le chargement des images d'un combattant seulement quand il est choisi (le chargement initial est à la limite des 4 Mo).
+La grille de sélection a 6 cases, toutes occupées. Un septième combattant demandera une grille plus grande. Le chargement n'est plus une limite : depuis la phase 6, seules les poses d'attente sont chargées au démarrage (0,7 Mo), les autres au lancement du combat.
 
 Deux précautions, qui relèvent du propriétaire : taper sur tous les bords, comme le veut la tradition ; et, avant une diffusion large, demander un avis juridique (l'exception de caricature existe en droit français, mais elle a des limites).
 
@@ -387,15 +387,16 @@ Uniquement aux 3 jalons, ou en cas de choix qui ne peut pas être annulé facile
 - IA : remplit sa barre, lance son spécial, tente la garde au bon moment selon son niveau.
 - *Validé quand* : tests unitaires du Buzz, des cinématiques et du sonné ; équilibre toujours sous 60 % en simulation, un ou deux spéciaux par round.
 
-### Phase 6 · Finition du solo
+### Phase 6 · Finition du solo ✔
 
-- Tutoriel court au premier lancement (se déplacer, gifler, charger, garder, lancer le Buzz).
-- Sauvegarde locale : difficulté choisie, victoires, dernier perso utilisé.
-- Intégration des poses des spéciaux et des vrais décors déjà fournis, réglage des boîtes de collision.
-- Passe de performance et de taille de chargement.
-- *Validé quand* : toutes les vérifications passent sur la version en ligne.
+**Faite le 13 octobre 2026.** Détail dans `CHANGELOG.md`.
 
-### Phase 7 · Deux joueurs en ligne
+- Tutoriel au premier lancement : 7 exercices contre un partenaire d'entraînement (marcher, sauter et s'accroupir, gifle, pied, grosse gifle, garde, Buzz), bouton Passer, rejouable depuis l'accueil.
+- Sauvegarde locale : tutoriel vu, dernier combattant, difficulté, lieu, victoires et défaites par difficulté.
+- Boîtes de collision mesurées sur les vraies poses : corps élargi de 26 à 38 px, le reste confirmé.
+- Chargement initial de 3,57 à 0,71 Mo (poses chargées au lancement du combat).
+
+### Phase 7 · Deux joueurs en ligne (remplacée par `ROADMAP-EN-LIGNE.md`)
 
 - Connexion directe entre deux téléphones avec **PeerJS** et un code de salon.
 - Synchronisation par **échange des entrées** avec un petit retard d'entrée fixe (3 à 4 pas) : les deux téléphones font tourner la même simulation déterministe.

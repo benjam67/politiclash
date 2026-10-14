@@ -103,7 +103,7 @@ test.describe('phase 1 : déplacements en temps réel', () => {
 
     // Le joueur passe de l'autre côté en sautant : les deux se retournent.
     await page.evaluate(() => (window.__slap!.inputs = { p1: { droite: true }, p2: {} }));
-    await waitState(page, `s.p2.x - s.p1.x < 70`);
+    await waitState(page, `s.p2.x - s.p1.x < 90`);
     await page.evaluate(() => (window.__slap!.inputs = { p1: { droite: true, haut: true }, p2: {} }));
     await waitState(page, `s.p1.action === 'jump'`);
     await page.evaluate(() => (window.__slap!.inputs = { p1: {}, p2: {} }));

@@ -100,3 +100,29 @@ export const COMMENTS = {
 } as const;
 
 export type CommentKind = keyof typeof COMMENTS;
+
+/**
+ * Tutoriel du premier lancement. Pour chaque exercice : un titre, puis la consigne au doigt (téléphone)
+ * et au clavier (ordinateur).
+ */
+export const TUTORIAL = {
+  heading: 'ENTRAÎNEMENT',
+  steps: {
+    walk: { title: 'Marche', touch: 'Pousse le stick à gauche ou à droite.', keys: 'Flèches ← → (ou Q et D).' },
+    jumpCrouch: { title: 'Saute et accroupis-toi', touch: 'Stick en haut pour sauter, en bas pour t’accroupir.', keys: '↑ pour sauter, ↓ pour t’accroupir.' },
+    slap: { title: 'Gifle', touch: 'Approche-toi et touche « Gifle ». Deux fois !', keys: 'Approche-toi et appuie sur J. Deux fois !' },
+    kick: { title: 'Coup de pied', touch: 'Touche « Pied » : il frappe bas, sous la garde haute.', keys: 'Appuie sur I : il frappe bas, sous la garde haute.' },
+    big: { title: 'Grosse gifle', touch: 'Maintiens « Grosse gifle » et relâche dans la zone dorée.', keys: 'Maintiens K et relâche dans la zone dorée.' },
+    guard: { title: 'Garde', touch: 'Il attaque ! Maintiens « Garde » pour bloquer ses gifles.', keys: 'Il attaque ! Maintiens L pour bloquer ses gifles.' },
+    buzz: { title: 'Le Buzz', touch: 'Barre Buzz pleine : maintiens « Buzz » jusqu’à remplir le cercle.', keys: 'Barre Buzz pleine : maintiens K jusqu’à remplir le cercle.' },
+  },
+  good: 'BIEN !',
+  done: 'TU ES PRÊT !',
+  doneHelp: { touch: 'Astuce : stick en bas + « Garde », c’est la garde basse, contre les coups de pied.', keys: 'Astuce : ↓ + L, c’est la garde basse, contre les coups de pied.' },
+  skip: 'PASSER',
+  go: 'C’EST PARTI',
+  /** Bouton de l'accueil pour refaire le tutoriel. */
+  replay: 'TUTORIEL',
+  /** Sur l'accueil, nombre de victoires contre l'IA. */
+  wins: (n: number) => (n === 1 ? '1 victoire' : `${n} victoires`),
+};

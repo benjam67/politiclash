@@ -100,3 +100,9 @@ export const namesIn = (page: Page, scene: string) =>
   page.evaluate((sc) => (window.__slap!.game!.scene.getScene(sc) as unknown as { children: { list: { name: string }[] } }).children.list.map((o) => o.name).filter(Boolean), scene);
 
 export const waitScene = (page: Page, scene: string, timeout = 30_000) => page.waitForFunction((s) => window.__slap?.scene === s && window.__slap?.ready === true, scene, { timeout });
+
+/** Fait comme si le tutoriel avait déjà été vu (à appeler avant `page.goto`). */
+export const skipTutorial = (page: Page) =>
+  page.addInitScript(() => {
+    if (!localStorage.getItem('politiclash.save')) localStorage.setItem('politiclash.save', JSON.stringify({ tutorialDone: true }));
+  });
