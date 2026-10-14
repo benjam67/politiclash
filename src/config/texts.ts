@@ -90,7 +90,7 @@ export const FIGHTER_TEXTS: Record<FighterId, FighterTexts> = {
     specialLines: ['Un nuage doré… et BOUM ! Le public est ébloui !', 'De la poudre aux yeux, et une explosion en prime !'],
   },
   tailleur: {
-    name: 'Narine le Zen', short: 'Narine', katakana: 'ナリーヌ', special: 'Le Déhanché zen', elected: 'ÉLUE',
+    name: 'Narine le Zen', short: 'Narine', katakana: 'ナリーヌ', special: 'Coupé-Décalé', elected: 'ÉLUE',
     specialLines: ['Un petit pas de danse… et le coup de hanche part !', 'Tout en souplesse, tout dans la hanche !'],
   },
   cadet: {
@@ -98,15 +98,15 @@ export const FIGHTER_TEXTS: Record<FighterId, FighterTexts> = {
     specialLines: ['Cul sec ! Et la pinte finit sur le crâne !', 'C’est sa tournée ! Personne n’a pu refuser !'],
   },
   barbe: {
-    name: 'Bompardiou', short: 'Bompardiou', katakana: 'ボンパルディウ', special: 'Le Grand Lancer', elected: 'ÉLU',
+    name: 'Bompardiou', short: 'Bompardiou', katakana: 'ボンパルディウ', special: 'Le Kapital', elected: 'ÉLU',
     specialLines: ['La faucille et le marteau tournoient… en plein dans le mille !', 'Un lancer d’outils, du jamais vu !'],
   },
   doyen: {
-    name: 'JLM', short: 'JLM', katakana: 'ジェイエルエム', special: 'Le Coup de gueule', elected: 'ÉLU',
+    name: 'JLM', short: 'JLM', katakana: 'ジェイエルエム', special: 'La Perquis’', elected: 'ÉLU',
     specialLines: ['Quel coup de gueule ! Les vitres en ont tremblé !', 'Une onde de choc ! On l’a entendu jusqu’au bout de la rue !'],
   },
   binocle: {
-    name: 'Jordan', short: 'Jordan', katakana: 'ジョルダン', special: 'Le Vent arrière', elected: 'ÉLU',
+    name: 'Jordan', short: 'Jordan', katakana: 'ジョルダン', special: 'Le Secret de Tolbiac', elected: 'ÉLU',
     specialLines: ['Dos tourné… et tir par l’arrière ! Quelle indignité !', 'Ça sent mauvais pour l’adversaire !'],
   },
 };
