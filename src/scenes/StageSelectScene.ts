@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import type { AiLevel } from '../ai/ai';
 import type { FighterId } from '../config/roster';
 import { queueStageImages, STAGE_IDS, STAGES, type StageId } from '../config/stages';
-import { STAGE_TEXTS } from '../config/texts';
+import { SCREENS, STAGE_TEXTS } from '../config/texts';
 import { computeLayout } from '../logic/layout';
 import { sfx } from '../audio/sfx';
 import { makeButton } from '../ui/button';
@@ -72,7 +72,7 @@ export class StageSelectScene extends Phaser.Scene {
     add(this.add.rectangle(width / 2, 58, width * 1.3, 84, COLORS.red).setStrokeStyle(7, COLORS.ink).setAngle(-2));
     add(
       this.add
-        .text(width / 2, 56, 'CHOISIS LE LIEU', { fontFamily: FONT_TITLE, fontSize: '46px', color: CSS.yellow, stroke: CSS.ink, strokeThickness: 10 })
+        .text(width / 2, 56, SCREENS.pickStage, { fontFamily: FONT_TITLE, fontSize: '46px', color: CSS.yellow, stroke: CSS.ink, strokeThickness: 10 })
         .setOrigin(0.5)
         .setAngle(-2)
         .setName('select-title'),
@@ -104,11 +104,11 @@ export class StageSelectScene extends Phaser.Scene {
           }),
         );
       } else {
-        add(makeCard(this, x, y, `card-soon-${i}`, { w: cw, h: ch, label: 'BIENTÔT', locked: true }));
+        add(makeCard(this, x, y, `card-soon-${i}`, { w: cw, h: ch, label: SCREENS.soonStage, locked: true }));
       }
     }
     add(
-      makeButton(this, width / 2, Math.min(yLast + ch / 2 + 56, height - safe.bottom - 40), 'AU HASARD', COLORS.cyan, () => this.start(STAGE_IDS[Math.floor(Math.random() * STAGE_IDS.length)]), { w: 260, h: 60, font: 24 }).setDepth(4),
+      makeButton(this, width / 2, Math.min(yLast + ch / 2 + 56, height - safe.bottom - 40), SCREENS.random, COLORS.cyan, () => this.start(STAGE_IDS[Math.floor(Math.random() * STAGE_IDS.length)]), { w: 260, h: 60, font: 24 }).setDepth(4).setName('btn-random'),
     );
     add(
       makeButton(this, 96 + side, 58, '← RETOUR', COLORS.cream, () => this.scene.start('CharacterSelect', { left: this.choice.left, level: this.choice.level }), { w: 150, h: 46, font: 17 })

@@ -1,7 +1,7 @@
 {
   "name": "PolitiClash",
   "short_name": "PolitiClash",
-  "description": "Un jeu de combat de gifles en temps réel.",
+  "description": "Tous les coups sont permis pour entrer à l’Élysée.",
   "lang": "fr",
   "start_url": "./",
   "scope": "./",

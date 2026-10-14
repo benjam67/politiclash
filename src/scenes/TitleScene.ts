@@ -6,7 +6,7 @@ import { COLORS, CSS, FONT_TITLE, FONT_UI } from '../ui/theme';
 import { fighterKey } from '../config/poses';
 import { needsInstallHint, safeInsets } from '../ui/safe';
 import { PLAYABLE_IDS, spriteOf } from '../config/roster';
-import { GAME, ONLINE, TUTORIAL } from '../config/texts';
+import { GAME, ONLINE, SCREENS, TUTORIAL } from '../config/texts';
 import { openLobby } from '../net/lobby';
 import { normalizeCode } from '../net/room';
 import { loadSave, totalWins } from '../logic/save';
@@ -120,7 +120,7 @@ export class TitleScene extends Phaser.Scene {
 
     // Premier lancement : JOUER commence par le tutoriel.
     const save = loadSave();
-    add(makeButton(this, width / 2 - 160, height * 0.6, 'JOUER', COLORS.yellow, () => (save.tutorialDone ? this.scene.start('CharacterSelect', {}) : this.startTutorial()), { w: 290, h: 84, font: 38 }).setDepth(4));
+    add(makeButton(this, width / 2 - 160, height * 0.6, SCREENS.play, COLORS.yellow, () => (save.tutorialDone ? this.scene.start('CharacterSelect', {}) : this.startTutorial()), { w: 290, h: 84, font: 38 }).setDepth(4).setName('btn-play'));
     add(makeButton(this, width / 2 + 160, height * 0.6, ONLINE.menuTitle, COLORS.cyan, () => this.goOnline(), { w: 290, h: 84, font: 34 }).setDepth(4).setName('btn-online'));
     if (this.notice) {
       add(

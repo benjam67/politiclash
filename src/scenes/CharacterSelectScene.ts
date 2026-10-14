@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { AI_LEVELS, levelLabel, type AiLevel } from '../ai/ai';
 import { fighterKey } from '../config/poses';
 import { PLAYABLE_IDS, ROSTER_SLOTS, spriteOf, type FighterId } from '../config/roster';
-import { FIGHTER_TEXTS } from '../config/texts';
+import { FIGHTER_TEXTS, SCREENS } from '../config/texts';
 import { computeLayout } from '../logic/layout';
 import { sfx } from '../audio/sfx';
 import { makeButton } from '../ui/button';
@@ -20,7 +20,7 @@ export interface CharacterSelectData {
   level?: AiLevel;
 }
 
-const TITLES: Record<Step, string> = { p1: 'CHOISIS TON COMBATTANT', p2: 'CHOISIS TON ADVERSAIRE', level: 'DIFFICULTÉ' };
+const TITLES: Record<Step, string> = { p1: SCREENS.pickFighter, p2: SCREENS.pickFoe, level: SCREENS.pickLevel };
 
 /** Cadrage du portrait : un carré autour du visage, dans l'image d'attente. */
 export function portraitOf(id: FighterId) {
@@ -165,11 +165,11 @@ export class CharacterSelectScene extends Phaser.Scene {
           const chosen = this.step === 'p1' ? this.left === id : this.right === id;
           add(makeCard(this, x, y, `card-${id}`, { w: cw, h: ch, label: FIGHTER_TEXTS[id].short.toUpperCase(), image: portraitOf(id), selected: chosen, onClick: () => this.pick(id) }));
         } else {
-          add(makeCard(this, x, y, `card-soon-${i}`, { w: cw, h: ch, label: 'BIENTÔT', locked: true }));
+          add(makeCard(this, x, y, `card-soon-${i}`, { w: cw, h: ch, label: SCREENS.soon, locked: true }));
         }
       }
       if (this.step === 'p2') {
-        add(makeButton(this, cx, top + ch * 1.5 + gap + 50, 'AU HASARD', COLORS.cyan, () => this.pickRandom(), { w: 260, h: 58, font: 24 }).setDepth(4));
+        add(makeButton(this, cx, top + ch * 1.5 + gap + 50, SCREENS.random, COLORS.cyan, () => this.pickRandom(), { w: 260, h: 58, font: 24 }).setDepth(4).setName('btn-random'));
       }
     }
 

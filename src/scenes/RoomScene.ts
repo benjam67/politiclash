@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { fighterKey } from '../config/poses';
 import { PLAYABLE_IDS, ROSTER_SLOTS, spriteOf, type FighterId } from '../config/roster';
 import { STAGE_IDS } from '../config/stages';
-import { FIGHTER_TEXTS, ONLINE, STAGE_TEXTS } from '../config/texts';
+import { FIGHTER_TEXTS, ONLINE, SCREENS, STAGE_TEXTS } from '../config/texts';
 import { computeLayout } from '../logic/layout';
 import { updateSave } from '../logic/save';
 import { sfx } from '../audio/sfx';
@@ -133,7 +133,7 @@ export class RoomScene extends Phaser.Scene {
       const x = cx + ((i % 3) - 1) * (cw + gap);
       const y = top + Math.floor(i / 3) * (ch + gap);
       if (id) add(makeCard(this, x, y, `card-${id}`, { w: cw, h: ch, label: FIGHTER_TEXTS[id].short.toUpperCase(), image: portraitOf(id), selected: r.me.fighter === id, onClick: () => this.pick(id) }));
-      else add(makeCard(this, x, y, `card-soon-${i}`, { w: cw, h: ch, label: 'BIENTÔT', locked: true }));
+      else add(makeCard(this, x, y, `card-soon-${i}`, { w: cw, h: ch, label: SCREENS.soon, locked: true }));
     }
 
     // Lieu : l'hôte le fait défiler, l'invité le voit.

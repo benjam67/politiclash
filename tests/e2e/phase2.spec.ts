@@ -247,10 +247,10 @@ test.describe('phase 2 : coups, garde, rounds', () => {
       const sc = g.scene.getScene('Result') as unknown as { children: { list: O[] } };
       const find = (n: string) => sc.children.list.find((o) => o.name === n)!;
       const k = g.scale.displayScale;
-      return { state: window.__slap!.state, title: find('result-title').text, score: find('result-score').text, again: { x: find('btn-REVANCHE').x / k.x, y: find('btn-REVANCHE').y / k.y } };
+      return { state: window.__slap!.state, title: find('result-title').text, score: find('result-score').text, again: { x: find('btn-again').x / k.x, y: find('btn-again').y / k.y } };
     });
     expect(res.state).toMatchObject({ mode: 'result', winner: 0, wins: [2, 0] });
-    expect(res.title).toBe('VICTOIRE : MANU !');
+    expect(res.title).toBe('MANU EST ÉLU !');
     expect(res.score).toBe('2 – 0');
     await page.touchscreen.tap(res.again.x, res.again.y);
     await waitReady(page, 'Fight');

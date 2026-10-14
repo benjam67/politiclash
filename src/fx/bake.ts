@@ -2,7 +2,7 @@
 // éclairs, lignes de focus, trace de main, gouttes, dents, bulles, icônes.
 // Tracer un texte avec un gros contour coûte cher : on ne le fait jamais pendant le combat.
 import Phaser from 'phaser';
-import { BUZZ_TEXTS, COMMENTS, FIGHTER_TEXTS } from '../config/texts';
+import { ANNOUNCE, BUZZ_TEXTS, COMMENTS, FIGHTER_TEXTS, HIT_LABELS } from '../config/texts';
 import { PROP_FILES } from '../config/specials';
 import { FIGHTER_IDS } from '../config/roster';
 import { COLORS, CSS, FONT_TITLE, FONT_UI } from '../ui/theme';
@@ -64,13 +64,7 @@ export const DIGIT_VARIANTS = {
 } as const;
 export type DigitVariant = keyof typeof DIGIT_VARIANTS;
 
-export const LABELS = {
-  crit: 'CRITIQUE ×2',
-  grazed: 'EFFLEURÉE',
-  missed: 'RATÉE…',
-  limp: 'GIFLE MOLLE…',
-  self: 'SURCHAUFFE !',
-} as const;
+export const LABELS = HIT_LABELS;
 
 export const ONOMATOPOEIA = {
   slap: { jp: 'バシッ！', fr: 'CLAAAC !' },
@@ -84,17 +78,17 @@ export const commentKey = (kind: keyof typeof COMMENTS, i: number) => `com_${kin
 
 export function bakeAll(scene: Phaser.Scene) {
   // Annonces
-  for (const r of [1, 2, 3]) bakeText(scene, `ann_round_${r}`, `ROUND ${r}`, title(110, CSS.yellow, 16));
-  bakeText(scene, 'ann_round_final', 'ROUND FINAL', title(110, CSS.yellow, 16));
-  bakeText(scene, 'ann_fight', 'BAGARRE !', title(120, CSS.pink, 16));
-  bakeText(scene, 'ann_ko', 'K.O. !', title(150, CSS.yellow, 18));
-  bakeText(scene, 'ann_timeup', 'TERMINÉ !', title(120, CSS.cyan, 16));
-  bakeText(scene, 'ann_draw', 'ÉGALITÉ !', title(96, CSS.cream, 15));
-  bakeText(scene, 'ann_double_ko', 'DOUBLE K.O. !', title(120, CSS.yellow, 17));
+  for (const r of [1, 2, 3]) bakeText(scene, `ann_round_${r}`, ANNOUNCE.round(r), title(110, CSS.yellow, 16));
+  bakeText(scene, 'ann_round_final', ANNOUNCE.final, title(110, CSS.yellow, 16));
+  bakeText(scene, 'ann_fight', ANNOUNCE.fight, title(120, CSS.pink, 16));
+  bakeText(scene, 'ann_ko', ANNOUNCE.ko, title(150, CSS.yellow, 18));
+  bakeText(scene, 'ann_timeup', ANNOUNCE.timeUp, title(100, CSS.cyan, 16));
+  bakeText(scene, 'ann_draw', ANNOUNCE.draw, title(80, CSS.cream, 15));
+  bakeText(scene, 'ann_double_ko', ANNOUNCE.doubleKo, title(120, CSS.yellow, 17));
   for (const id of FIGHTER_IDS) {
     const name = FIGHTER_TEXTS[id].short.toUpperCase();
     const special = FIGHTER_TEXTS[id].special.toUpperCase();
-    bakeText(scene, `ann_roundfor_${id}`, `ROUND POUR ${name} !`, title(40, CSS.cream, 8));
+    bakeText(scene, `ann_roundfor_${id}`, ANNOUNCE.roundFor(name), title(40, CSS.cream, 8));
     bakeText(scene, `ann_special_${id}`, `${special} !`, title(66, CSS.pink, 12));
     bakeText(scene, `lbl_ready_${id}`, `${special} PRÊT !`, {
       fontFamily: FONT_TITLE,
@@ -123,16 +117,16 @@ export function bakeAll(scene: Phaser.Scene) {
   bakeText(scene, 'lbl_missed', LABELS.missed, tag(CSS.red));
   bakeText(scene, 'lbl_limp', LABELS.limp, tag(CSS.red));
   bakeText(scene, 'lbl_self', LABELS.self, tag(CSS.red));
-  bakeText(scene, 'lbl_stun', 'SONNÉ !', tag(CSS.cyan));
-  bakeText(scene, 'lbl_special', 'SPÉCIALE !', tag(CSS.pink));
-  bakeText(scene, 'lbl_dodge', 'ESQUIVE !', { ...tag(CSS.cyan), color: CSS.ink });
-  bakeText(scene, 'lbl_perfect', 'ESQUIVE PARFAITE !', { ...tag(CSS.yellow), color: CSS.ink });
+  bakeText(scene, 'lbl_stun', LABELS.stun, tag(CSS.cyan));
+  bakeText(scene, 'lbl_special', LABELS.special, tag(CSS.pink));
+  bakeText(scene, 'lbl_dodge', LABELS.dodge, { ...tag(CSS.cyan), color: CSS.ink });
+  bakeText(scene, 'lbl_perfect', LABELS.perfect, { ...tag(CSS.yellow), color: CSS.ink });
   bakeText(scene, 'lbl_parried', BUZZ_TEXTS.parried, { ...tag(CSS.yellow), color: CSS.ink });
   bakeText(scene, 'lbl_early', BUZZ_TEXTS.tooEarly, tag(CSS.red));
-  bakeText(scene, 'lbl_block', 'BLOQUÉ !', { ...tag(CSS.cyan), color: CSS.ink });
-  bakeText(scene, 'lbl_break', 'GARDE BRISÉE !', tag(CSS.red));
-  bakeText(scene, 'lbl_wrong', 'MAUVAISE GARDE !', tag(CSS.red));
-  bakeText(scene, 'lbl_down', 'AU TAPIS !', tag(CSS.pink));
+  bakeText(scene, 'lbl_block', LABELS.block, { ...tag(CSS.cyan), color: CSS.ink });
+  bakeText(scene, 'lbl_break', LABELS.guardBreak, tag(CSS.red));
+  bakeText(scene, 'lbl_wrong', LABELS.wrongGuard, tag(CSS.red));
+  bakeText(scene, 'lbl_down', LABELS.down, tag(CSS.pink));
   for (const n of [2, 3]) bakeText(scene, `lbl_x${n}`, `×${n}`, title(64, CSS.pink, 11));
   bakeText(scene, 'lbl_buzzfull', BUZZ_TEXTS.full, {
     fontFamily: FONT_TITLE,
@@ -176,7 +170,7 @@ export function bakeAll(scene: Phaser.Scene) {
     list.forEach((text, i) => bakeText(scene, commentKey(kind as keyof typeof COMMENTS, i), text, com));
   }
   for (const id of FIGHTER_IDS) FIGHTER_TEXTS[id].specialLines.forEach((text, i) => bakeText(scene, `com_sp_${id}_${i}`, text, com));
-  bakeText(scene, 'com_tag', 'COMMENTATEUR', {
+  bakeText(scene, 'com_tag', ANNOUNCE.commentator, {
     fontFamily: FONT_TITLE,
     fontSize: '16px',
     color: CSS.ink,

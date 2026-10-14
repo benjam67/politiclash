@@ -64,7 +64,7 @@ test('l’accueil porte le nouveau nom et le bouton JOUER mène au choix du pers
   });
   expect(title).toBe('POLITICLASH');
   await page.screenshot({ path: `${SHOTS}/phase0-accueil.png` });
-  await tapNamed(page, 'Title', 'btn-JOUER');
+  await tapNamed(page, 'Title', 'btn-play');
   await waitScene(page, 'CharacterSelect');
   await expectNoErrors(errors);
 });

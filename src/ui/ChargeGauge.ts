@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { HIT_LABELS } from '../config/texts';
 import { COLORS, CSS, FONT_TITLE } from './theme';
 import { digitsImage } from '../fx/bake';
 
@@ -22,7 +23,7 @@ export class ChargeGauge extends Phaser.GameObjects.Container {
     super(scene, 0, 0);
     this.g = scene.add.graphics();
     this.label = scene.add
-      .text(0, 0, 'CHARGE…', {
+      .text(0, 0, HIT_LABELS.charging, {
         fontFamily: FONT_TITLE,
         fontSize: '22px',
         color: CSS.cream,
@@ -56,7 +57,7 @@ export class ChargeGauge extends Phaser.GameObjects.Container {
     this.value = charge;
     this.overheat = overheat;
     const golden = charge >= this.zone[0] && charge <= this.zone[1];
-    const text = overheat ? 'SURCHAUFFE !' : golden ? 'PARFAIT !' : 'CHARGE…';
+    const text = overheat ? HIT_LABELS.overheat : golden ? HIT_LABELS.golden : HIT_LABELS.charging;
     if (this.label.text !== text) {
       this.label.setText(text);
       this.label.setColor(overheat ? CSS.red : golden ? CSS.yellow : CSS.cream);

@@ -653,3 +653,14 @@ Retour du propriétaire après une partie à deux : sur iPhone, le plein écran 
 - **Choix du lieu** : la grille passe à 3 × 2 cases (5 lieux et une case « Bientôt »).
 - **Commentateur** : quatre répliques qui parlaient du comptoir ou du patron sont rendues neutres.
 - **Vérifications** : 205 tests unitaires et 39 tests navigateur passent. Chargement initial inchangé : 3,57 Mo.
+
+## 14 octobre 2026 · Nouvelle histoire : la course à l'Élysée
+
+Les combattants se battent désormais pour devenir président ou présidente. Textes validés par le propriétaire.
+
+- Rounds : 1er tour, 2e tour, Vote final. Égalité : « Recomptage des voix ! ». Fin du chrono : « Bureaux fermés ! ».
+- Écran de fin : « MANU EST ÉLU ! » / « NARINE EST ÉLUE ! » (champ `elected` par personnage), boutons Nouveau débat et Nouvelle campagne.
+- Mots sur les coups (Veto, Langue de bois, Majorité perdue, Chute dans les sondages…), commentateur devenu l'éditorialiste, toutes ses phrases réécrites sans pronom genré.
+- Difficultés : Municipales, Législatives, Présidentielle. Le bar devient Le Bistro. Tutoriel : Media Training.
+- En ligne : Primaire ouverte, terrain, nouveau débat, candidature retirée, nouvelles réactions.
+- Tous les textes affichés sont maintenant dans `src/config/texts.ts` (annonces, étiquettes, boutons des écrans). Les boutons ont des noms fixes pour les tests (`btn-play`, `btn-random`, `btn-again`, `btn-other`, `btn-change`).

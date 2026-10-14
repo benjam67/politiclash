@@ -45,7 +45,7 @@ test.describe('phase 6 : tutoriel et sauvegarde', () => {
     await waitReady(page, 'Title');
     // Pas encore de bouton « Tutoriel » : il n'apparaît qu'une fois le tutoriel vu.
     expect(await namesIn(page, 'Title')).not.toContain('btn-tutorial');
-    await tapNamed(page, 'Title', 'btn-JOUER');
+    await tapNamed(page, 'Title', 'btn-play');
     await waitScene(page, 'Fight');
     expect(await st(page)).toMatchObject({ tuto: { step: 'walk', index: 0 } });
     await page.waitForTimeout(300);
@@ -74,7 +74,7 @@ test.describe('phase 6 : tutoriel et sauvegarde', () => {
     await page.goto('./');
     await waitReady(page, 'Title');
     expect(await namesIn(page, 'Title')).toContain('btn-tutorial');
-    await tapNamed(page, 'Title', 'btn-JOUER');
+    await tapNamed(page, 'Title', 'btn-play');
     await waitScene(page, 'CharacterSelect');
     await expectNoErrors(errors);
   });
@@ -97,7 +97,7 @@ test.describe('phase 6 : tutoriel et sauvegarde', () => {
     });
     await page.goto('./');
     await waitReady(page, 'Title');
-    await tapNamed(page, 'Title', 'btn-JOUER');
+    await tapNamed(page, 'Title', 'btn-play');
     await waitScene(page, 'CharacterSelect');
     await tapNamed(page, 'CharacterSelect', 'card-doyen');
     await page.waitForFunction(() => (window.__slap!.state as { step: string }).step === 'p2');
@@ -117,7 +117,7 @@ test.describe('phase 6 : tutoriel et sauvegarde', () => {
     await page.goto('./');
     await waitReady(page, 'Title');
     expect(await namesIn(page, 'Title')).toContain('title-wins');
-    await tapNamed(page, 'Title', 'btn-JOUER');
+    await tapNamed(page, 'Title', 'btn-play');
     await waitScene(page, 'CharacterSelect');
     expect(await st(page)).toMatchObject({ step: 'p1', left: 'doyen', level: 'hard' });
     await tapNamed(page, 'CharacterSelect', 'card-doyen');

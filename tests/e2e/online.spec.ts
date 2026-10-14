@@ -172,10 +172,10 @@ test.describe('phase 7b : Entre amis', () => {
     await sameMatch(host, guest);
 
     // Revanche : il faut les deux.
-    await tapNamed(host, 'Result', 'btn-REVANCHE');
+    await tapNamed(host, 'Result', 'btn-again');
     await guest.waitForFunction(() => window.__slap!.game!.scene.getScene('Result').children.list.some((o) => o.name === 'result-them-again'));
     await guest.screenshot({ path: `${SHOTS}/7b-revanche-demandee.png` });
-    await tapNamed(guest, 'Result', 'btn-REVANCHE');
+    await tapNamed(guest, 'Result', 'btn-again');
     await waitScene(host, 'Fight');
     await waitScene(guest, 'Fight');
     const n = await state<{ net: NetInfo }>(guest);
@@ -203,7 +203,7 @@ test.describe('phase 7b : Entre amis', () => {
     await sameMatch(host, guest);
 
     // Changer de perso : les deux reviennent au salon. Puis l'invité quitte : l'hôte est prévenu.
-    await tapNamed(host, 'Result', 'btn-CHANGER DE PERSO');
+    await tapNamed(host, 'Result', 'btn-change');
     await waitScene(host, 'Room');
     await waitScene(guest, 'Room');
     expect((await state<{ me: { ready: boolean } }>(guest)).me.ready).toBe(false);
