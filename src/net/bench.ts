@@ -3,6 +3,7 @@
 import { SIM } from '../config/balance';
 import type { FighterId } from '../config/roster';
 import { AiSource, type AiLevel } from '../ai/ai';
+import type { StageId } from '../config/stages';
 import { createFight, hashState, step, STEP_MS, type FightState } from '../logic/fight';
 import { decodeInput, noInput } from '../logic/input';
 import { FakePipe, type PipeOptions } from './fakePipe';
@@ -23,6 +24,9 @@ export interface NetMatchOptions {
   corruptAt?: number;
   /** Durée maximale (ms de jeu). */
   maxMs?: number;
+  stage?: StageId;
+  /** Le second téléphone ne touche à rien. */
+  idleGuest?: boolean;
 }
 
 export interface NetMatchReport {
@@ -54,7 +58,7 @@ export function playNetMatch(o: NetMatchOptions): NetMatchReport {
   const left = o.left ?? 'aviateur';
   const right = o.right ?? 'doyen';
   const [la, lb] = o.levels ?? ['hard', 'hard'];
-  const init = createFight(left, right, 'bar', seed);
+  const init = createFight(left, right, o.stage ?? 'bar', seed);
   const ab = new FakePipe<NetMsg>({ ...o.pipe, seed: seed * 7 + 1 });
   const ba = new FakePipe<NetMsg>({ ...o.pipe, seed: seed * 7 + 2 });
   for (const [x, y] of o.cuts ?? []) {
@@ -87,7 +91,7 @@ export function playNetMatch(o: NetMatchOptions): NetMatchReport {
     }
     if (now >= nextB) {
       nextB += STEP_MS / drift;
-      sb.tick(now, ai[1].read(sb.state, 1));
+      sb.tick(now, o.idleGuest ? noInput() : ai[1].read(sb.state, 1));
       count(events[1], sb.drainEvents());
       if (o.corruptAt !== undefined && !corrupted && sb.frame >= o.corruptAt) {
         corrupted = true;

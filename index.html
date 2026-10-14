@@ -79,6 +79,156 @@
         margin: 0;
         font-size: 18px;
       }
+      /* ── Jeu en ligne : menu et salon (HTML pour profiter du clavier du téléphone) ── */
+      #lobby {
+        position: fixed;
+        inset: 0;
+        z-index: 8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(26, 16, 32, 0.84);
+        font-family: 'M PLUS 1p', system-ui, sans-serif;
+        color: var(--cream);
+        touch-action: manipulation;
+      }
+      #lobby[hidden] {
+        display: none;
+      }
+      #lobby .panel {
+        position: relative;
+        width: min(92vw, 560px);
+        max-height: 94vh;
+        overflow: auto;
+        box-sizing: border-box;
+        padding: 12px 18px 14px;
+        background: var(--ink);
+        border: 5px solid var(--cream);
+        box-shadow: 8px 8px 0 var(--red);
+        transform: rotate(-1deg);
+        text-align: center;
+      }
+      #lobby .ttl {
+        font-family: 'Dela Gothic One', system-ui, sans-serif;
+        font-size: 26px;
+        color: var(--yellow);
+        text-shadow: 3px 3px 0 var(--red);
+        margin-bottom: 4px;
+      }
+      #lobby [data-view] {
+        display: none;
+      }
+      #lobby[data-show='choice'] [data-view='choice'],
+      #lobby[data-show='host'] [data-view='host'],
+      #lobby[data-show='join'] [data-view='join'],
+      #lobby[data-show='busy'] [data-view='busy'] {
+        display: block;
+      }
+      #lobby p {
+        margin: 5px 0;
+        font-weight: 800;
+        font-size: 15px;
+      }
+      #lobby .row {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      #lobby .mode {
+        border-top: 2px dashed rgba(255, 247, 232, 0.25);
+        margin-top: 6px;
+        padding-top: 4px;
+      }
+      #lobby .mode h3 {
+        margin: 2px 0 0;
+        font-family: 'Dela Gothic One', system-ui, sans-serif;
+        font-weight: 400;
+        font-size: 17px;
+        color: var(--cyan);
+      }
+      #lobby .mode.soon {
+        opacity: 0.5;
+      }
+      #lobby button {
+        font-family: 'Dela Gothic One', system-ui, sans-serif;
+        font-size: 17px;
+        color: var(--ink);
+        background: var(--yellow);
+        border: 5px solid var(--ink);
+        outline: 3px solid var(--cream);
+        padding: 8px 14px;
+        margin: 5px 0;
+        transform: rotate(-2deg);
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      #lobby button:active {
+        transform: rotate(-2deg) scale(0.95);
+      }
+      #lobby button.alt {
+        background: var(--cyan);
+      }
+      #lobby button.back {
+        position: absolute;
+        left: 10px;
+        top: 8px;
+        font-size: 12px;
+        background: var(--cream);
+        padding: 4px 9px;
+        outline: none;
+        border-width: 3px;
+        margin: 0;
+      }
+      #lobby label {
+        font-weight: 800;
+        font-size: 14px;
+      }
+      #lobby #lobby-pseudo {
+        font-family: 'M PLUS 1p', system-ui, sans-serif;
+        font-weight: 800;
+        font-size: 18px;
+        width: 9em;
+        padding: 3px 8px;
+        color: var(--ink);
+        background: var(--cream);
+        border: 4px solid var(--yellow);
+        -webkit-user-select: text;
+        user-select: text;
+      }
+      #lobby .code {
+        font-family: 'Dela Gothic One', system-ui, sans-serif;
+        font-size: 54px;
+        line-height: 1.1;
+        letter-spacing: 10px;
+        color: var(--cream);
+        text-shadow: 4px 4px 0 var(--pink);
+        -webkit-user-select: text;
+        user-select: text;
+      }
+      #lobby #lobby-code {
+        font-family: 'Dela Gothic One', system-ui, sans-serif;
+        font-size: 38px;
+        width: 5.2em;
+        text-align: center;
+        letter-spacing: 8px;
+        text-transform: uppercase;
+        color: var(--ink);
+        background: var(--cream);
+        border: 5px solid var(--yellow);
+        padding: 2px 0 2px 8px;
+        -webkit-user-select: text;
+        user-select: text;
+        touch-action: manipulation;
+      }
+      #lobby .status {
+        min-height: 20px;
+        color: var(--cyan);
+      }
+      #lobby .status.err {
+        color: var(--pink);
+      }
       @keyframes tilt {
         0%, 20% { transform: rotate(0deg); }
         55%, 80% { transform: rotate(-90deg); }
@@ -93,6 +243,45 @@
   </head>
   <body>
     <div id="game"></div>
+    <div id="lobby" hidden data-show="choice">
+      <div class="panel">
+        <button data-act="back" class="back">← RETOUR</button>
+        <div class="ttl" data-text="menuTitle"></div>
+        <div data-view="choice">
+          <div class="row">
+            <label for="lobby-pseudo" data-text="pseudoLabel"></label>
+            <input id="lobby-pseudo" maxlength="14" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done" />
+          </div>
+          <div class="mode">
+            <h3 data-text="friends"></h3>
+            <p data-status data-text="friendsHelp"></p>
+            <div class="row">
+              <button data-act="create" data-text="create"></button>
+              <button data-act="join" class="alt" data-text="join"></button>
+            </div>
+          </div>
+          <div class="mode soon">
+            <h3 data-text="quick"></h3>
+            <p data-text="quickSoon"></p>
+          </div>
+        </div>
+        <div data-view="host">
+          <p data-text="friends"></p>
+          <div class="code" id="lobby-code-show">····</div>
+          <div class="row"><button data-act="share" class="alt" data-text="share"></button></div>
+          <p class="status" data-status></p>
+        </div>
+        <div data-view="join">
+          <p data-text="codeHelp"></p>
+          <input id="lobby-code" maxlength="4" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="text" enterkeyhint="go" aria-label="Code du salon" />
+          <div class="row"><button data-act="go" data-text="go"></button></div>
+          <p class="status" data-status></p>
+        </div>
+        <div data-view="busy">
+          <p class="status" data-status></p>
+        </div>
+      </div>
+    </div>
     <div id="rotate" role="alert">
       <div class="title">POLITICLASH</div>
       <div class="phone" aria-hidden="true"></div>

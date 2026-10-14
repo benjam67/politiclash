@@ -50,7 +50,10 @@ Le combat est déjà prêt pour le jeu en ligne : la simulation est déterminist
 - Banc d'essai sans réseau réel : deux simulations reliées par un faux tuyau qui ajoute de la latence, des pertes et du désordre.
 - *Validé quand* : 200 matchs entre deux IA reliées par le faux tuyau (100 ms, puis 200 ms et 5 % de pertes) se terminent tous sans désynchronisation ; le retour en arrière tient sous 8 ms par image avec ralentissement du processeur ×4.
 
-### Phase 7b · Mode Entre amis
+### Phase 7b · Mode Entre amis ✔
+
+**Faite le 14 octobre 2026** (détail dans `CHANGELOG.md`). Match complet entre deux navigateurs sans désynchronisation, avec et sans 100 ms de latence ; le lien d'invitation ouvre le salon. Ajouté : réactions toutes prêtes (texte provisoire), pseudo libre, contrôle de version. En attente : le jalon 3 sur de vrais téléphones.
+
 
 - Écran « Jouer en ligne » → « Entre amis » → « Créer un salon » ou « Rejoindre ».
 - Code de 4 lettres sans lettres ambiguës (pas de O, 0, I, 1), et **lien d'invitation** `…/politiclash/?salon=ABCD` à partager par message (bouton de partage du téléphone).

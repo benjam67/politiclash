@@ -352,6 +352,42 @@ Environ 3 retours en arrière par seconde. À 200 ms par sens (400 ms d'aller-re
 - Trouvé par les tests : avant d'avoir reçu le moindre paquet, le jeu croyait être en avance sur l'adversaire et sautait une image.
 - Reste visible : 1 à 2 petits effets par match (« sonné », une gifle) prédits puis démentis par l'entrée réelle. Sans effet sur le combat.
 
+## Phase 7b · Mode Entre amis — 2026-10-14
+
+**Parcours**
+- Accueil : nouveau bouton **EN LIGNE** à côté de JOUER. Menu (en HTML, pour le clavier du téléphone) : pseudo (libre, 14 caractères, gardé sur le téléphone), **Entre amis** → CRÉER UN SALON ou REJOINDRE ; **Partie rapide** affichée « Bientôt ».
+- Créer : code de 4 lettres sans I ni O (ni chiffres) et bouton **PARTAGER LE LIEN** (partage du téléphone, sinon copie). Le lien `…/politiclash/?salon=ABCD` ouvre le jeu et entre directement dans le salon.
+- **Salon** (`scenes/RoomScene.ts`) : les deux joueurs face à face avec leur pseudo, grille des six combattants (le dernier choisi est proposé), lieu choisi par l'hôte (◀ ▶), bouton **PRÊT** ; le match part quand les deux sont prêts. Changer de perso ou de lieu annule « Prêt ». Ping affiché ; au-delà de 150 ms, « Connexion faible : le jeu pourra ralentir ».
+- **Combat en ligne** : l'hôte joue à gauche, l'invité à droite. Le moteur de la phase 7a fait tourner le match ; le retard d'entrée est choisi par l'hôte selon le ping mesuré dans le salon (3 à 6 pas).
+- **Coupures** : « Connexion instable… » (jeu figé), puis « Connexion coupée — le match reprend tout seul » dès 3 s, puis « Connexion perdue — Match annulé » à 15 s avec un bouton MENU.
+- **Fin de match** : REVANCHE (il faut que les deux la demandent ; « Hôte veut la revanche ! » s'affiche chez l'autre), CHANGER DE PERSO (les deux reviennent au salon), MENU. Un joueur qui quitte (maison, Quitter, Menu) : l'autre est prévenu, match annulé.
+- **Réactions** : bouton 💬 en combat, 5 réactions toutes prêtes (provisoires, dans `texts.ts` → `REACTIONS`), une toutes les 1,5 s au plus, bulle au-dessus du combattant. Bouton pour couper celles de l'adversaire (gardé sur le téléphone). Pas de chat libre.
+- **Versions** : à l'arrivée dans le salon, chacun envoie l'empreinte de ses règles (`balance.ts`, combattants, coups spéciaux). Si elles diffèrent : « Vous n'avez pas la même version du jeu. Rechargez la page tous les deux. »
+
+**Technique**
+- `net/peer.ts` : liaison PeerJS avec **deux canaux** : `ctl`, fiable et ordonné (salon) ; `game`, non ordonné (match) : un paquet perdu ne retient pas les suivants, la session sait les remettre en ordre. Seule la mise en relation passe par le serveur public de PeerJS, chargé seulement quand on ouvre le menu en ligne (chargement initial : 0,73 Mo).
+- La liaison se répare seule : battement sur les deux canaux, et si l'un reste muet 4 s, elle est refaite. L'invité rappelle au bout de 5 et 10 s si rien ne s'ouvre, avant d'afficher « Connexion impossible sur ce réseau. Essayez en Wi-Fi tous les deux. »
+- Les messages du salon reçus avant que le salon soit prêt à les lire sont gardés puis remis ; chacun répond à la présentation de l'autre.
+- `net/friends.ts` (état du salon partagé par les écrans), `net/room.ts` (code, lien, pseudo, messages), `net/lobby.ts` (menu).
+- Essais : `?peer=hôte:port` (serveur de mise en relation local), `?lag=100` (latence ajoutée), `?netbot=hard|idle` (téléphone joué par l'IA, ou qui ne touche à rien).
+
+**Corrigé en route**
+- Quand l'hôte renvoyait sa présentation (après une reconnexion), le lieu qu'elle contient annulait « Prêt » chez l'invité sans le dire à l'hôte : chacun pouvait croire l'autre prêt. Le lieu ou le perso reçus n'annulent plus « Prêt » que s'ils changent vraiment, et l'autre est prévenu.
+- Le salon était redessiné entièrement à chaque mesure du ping (deux fois par seconde) : seul le ping est mis à jour.
+- Tests : les téléphones ouverts par un test n'étaient pas fermés et continuaient de jouer pendant le test suivant, ce qui faisait échouer un test sur deux sur la machine de test (4 images par seconde).
+
+**Vérifications**
+- 235 tests unitaires (10 de plus : code, lien d'invitation, pseudo, salon à deux par une fausse liaison : présentations, départ du match, « Prêt » annulé, revanche, retour au salon, départ, versions différentes, nouvelle présentation de l'hôte).
+- 5 tests à **deux navigateurs** (`online.spec.ts`), avec un serveur de mise en relation local :
+  - salon par le lien d'invitation, choix, prêt, **match complet** entre deux IA : même vainqueur, même score, **même état final au pas près** sur les deux téléphones, aucune désynchronisation ;
+  - le même avec **100 ms de latence dans chaque sens** : environ 260 retours en arrière par téléphone, aucune désynchronisation ;
+  - réaction reçue, revanche à deux (match n° 2), départ de l'hôte en plein match (« Hôte a quitté le salon. Match annulé. ») ;
+  - coupure de la liaison en plein match : bandeau, reconnexion, même match ; puis changer de perso et départ de l'invité ;
+  - erreurs : code trop court, salon introuvable.
+- 43 tests navigateur du solo : tout passe.
+- Limite : la machine de test n'a pas de carte graphique et tourne à 4 images par seconde avec deux navigateurs ; la fluidité réelle et la traversée des box et des réseaux mobiles ne peuvent être essayées que sur de vrais téléphones. C'est l'objet du jalon 3.
+- Pas encore fait (prévu plus tard) : la reprise d'un match après rechargement de la page (le premier jeu l'avait) ; le relais pour les réseaux qui bloquent la connexion directe (phase 7c).
+
 ## Premier jeu · Phase 0 · Mise en place — 2026-10-01
 
 **Fait**

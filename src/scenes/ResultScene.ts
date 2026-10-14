@@ -11,6 +11,10 @@ import { COLORS, CSS, FONT_TITLE } from '../ui/theme';
 import type { FightData, FoeKind } from './FightScene';
 import type { AiLevel } from '../ai/ai';
 import { updateSave, withResult } from '../logic/save';
+import { ONLINE } from '../config/texts';
+import { currentRoom, type FriendRoom } from '../net/friends';
+import type { SessionStats } from '../net/rollback';
+import { FONT_UI } from '../ui/theme';
 
 export interface ResultData {
   ids: [FighterId, FighterId];
@@ -20,12 +24,16 @@ export interface ResultData {
   p2: FoeKind;
   level: AiLevel;
   autoplay: boolean;
+  /** Match en ligne : le joueur de ce téléphone, et de quoi vérifier que les deux téléphones ont le même match. */
+  online?: { me: 0 | 1; hash: number; steps: number; stats: SessionStats };
 }
 
 /** Écran de résultat : le vainqueur, le score en rounds, revanche ou retour à l'accueil. */
 export class ResultScene extends Phaser.Scene {
   private items: Phaser.GameObjects.GameObject[] = [];
   private result!: ResultData;
+  private room: FriendRoom | null = null;
+  private off: (() => void) | null = null;
 
   constructor() {
     super('Result');
@@ -34,6 +42,8 @@ export class ResultScene extends Phaser.Scene {
   init(data: ResultData) {
     this.result = data;
     this.items = [];
+    this.room = data.online ? currentRoom() : null;
+    this.off = null;
   }
 
   create() {
@@ -45,11 +55,22 @@ export class ResultScene extends Phaser.Scene {
     sfx.crowd(0.8, 1.6);
     // Victoires et défaites contre l'IA, gardées sur l'appareil (pas la démo).
     const r = this.result;
-    if (r.p2 === 'ai' && !r.autoplay) updateSave((sv) => withResult(sv, r.level, r.winner === 0));
+    if (r.p2 === 'ai' && !r.autoplay && !r.online) updateSave((sv) => withResult(sv, r.level, r.winner === 0));
+    if (this.room) {
+      this.off = this.room.listen({
+        change: () => this.build(),
+        start: (st) => this.scene.start('Fight', { online: st }),
+        room: () => this.scene.start('Room'),
+        leave: (why) => {
+          if (why !== 'self') this.scene.start('Title', { notice: why === 'version' ? ONLINE.version : ONLINE.left(this.room?.them?.pseudo ?? '') });
+        },
+      });
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.off?.());
+    }
     if (window.__slap) {
       window.__slap.ready = true;
       window.__slap.scene = 'Result';
-      window.__slap.state = { mode: 'result', winner: this.result.winner, wins: this.result.wins, ids: { left: this.result.ids[0], right: this.result.ids[1] } };
+      window.__slap.state = { mode: 'result', winner: this.result.winner, wins: this.result.wins, ids: { left: this.result.ids[0], right: this.result.ids[1] }, online: this.result.online ?? null };
     }
   }
 
@@ -106,10 +127,46 @@ export class ResultScene extends Phaser.Scene {
         .setName('result-score'),
     );
 
-    const again: FightData = { left: r.ids[0], right: r.ids[1], stage: r.stage, p2: r.p2, level: r.level, autoplay: r.autoplay };
     const by = Math.min(height * 0.62, height - safe.bottom - 150);
+    if (r.online) {
+      this.buildOnline(by);
+      return;
+    }
+    const again: FightData = { left: r.ids[0], right: r.ids[1], stage: r.stage, p2: r.p2, level: r.level, autoplay: r.autoplay };
     add(makeButton(this, width / 2, by, 'REVANCHE', COLORS.yellow, () => this.scene.start('Fight', again), { w: 320, h: 76, font: 34 }).setDepth(4));
     add(makeButton(this, width / 2 - 135, by + 92, 'AUTRE COMBAT', COLORS.cyan, () => this.scene.start('CharacterSelect', { left: r.ids[0], level: r.level }), { w: 250, h: 58, font: 22 }).setDepth(4));
     add(makeButton(this, width / 2 + 135, by + 92, 'ACCUEIL', COLORS.cream, () => this.scene.start('Title'), { w: 250, h: 58, font: 22 }).setDepth(4));
+  }
+
+  /** En ligne : revanche (il faut que les deux la demandent), changer de perso (retour au salon), menu. */
+  private buildOnline(by: number) {
+    const { width } = this.scale;
+    const room = this.room;
+    const add = <T extends Phaser.GameObjects.GameObject>(o: T) => (this.items.push(o), o);
+    if (!room || room.closed) {
+      add(makeButton(this, width / 2, by, ONLINE.menu, COLORS.yellow, () => this.scene.start('Title'), { w: 320, h: 76, font: 34 }).setDepth(4));
+      return;
+    }
+    const who = room.them?.pseudo ?? '';
+    if (room.again.me) {
+      add(this.add.text(width / 2, by, ONLINE.againWait(who), { fontFamily: FONT_UI, fontStyle: '800', fontSize: '24px', color: CSS.cream, stroke: CSS.ink, strokeThickness: 6 }).setOrigin(0.5).setDepth(4).setName('result-wait'));
+    } else {
+      add(makeButton(this, width / 2, by, ONLINE.again, COLORS.yellow, () => room.askAgain(), { w: 320, h: 76, font: 34 }).setDepth(4));
+    }
+    if (room.again.them && !room.again.me) {
+      add(this.add.text(width / 2, by - 58, ONLINE.againThem(who), { fontFamily: FONT_UI, fontStyle: '800', fontSize: '20px', color: CSS.yellow, stroke: CSS.ink, strokeThickness: 5 }).setOrigin(0.5).setDepth(4).setName('result-them-again'));
+    }
+    add(
+      makeButton(this, width / 2 - 135, by + 92, ONLINE.changeFighter, COLORS.cyan, () => {
+        room.backToRoom();
+        this.scene.start('Room');
+      }, { w: 250, h: 58, font: 20 }).setDepth(4),
+    );
+    add(
+      makeButton(this, width / 2 + 135, by + 92, ONLINE.menu, COLORS.cream, () => {
+        room.leave();
+        this.scene.start('Title');
+      }, { w: 250, h: 58, font: 22 }).setDepth(4),
+    );
   }
 }

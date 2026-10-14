@@ -126,3 +126,65 @@ export const TUTORIAL = {
   /** Sur l'accueil, nombre de victoires contre l'IA. */
   wins: (n: number) => (n === 1 ? '1 victoire' : `${n} victoires`),
 };
+
+/** Jeu en ligne. */
+export const ONLINE = {
+  menuTitle: 'EN LIGNE',
+  friends: 'ENTRE AMIS',
+  friendsHelp: 'Chacun sur son téléphone, avec un code de salon.',
+  quick: 'PARTIE RAPIDE',
+  quickSoon: 'Bientôt : contre n’importe qui.',
+  pseudoLabel: 'Ton pseudo',
+  create: 'CRÉER UN SALON',
+  join: 'REJOINDRE',
+  go: 'C’EST PARTI',
+  share: 'PARTAGER LE LIEN',
+  shareText: (code: string) => `Viens te prendre une gifle sur PolitiClash ! Salon ${code}`,
+  copied: 'Lien copié ! Envoie-le à ton adversaire.',
+  creating: 'Création du salon…',
+  waiting: 'En attente de ton adversaire…',
+  joining: (code: string) => `Connexion au salon ${code}…`,
+  codeHelp: 'Le code du salon (4 lettres) :',
+  errors: {
+    badCode: 'Le code fait 4 lettres.',
+    'room-not-found': 'Salon introuvable. Vérifie le code.',
+    'room-taken': 'Ce code est déjà pris, réessaie.',
+    network: 'Pas de connexion au serveur. Vérifie ta connexion et réessaie.',
+    'p2p-failed': 'Connexion impossible sur ce réseau. Essayez en Wi-Fi tous les deux.',
+  } as Record<string, string>,
+  // Salon
+  room: (code: string) => `SALON ${code}`,
+  stage: 'LIEU',
+  hostPicksStage: 'L’hôte choisit le lieu',
+  ready: 'PRÊT',
+  notReady: 'PAS PRÊT',
+  isReady: 'PRÊT !',
+  waitingThem: 'En attente…',
+  quit: '← QUITTER',
+  pickFirst: 'Choisis ton combattant.',
+  pressReady: 'Appuie sur PRÊT quand tu veux.',
+  waitReady: (who: string) => `On attend ${who}…`,
+  ping: (ms: number) => `Connexion : ${ms} ms`,
+  weak: 'Connexion faible : le jeu pourra ralentir.',
+  // Combat
+  vs: (who: string) => `EN LIGNE · CONTRE ${who.toUpperCase()}`,
+  unstable: 'Connexion instable…',
+  paused: 'Connexion coupée',
+  pausedHelp: 'On attend ton adversaire, le match reprend tout seul.',
+  lostTitle: 'Connexion perdue',
+  cancelled: 'Match annulé.',
+  menu: 'MENU',
+  // Fin de match
+  again: 'REVANCHE',
+  againWait: (who: string) => `On attend ${who}…`,
+  againThem: (who: string) => `${who} veut la revanche !`,
+  changeFighter: 'CHANGER DE PERSO',
+  // Départs
+  left: (who: string) => `${who} a quitté le salon.`,
+  version: 'Vous n’avez pas la même version du jeu. Rechargez la page tous les deux.',
+  muteOn: 'Réactions coupées',
+  muteOff: 'Réactions',
+};
+
+/** Réactions toutes prêtes (pas de chat libre). PROVISOIRES, à remplacer par le propriétaire. */
+export const REACTIONS = ['Aïe !', 'Encore !', 'Bien joué', 'Même pas mal', 'Revanche !'];

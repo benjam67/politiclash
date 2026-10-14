@@ -2,6 +2,7 @@
 // Une sauvegarde absente, abîmée ou d'une autre version est remise d'aplomb sans planter.
 import { PLAYABLE_IDS, type FighterId } from '../config/roster';
 import { STAGE_IDS, type StageId } from '../config/stages';
+import { cleanPseudo } from '../net/room';
 
 export type Level = 'easy' | 'normal' | 'hard';
 const LEVELS: Level[] = ['easy', 'normal', 'hard'];
@@ -20,12 +21,16 @@ export interface SaveData {
   lastStage: StageId | null;
   /** Matchs gagnés et perdus contre l'IA, par niveau. */
   record: Record<Level, Record2>;
+  /** Pseudo du jeu en ligne (mode Entre amis). */
+  pseudo: string;
+  /** Réactions de l'adversaire coupées. */
+  muteReactions: boolean;
 }
 
 export const STORAGE_KEY = 'politiclash.save';
 
 export function defaultSave(): SaveData {
-  return { v: 1, tutorialDone: false, level: 'normal', lastFighter: null, lastStage: null, record: { easy: { w: 0, l: 0 }, normal: { w: 0, l: 0 }, hard: { w: 0, l: 0 } } };
+  return { v: 1, tutorialDone: false, level: 'normal', lastFighter: null, lastStage: null, record: { easy: { w: 0, l: 0 }, normal: { w: 0, l: 0 }, hard: { w: 0, l: 0 } }, pseudo: '', muteReactions: false };
 }
 
 const count = (n: unknown) => (typeof n === 'number' && Number.isFinite(n) && n >= 0 ? Math.min(1e6, Math.floor(n)) : 0);
@@ -39,6 +44,8 @@ export function sanitize(raw: unknown): SaveData {
   if (LEVELS.includes(r.level as Level)) out.level = r.level as Level;
   if ((PLAYABLE_IDS as string[]).includes(r.lastFighter as string)) out.lastFighter = r.lastFighter as FighterId;
   if ((STAGE_IDS as string[]).includes(r.lastStage as string)) out.lastStage = r.lastStage as StageId;
+  if (typeof r.pseudo === 'string') out.pseudo = cleanPseudo(r.pseudo);
+  out.muteReactions = r.muteReactions === true;
   const rec = r.record && typeof r.record === 'object' ? (r.record as Record<string, unknown>) : {};
   for (const lv of LEVELS) {
     const x = rec[lv] && typeof rec[lv] === 'object' ? (rec[lv] as Record<string, unknown>) : {};

@@ -6,20 +6,46 @@ import { COLORS, CSS, FONT_TITLE, FONT_UI } from '../ui/theme';
 import { fighterKey } from '../config/poses';
 import { needsInstallHint, safeInsets } from '../ui/safe';
 import { PLAYABLE_IDS, spriteOf } from '../config/roster';
-import { GAME, TUTORIAL } from '../config/texts';
+import { GAME, ONLINE, TUTORIAL } from '../config/texts';
+import { openLobby } from '../net/lobby';
+import { normalizeCode } from '../net/room';
 import { loadSave, totalWins } from '../logic/save';
 import type { FightData } from './FightScene';
 
 /** Écran d'accueil : le bouton JOUER mène au choix du personnage. */
 export class TitleScene extends Phaser.Scene {
   private items: Phaser.GameObjects.GameObject[] = [];
+  /** Message à afficher (un ami a quitté le salon, versions différentes…). */
+  private notice = '';
+  private lobbyOpen = false;
 
   constructor() {
     super('Title');
   }
 
-  init() {
+  init(data: { notice?: string; join?: string }) {
     this.items = [];
+    this.notice = data?.notice ?? '';
+    this.lobbyOpen = false;
+    // Lien d'invitation (`?salon=ABCD`) : on rejoint le salon directement, une seule fois.
+    const code = data?.join ?? normalizeCode(new URLSearchParams(location.search).get('salon') ?? '');
+    if (code && !TitleScene.joined) {
+      TitleScene.joined = true;
+      this.time.delayedCall(50, () => this.goOnline(code));
+    }
+  }
+
+  private static joined = false;
+
+  private goOnline(join?: string) {
+    if (this.lobbyOpen) return;
+    this.lobbyOpen = true;
+    this.notice = '';
+    this.build();
+    void openLobby({ join }).then((room) => {
+      this.lobbyOpen = false;
+      if (room) this.scene.start('Room');
+    });
   }
 
   create() {
@@ -94,7 +120,17 @@ export class TitleScene extends Phaser.Scene {
 
     // Premier lancement : JOUER commence par le tutoriel.
     const save = loadSave();
-    add(makeButton(this, width / 2, height * 0.6, 'JOUER', COLORS.yellow, () => (save.tutorialDone ? this.scene.start('CharacterSelect', {}) : this.startTutorial()), { w: 320, h: 84, font: 38 }).setDepth(4));
+    add(makeButton(this, width / 2 - 160, height * 0.6, 'JOUER', COLORS.yellow, () => (save.tutorialDone ? this.scene.start('CharacterSelect', {}) : this.startTutorial()), { w: 290, h: 84, font: 38 }).setDepth(4));
+    add(makeButton(this, width / 2 + 160, height * 0.6, ONLINE.menuTitle, COLORS.cyan, () => this.goOnline(), { w: 290, h: 84, font: 34 }).setDepth(4).setName('btn-online'));
+    if (this.notice) {
+      add(
+        this.add
+          .text(width / 2, height * 0.42, this.notice, { fontFamily: FONT_UI, fontStyle: '800', fontSize: '20px', color: CSS.yellow, stroke: CSS.ink, strokeThickness: 6, align: 'center', wordWrap: { width: width * 0.5 } })
+          .setOrigin(0.5)
+          .setDepth(5)
+          .setName('title-notice'),
+      );
+    }
     if (save.tutorialDone) add(makeButton(this, width / 2, height * 0.6 + 86, TUTORIAL.replay, COLORS.cream, () => this.startTutorial(), { w: 210, h: 50, font: 20 }).setDepth(4).setName('btn-tutorial'));
     const wins = totalWins(save);
     if (wins > 0) {

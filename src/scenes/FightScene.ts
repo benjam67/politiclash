@@ -3,7 +3,10 @@ import { BUZZ, GUARD, MATCH, SIM, STAGE, STYLE } from '../config/balance';
 import { PLAYABLE_IDS, ROSTER, spriteOf, type FighterId } from '../config/roster';
 import { CHEEK } from '../config/sprites';
 import { queueStageImages, STAGES, type StageId } from '../config/stages';
-import { FIGHTER_TEXTS, TUTORIAL } from '../config/texts';
+import { FIGHTER_TEXTS, ONLINE, REACTIONS, TUTORIAL } from '../config/texts';
+import { currentRoom, type FriendRoom } from '../net/friends';
+import { NetSession, type NetStatus } from '../net/rollback';
+import type { MatchStart } from '../net/room';
 import { fighterKey, frameOf, poseFor } from '../config/poses';
 import { computeLayout, HABITUES, type StageLayout } from '../logic/layout';
 import {
@@ -42,7 +45,7 @@ import type { ResultData } from './ResultScene';
 import { queueFighterImages } from './BootScene';
 import { showLoadingBar } from '../ui/loading';
 import { createTuto, TUTO_STEPS, tutoAfterStep, tutoDone, tutoPartner, tutoProgress, tutoStep, type Tuto } from '../logic/tutorial';
-import { updateSave } from '../logic/save';
+import { loadSave, updateSave } from '../logic/save';
 import { makeButton } from '../ui/button';
 import { FONT_UI } from '../ui/theme';
 
@@ -70,6 +73,8 @@ export interface FightData {
   tutorial?: boolean;
   /** Essai de charge du jeu en ligne : à chaque pas, rejoue en plus les N derniers pas (pire cas du retour en arrière). */
   rollback?: number;
+  /** Match en ligne (mode Entre amis) : réglages envoyés par l'hôte. */
+  online?: MatchStart;
 }
 
 interface FighterView {
@@ -143,6 +148,22 @@ export class FightScene extends Phaser.Scene {
   /** Temps passé à rejouer, par image (ms), pour les mesures. */
   private rollbackMs: number[] = [];
 
+  // Jeu en ligne.
+  private online: MatchStart | null = null;
+  private room: FriendRoom | null = null;
+  private net: NetSession | null = null;
+  /** Le joueur de ce téléphone : 0 à gauche (hôte, ou hors ligne), 1 à droite (invité). */
+  private me: 0 | 1 = 0;
+  private netBot: AiSource | null = null;
+  private netShown: NetStatus | 'gone' = 'ok';
+  private netUi: Phaser.GameObjects.GameObject[] = [];
+  private ended = false;
+  private offRoom: (() => void) | null = null;
+  private reactBtn: Phaser.GameObjects.Text | null = null;
+  private reactMenu: Phaser.GameObjects.GameObject[] = [];
+  private lastReact = 0;
+  private muted = false;
+
   private state!: FightState;
   private acc = 0;
   private lastNow = -1;
@@ -175,6 +196,28 @@ export class FightScene extends Phaser.Scene {
     this.startBuzz = data.buzz ?? 0;
     this.tuto = data.tutorial ? createTuto() : null;
     this.rollbackLoad = data.rollback ?? 0;
+    this.online = data.online ?? null;
+    this.room = this.online ? currentRoom() : null;
+    this.net = null;
+    this.me = 0;
+    this.netBot = null;
+    this.netShown = 'ok';
+    this.netUi = [];
+    this.ended = false;
+    this.offRoom = null;
+    this.reactBtn = null;
+    this.reactMenu = [];
+    this.lastReact = 0;
+    this.muted = loadSave().muteReactions;
+    if (this.online) {
+      this.ids = [...this.online.fighters];
+      this.stageId = this.online.stage;
+      this.seed = this.online.seed;
+      this.intro = true;
+      this.autoplay = false;
+      this.tuto = null;
+      this.me = this.room?.index ?? 0;
+    }
     this.history = [];
     this.rollbackMs = [];
     this.tutoUi = [];
@@ -244,11 +287,14 @@ export class FightScene extends Phaser.Scene {
       this.soundBtn.setTexture(sfx.muted ? 'ico_sound_off' : 'ico_sound_on');
       if (!sfx.muted) sfx.startMusic();
     });
-    this.homeBtn = this.add.image(0, 0, 'ico_home').setDepth(130).setInteractive({ useHandCursor: true });
-    this.homeBtn.on('pointerup', () => this.scene.start('Title'));
+    this.homeBtn = this.add.image(0, 0, 'ico_home').setDepth(130).setInteractive({ useHandCursor: true }).setName('btn-home');
+    this.homeBtn.on('pointerup', () => {
+      this.room?.leave();
+      this.scene.start('Title');
+    });
     // Niveau de l'IA, discret, sous le chrono.
     this.levelTag = this.add
-      .text(0, 0, this.tuto ? '' : this.p2Kind === 'ai' ? (this.autoplay ? `DÉMO · ${levelLabel(this.level).toUpperCase()}` : `IA ${levelLabel(this.level).toUpperCase()}`) : '', { fontFamily: FONT_TITLE, fontSize: '15px', color: CSS.cream, stroke: CSS.ink, strokeThickness: 5 })
+      .text(0, 0, this.online ? ONLINE.vs(this.room?.them?.pseudo ?? '') : this.tuto ? '' : this.p2Kind === 'ai' ? (this.autoplay ? `DÉMO · ${levelLabel(this.level).toUpperCase()}` : `IA ${levelLabel(this.level).toUpperCase()}`) : '', { fontFamily: FONT_TITLE, fontSize: '15px', color: CSS.cream, stroke: CSS.ink, strokeThickness: 5 })
       .setOrigin(0.5, 0)
       .setDepth(100);
 
@@ -275,12 +321,15 @@ export class FightScene extends Phaser.Scene {
       this.touch.setVisible(false);
     }
 
+    if (this.online) this.startOnline();
+
     this.applyLayout();
     this.scale.on(Phaser.Scale.Events.RESIZE, this.applyLayout, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.scale.off(Phaser.Scale.Events.RESIZE, this.applyLayout, this);
       window.removeEventListener('touchstart', reveal);
       this.keyboard.destroy();
+      this.offRoom?.();
     });
 
     // Le son ne peut démarrer qu'après un geste de l'utilisateur.
@@ -300,6 +349,10 @@ export class FightScene extends Phaser.Scene {
   }
 
   update(time: number) {
+    if (this.online) {
+      this.updateOnline(time);
+      return;
+    }
     // Simulation à pas fixe, indépendante de la fréquence d'affichage. On mesure le temps réel nous-mêmes :
     // celui que donne Phaser est lissé et plafonné, ce qui ralentirait le combat sur un appareil lent.
     const now = performance.now();
@@ -374,6 +427,7 @@ export class FightScene extends Phaser.Scene {
     // Sous le bouton d'accueil, au-dessus du stick.
     this.gauge.layout(margin + 6, 204, Math.max(160, height - safe.bottom - 213 - 204 - 60));
     this.soundBtn.setPosition(width - 44 - side, 120);
+    this.reactBtn?.setPosition(width - 44 - side, 196);
     this.homeBtn.setPosition(44 + side, 120);
     this.fx.layout(width, height);
     this.commentator.layout(width, height, side, safe.bottom);
@@ -441,8 +495,10 @@ export class FightScene extends Phaser.Scene {
       view.bar.setBuzz(s.f[i].buzz / BUZZ.max);
       view.pips.setWon(s.wins[i]);
     });
-    this.touch.setBuzz(a.buzz >= BUZZ.max && !s.cine);
-    this.touch.setRing(a.mode === 'buzz' ? a.mt / BUZZ_STEPS : 0);
+    // Le joueur de ce téléphone (à droite pour l'invité en ligne).
+    const mine = s.f[this.me];
+    this.touch.setBuzz(mine.buzz >= BUZZ.max && !s.cine);
+    this.touch.setRing(mine.mode === 'buzz' ? mine.mt / BUZZ_STEPS : 0);
     this.timer.set(Math.ceil(s.timeLeft / SIM.stepsPerSecond), s.timeLeft / ROUND_STEPS);
     const sec = Math.ceil(s.timeLeft / SIM.stepsPerSecond);
     if (s.phase === 'fight' && sec <= 10 && sec !== this.lastTick && sec > 0) {
@@ -451,13 +507,13 @@ export class FightScene extends Phaser.Scene {
     }
 
     // Jauge de charge du joueur 1.
-    const charging = a.mode === 'charge';
+    const charging = mine.mode === 'charge';
     if (charging !== this.charging) {
       this.charging = charging;
       if (charging) this.gauge.setZone(STYLE.goldenZone);
       this.gauge.show(charging);
     }
-    if (charging) this.gauge.setValue(chargePct(a.chg), a.hot > 0);
+    if (charging) this.gauge.setValue(chargePct(mine.chg), mine.hot > 0);
   }
 
   private renderFighter(view: FighterView, f: FighterState, i: 0 | 1) {
@@ -553,7 +609,7 @@ export class FightScene extends Phaser.Scene {
       case 'buzzFull': {
         sfx.powerUp();
         this.crowd?.cheer(0.5);
-        if (e.who === 0 || this.autoplay) this.commentator.say('buzz');
+        if (e.who === this.me || this.autoplay) this.commentator.say('buzz');
         break;
       }
       case 'buzzStart':
@@ -763,6 +819,198 @@ export class FightScene extends Phaser.Scene {
     if (this.rollbackMs.length > 600) this.rollbackMs.shift();
   }
 
+  // ── Jeu en ligne ───────────────────────────────────────────────────────
+
+  private startOnline() {
+    const start = this.online as MatchStart;
+    const room = this.room;
+    this.net = new NetSession(this.me, this.state, (m) => room?.sendGame({ n: start.n, m }), { delay: start.delay });
+    // Essais : `?netbot=hard` fait jouer ce téléphone par l'IA (elle ne voit que son écran, prédictions comprises) ;
+    // `?netbot=idle` : il ne touche à rien.
+    const bot = new URLSearchParams(location.search).get('netbot');
+    if (bot === 'idle') {
+      this.netBot = new IdleSource() as unknown as AiSource;
+      this.touch.setVisible(false);
+    } else if (bot === 'easy' || bot === 'normal' || bot === 'hard') {
+      this.netBot = new AiSource(bot, start.seed + this.me);
+      this.touch.setVisible(false);
+    }
+    if (!room) return;
+    this.offRoom = room.listen({
+      game: (g) => {
+        if (g.n === start.n) this.net?.receive(performance.now(), g.m);
+      },
+      react: (i) => this.showReaction(1 - this.me as 0 | 1, i),
+      leave: (why) => {
+        if (why === 'self' || this.ended) return;
+        this.ended = true;
+        this.netOverlay(why === 'version' ? ONLINE.version : ONLINE.left(room.them?.pseudo ?? ''), ONLINE.cancelled, true);
+      },
+    });
+    // Réactions : un bouton sous celui du son.
+    this.reactBtn = this.add
+      .text(0, 0, '💬', { fontSize: '40px' })
+      .setOrigin(0.5)
+      .setDepth(130)
+      .setInteractive({ useHandCursor: true })
+      .setName('btn-react');
+    this.reactBtn.on('pointerup', () => this.toggleReactMenu());
+  }
+
+  /** Entrée de ce téléphone pour le prochain pas. */
+  private localInput(): InputFrame {
+    if (this.netBot && this.net) return this.netBot.read(this.net.state, this.me);
+    const forced = window.__slap?.inputs ?? {};
+    const f1 = typeof forced.p1 === 'function' ? forced.p1(this.state) : forced.p1;
+    return mergeInputs(this.keyboard.read(), this.touch.read(), f1 ?? {});
+  }
+
+  private updateOnline(time: number) {
+    const net = this.net as NetSession;
+    const now = performance.now();
+    const delta = (this.lastNow < 0 ? STEP_MS : now - this.lastNow) * (now < this.slowUntil ? 0.35 : 1);
+    this.lastNow = now;
+    this.acc = Math.min(this.acc + delta, STEP_MS * MAX_STEPS_PER_FRAME);
+    while (this.acc >= STEP_MS && !this.ended) {
+      this.acc -= STEP_MS;
+      net.tick(now, this.localInput());
+      this.state = net.state;
+      for (const e of net.drainEvents()) this.onEvent(e);
+      if (net.finished) break;
+    }
+    this.state = net.state;
+    this.crowd?.update(time);
+    this.render(false);
+    if (!this.ended) {
+      const st = net.status(now);
+      if (st !== this.netShown) {
+        this.netShown = st;
+        if (st === 'ok') this.clearNetUi();
+        else if (st === 'unstable') this.netOverlay(ONLINE.unstable);
+        else if (st === 'paused') this.netOverlay(ONLINE.paused, ONLINE.pausedHelp);
+        else {
+          // Entre amis : au-delà de 15 s, le match est annulé.
+          this.ended = true;
+          this.netOverlay(ONLINE.lostTitle, ONLINE.cancelled, true);
+          this.room?.close('lost');
+        }
+      }
+      if (net.finished) this.endOnline();
+    }
+    this.publish();
+  }
+
+  private endOnline() {
+    this.ended = true;
+    const s = this.net!.confirmedState;
+    const data: ResultData = {
+      ids: this.ids,
+      stage: this.stageId,
+      winner: s.winner as 0 | 1,
+      wins: [s.wins[0], s.wins[1]],
+      p2: 'ai',
+      level: this.level,
+      autoplay: false,
+      online: { me: this.me, hash: hashState(s), steps: this.net!.confirmedFrame, stats: { ...this.net!.stats } },
+    };
+    // Laisse voir le K.O. un instant, comme hors ligne.
+    this.time.delayedCall(300, () => this.scene.start('Result', data));
+  }
+
+  private clearNetUi() {
+    for (const o of this.netUi) o.destroy();
+    this.netUi = [];
+  }
+
+  /** Bandeau de connexion ; `menu` : le match est fini, bouton pour revenir au menu. */
+  private netOverlay(title: string, help = '', menu = false) {
+    this.clearNetUi();
+    const { width, height } = this.scale;
+    const add = <T extends Phaser.GameObjects.GameObject>(o: T) => (this.netUi.push(o), o);
+    if (menu) add(this.add.rectangle(0, 0, width, height, COLORS.ink, 0.6).setOrigin(0).setDepth(160));
+    add(this.add.rectangle(width / 2, height * 0.32, Math.min(width * 0.8, 760), help ? 110 : 70, COLORS.ink, 0.92).setStrokeStyle(5, COLORS.pink).setAngle(-2).setDepth(161));
+    add(
+      this.add
+        .text(width / 2, height * 0.32 - (help ? 18 : 0), title.toUpperCase(), { fontFamily: FONT_TITLE, fontSize: '30px', color: CSS.cream, stroke: CSS.ink, strokeThickness: 6 })
+        .setOrigin(0.5)
+        .setAngle(-2)
+        .setDepth(162)
+        .setName('net-title'),
+    );
+    if (help)
+      add(
+        this.add
+          .text(width / 2, height * 0.32 + 24, help, { fontFamily: FONT_UI, fontStyle: '800', fontSize: '18px', color: CSS.cyan, stroke: CSS.ink, strokeThickness: 4, align: 'center', wordWrap: { width: Math.min(width * 0.75, 720) } })
+          .setOrigin(0.5)
+          .setAngle(-2)
+          .setDepth(162),
+      );
+    if (menu) {
+      add(
+        makeButton(this, width / 2, height * 0.6, ONLINE.menu, COLORS.yellow, () => {
+          this.room?.leave();
+          this.scene.start('Title');
+        }, { w: 240, h: 66, font: 28 })
+          .setDepth(163)
+          .setName('btn-net-menu'),
+      );
+      this.touch.setVisible(false);
+    }
+  }
+
+  private toggleReactMenu() {
+    if (this.reactMenu.length) {
+      for (const o of this.reactMenu) o.destroy();
+      this.reactMenu = [];
+      return;
+    }
+    const { width } = this.scale;
+    const items = [...REACTIONS, this.muted ? ONLINE.muteOn : ONLINE.muteOff];
+    const w = 150;
+    const x0 = width / 2 - ((items.length - 1) * (w + 8)) / 2;
+    items.forEach((label, i) => {
+      const mute = i === REACTIONS.length;
+      const b = makeButton(this, x0 + i * (w + 8), 150, label, mute ? (this.muted ? COLORS.pink : COLORS.cream) : COLORS.cyan, () => {
+        if (mute) {
+          this.muted = !this.muted;
+          updateSave((sv) => ({ ...sv, muteReactions: this.muted }));
+        } else this.sendReaction(i);
+        this.toggleReactMenu();
+      }, { w, h: 46, font: 16 })
+        .setDepth(140)
+        .setName(mute ? 'btn-react-mute' : `btn-react-${i}`);
+      this.reactMenu.push(b);
+    });
+  }
+
+  private sendReaction(i: number) {
+    // Au plus une réaction toutes les 1,5 s.
+    const now = performance.now();
+    if (now - this.lastReact < 1500) return;
+    this.lastReact = now;
+    this.room?.react(i);
+    this.showReaction(this.me, i);
+  }
+
+  /** Bulle au-dessus d'un combattant pendant 2 s. Celles de l'adversaire sont cachées s'il a été coupé. */
+  private showReaction(who: 0 | 1, i: number) {
+    if (who !== this.me && this.muted) return;
+    const text = REACTIONS[i];
+    if (!text) return;
+    const f = this.state.f[who];
+    const p = this.toScreen(f.x / SUB, f.y / SUB + ROSTER[f.id].body.stand.h + 60);
+    const bubble = this.add
+      .text(p.x, p.y, text, { fontFamily: FONT_UI, fontStyle: '800', fontSize: '22px', color: CSS.ink, backgroundColor: CSS.cream, padding: { x: 12, y: 6 } })
+      .setOrigin(0.5, 1)
+      .setDepth(120)
+      .setName(`reaction-${who}`);
+    if (window.__slap) {
+      const w = window.__slap as unknown as { reactions?: string[] };
+      (w.reactions ??= []).push(`${who}:${text}`);
+    }
+    this.tweens.add({ targets: bubble, y: p.y - 30, alpha: 0, delay: 1600, duration: 400, onComplete: () => bubble.destroy() });
+  }
+
   // ── Tutoriel ───────────────────────────────────────────────────────────
 
   /** Panneau de consigne sous les barres de vie, puis écran de fin. Redessiné seulement quand il change. */
@@ -893,6 +1141,17 @@ export class FightScene extends Phaser.Scene {
       fps: this.game.loop.actualFps,
       timeLeft: Math.ceil(s.timeLeft / SIM.stepsPerSecond),
       rollbackMs: this.rollbackMs.length ? [...this.rollbackMs] : null,
+      net: this.net
+        ? {
+            me: this.me,
+            n: this.online?.n,
+            delay: this.online?.delay,
+            frame: this.net.frame,
+            confirmed: this.net.confirmedFrame,
+            status: this.net.status(performance.now()),
+            stats: { ...this.net.stats },
+          }
+        : null,
       tuto: this.tuto ? { step: tutoStep(this.tuto), index: this.tuto.i, n: this.tuto.n, pause: this.tuto.pause, done: tutoDone(this.tuto) } : null,
     };
     window.__slap.fx = { ...this.fx.stats, special: { ...this.sfxSpecial.stats }, ...(this.crowd?.stats ?? {}), ...this.commentator.stats, sounds: sfx.played.slice(-40) };
