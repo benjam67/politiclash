@@ -673,3 +673,4 @@ Les combattants se battent désormais pour devenir président ou présidente. Te
 - Le jeu s'appelle **France Bagarre** (titre, onglet, icône sur l'écran d'accueil, écran « tourne ton téléphone », message de partage). Le dépôt, l'adresse et les clés de sauvegarde gardent `politiclash`, pour ne perdre ni les sauvegardes ni les liens.
 - Menus aux couleurs du drapeau actuel : bleu marine `#002654`, blanc, rouge `#CE1126`. Bandeaux de titre bleu marine soulignés de blanc et de rouge ; boutons bleus, rouges ou blancs, texte blanc sur fond foncé ; difficultés en bleu, blanc, rouge ; menu en ligne sur fond bleu marine. Le combat garde ses couleurs.
 - Roadmap mise à jour : nouveau nom, histoire, noms et répliques définitifs.
+- Écran « tourne ton téléphone » : fond bleu marine, et le boxeur tricolore du logo au-dessus du titre (`public/logo-boxeur.webp`, 17 Ko).
