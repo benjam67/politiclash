@@ -26,6 +26,8 @@ export const SCREENS = {
   pickLevel: 'DIFFICULTÉ',
   pickStage: 'OÙ SE TIENT LE DÉBAT ?',
   random: 'TIRAGE AU SORT',
+  /** Valide le combattant choisi sur l'écran de sélection. */
+  confirm: 'VALIDER ✔',
   soon: 'BIENTÔT CANDIDAT',
   soonStage: 'BIENTÔT',
   /** Fin de match. `elected` vient de FIGHTER_TEXTS (ÉLU ou ÉLUE). */

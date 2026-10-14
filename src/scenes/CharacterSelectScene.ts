@@ -168,13 +168,20 @@ export class CharacterSelectScene extends Phaser.Scene {
           add(makeCard(this, x, y, `card-soon-${i}`, { w: cw, h: ch, label: SCREENS.soon, locked: true }));
         }
       }
-      if (this.step === 'p2') {
-        add(makeButton(this, cx, top + ch * 1.5 + gap + 50, SCREENS.random, FLAG.red, () => this.pickRandom(), { w: 260, h: 58, font: 24 }).setDepth(4).setName('btn-random'));
+      // Sous la grille : « Valider » dès qu'un combattant est choisi, et le tirage au sort pour l'adversaire.
+      const by = top + ch * 1.5 + gap + 50;
+      const current = this.step === 'p1' ? this.left : this.right;
+      const both = this.step === 'p2';
+      if (both) {
+        add(makeButton(this, cx - (current ? 150 : 0), by, SCREENS.random, FLAG.red, () => this.pickRandom(), { w: 260, h: 58, font: 24 }).setDepth(4).setName('btn-random'));
+      }
+      if (current) {
+        add(makeButton(this, cx + (both ? 150 : 0), by, SCREENS.confirm, FLAG.blue, () => this.confirm(), { w: 260, h: 58, font: 24 }).setDepth(4).setName('btn-confirm'));
       }
     }
 
     // Aide en bas, et retour.
-    const help = this.step === 'p1' ? 'Touche un portrait.' : this.step === 'p2' ? 'Le même combattant des deux côtés, c’est permis.' : 'Tu pourras changer à chaque match.';
+    const help = this.step === 'p1' ? 'Touche un portrait, puis valide.' : this.step === 'p2' ? 'Touche un portrait, puis valide. Le même des deux côtés, c’est permis.' : 'Tu pourras changer à chaque match.';
     add(
       this.add
         .text(cx, height - 12 - safe.bottom, help, { fontFamily: FONT_UI, fontStyle: '800', fontSize: '17px', color: CSS.cream, stroke: CSS.ink, strokeThickness: 5 })
@@ -188,15 +195,20 @@ export class CharacterSelectScene extends Phaser.Scene {
     this.publish();
   }
 
+  /** Toucher un portrait le choisit seulement ; on passe à l'étape suivante avec « Valider ». */
   private pick(id: FighterId) {
-    if (this.step === 'p1') {
-      this.left = id;
-      this.go('p2');
-    } else {
+    if (this.step === 'p1') this.left = id;
+    else {
       this.right = id;
       this.random = false;
-      this.go('level');
     }
+    sfx.tick(false);
+    this.build();
+  }
+
+  private confirm() {
+    if (this.step === 'p1' && this.left) this.go('p2');
+    else if (this.step === 'p2' && this.right) this.go('level');
   }
 
   private pickRandom() {

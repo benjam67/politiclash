@@ -100,8 +100,10 @@ test.describe('phase 6 : tutoriel et sauvegarde', () => {
     await tapNamed(page, 'Title', 'btn-play');
     await waitScene(page, 'CharacterSelect');
     await tapNamed(page, 'CharacterSelect', 'card-doyen');
+    await tapNamed(page, 'CharacterSelect', 'btn-confirm');
     await page.waitForFunction(() => (window.__slap!.state as { step: string }).step === 'p2');
     await tapNamed(page, 'CharacterSelect', 'card-cadet');
+    await tapNamed(page, 'CharacterSelect', 'btn-confirm');
     await page.waitForFunction(() => (window.__slap!.state as { step: string }).step === 'level');
     await tapNamed(page, 'CharacterSelect', 'btn-level-hard');
     await waitScene(page, 'StageSelect');
@@ -121,8 +123,10 @@ test.describe('phase 6 : tutoriel et sauvegarde', () => {
     await waitScene(page, 'CharacterSelect');
     expect(await st(page)).toMatchObject({ step: 'p1', left: 'doyen', level: 'hard' });
     await tapNamed(page, 'CharacterSelect', 'card-doyen');
+    await tapNamed(page, 'CharacterSelect', 'btn-confirm');
     await page.waitForFunction(() => (window.__slap!.state as { step: string }).step === 'p2');
     await tapNamed(page, 'CharacterSelect', 'card-cadet');
+    await tapNamed(page, 'CharacterSelect', 'btn-confirm');
     await page.waitForFunction(() => (window.__slap!.state as { step: string }).step === 'level');
     const names = await namesIn(page, 'CharacterSelect');
     expect(names).toContain('record-hard');

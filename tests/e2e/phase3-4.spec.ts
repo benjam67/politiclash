@@ -49,13 +49,25 @@ test.describe('phase 4 : choix du personnage et du niveau', () => {
     await page.waitForTimeout(200);
     await page.screenshot({ path: `${SHOTS}/phase4-choix-perso.png` });
 
+    // Toucher un portrait le choisit, sans passer à la suite : il faut valider.
+    expect(names).not.toContain('btn-confirm');
     await tapNamed(page, 'CharacterSelect', 'card-tailleur');
+    await page.waitForFunction(() => (window.__slap!.state as { left: string | null }).left === 'tailleur');
+    expect(await st(page)).toMatchObject({ step: 'p1' });
+    await tapNamed(page, 'CharacterSelect', 'card-cadet');
+    await page.waitForFunction(() => (window.__slap!.state as { left: string | null }).left === 'cadet');
+    await tapNamed(page, 'CharacterSelect', 'card-tailleur');
+    await page.waitForFunction(() => (window.__slap!.state as { left: string | null }).left === 'tailleur');
+    expect(await namesIn(page, 'CharacterSelect')).toContain('btn-confirm');
+    await page.screenshot({ path: `${SHOTS}/phase4-choix-perso-valider.png` });
+    await tapNamed(page, 'CharacterSelect', 'btn-confirm');
     await page.waitForFunction(() => (window.__slap!.state as { step: string }).step === 'p2');
     expect(await st(page)).toMatchObject({ left: 'tailleur' });
     await page.waitForTimeout(200);
     await page.screenshot({ path: `${SHOTS}/phase4-choix-adversaire.png` });
 
     await tapNamed(page, 'CharacterSelect', 'card-aviateur');
+    await tapNamed(page, 'CharacterSelect', 'btn-confirm');
     await page.waitForFunction(() => (window.__slap!.state as { step: string }).step === 'level');
     await page.waitForTimeout(200);
     await page.screenshot({ path: `${SHOTS}/phase4-difficulte.png` });
@@ -81,10 +93,12 @@ test.describe('phase 4 : choix du personnage et du niveau', () => {
     const step = (s: string) => page.waitForFunction((v) => (window.__slap!.state as { step: string }).step === v, s);
 
     await tapNamed(page, 'CharacterSelect', 'card-aviateur');
+    await tapNamed(page, 'CharacterSelect', 'btn-confirm');
     await step('p2');
     await tapNamed(page, 'CharacterSelect', 'btn-back');
     await step('p1');
     await tapNamed(page, 'CharacterSelect', 'card-aviateur');
+    await tapNamed(page, 'CharacterSelect', 'btn-confirm');
     await step('p2');
     await tapNamed(page, 'CharacterSelect', 'btn-random');
     await step('level');
@@ -93,6 +107,7 @@ test.describe('phase 4 : choix du personnage et du niveau', () => {
     await step('p2');
     // Même combattant des deux côtés.
     await tapNamed(page, 'CharacterSelect', 'card-aviateur');
+    await tapNamed(page, 'CharacterSelect', 'btn-confirm');
     await step('level');
     await tapNamed(page, 'CharacterSelect', 'btn-level-normal');
     await waitScene(page, 'StageSelect');
@@ -101,8 +116,10 @@ test.describe('phase 4 : choix du personnage et du niveau', () => {
     // Le combattant choisi est proposé de nouveau.
     expect(await st(page)).toMatchObject({ step: 'p1', left: 'aviateur', level: 'normal' });
     await tapNamed(page, 'CharacterSelect', 'card-aviateur');
+    await tapNamed(page, 'CharacterSelect', 'btn-confirm');
     await step('p2');
     await tapNamed(page, 'CharacterSelect', 'card-aviateur');
+    await tapNamed(page, 'CharacterSelect', 'btn-confirm');
     await step('level');
     await tapNamed(page, 'CharacterSelect', 'btn-level-hard');
     await waitScene(page, 'StageSelect');

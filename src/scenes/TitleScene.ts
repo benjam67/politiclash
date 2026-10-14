@@ -96,13 +96,21 @@ export class TitleScene extends Phaser.Scene {
         .setDepth(2),
     );
 
-    // Titre
-    const [band, ...stripes] = flagBand(this, width / 2, height * 0.2, width * 1.3, 150, -4).reverse().map(add);
+    // Logo (le boxeur tricolore) dans un cadre blanc, puis le titre sur un bandeau tricolore.
+    const logoH = Math.min(136, height * 0.19);
+    const logo = add(this.add.image(width / 2, height * 0.15, 'logo').setDepth(3).setAngle(-4).setName('title-logo'));
+    logo.setScale(logoH / logo.height);
+    const frame = 7;
+    add(this.add.rectangle(logo.x, logo.y + 6, logo.displayWidth + frame * 2, logo.displayHeight + frame * 2, COLORS.ink, 0.45).setAngle(-4).setDepth(2.8));
+    add(this.add.rectangle(logo.x, logo.y, logo.displayWidth + frame * 2, logo.displayHeight + frame * 2, FLAG.white).setAngle(-4).setDepth(2.9));
+
+    const titleY = height * 0.37;
+    const [band, ...stripes] = flagBand(this, width / 2, titleY, width * 1.3, 104, -4).reverse().map(add);
     stripes.forEach((o) => o.setDepth(1));
     band.setDepth(1);
     const title = add(
       this.add
-        .text(width / 2, height * 0.18, GAME.title, { fontFamily: FONT_TITLE, fontSize: '96px', color: FLAG_CSS.white, stroke: CSS.ink, strokeThickness: 16 })
+        .text(width / 2, titleY - 2, GAME.title, { fontFamily: FONT_TITLE, fontSize: '80px', color: FLAG_CSS.white, stroke: CSS.ink, strokeThickness: 14 })
         .setOrigin(0.5)
         .setAngle(-4)
         .setDepth(3)
@@ -113,7 +121,7 @@ export class TitleScene extends Phaser.Scene {
     if (title.width > maxW) title.setScale(maxW / title.width);
     add(
       this.add
-        .text(width / 2 + 190, height * 0.18 + 62, GAME.titleKana, { fontFamily: FONT_TITLE, fontSize: '28px', color: CSS.cream, stroke: CSS.ink, strokeThickness: 7 })
+        .text(width / 2 + 200, titleY + 52, GAME.titleKana, { fontFamily: FONT_TITLE, fontSize: '24px', color: CSS.cream, stroke: CSS.ink, strokeThickness: 7 })
         .setOrigin(0.5)
         .setAngle(-4)
         .setDepth(3),
@@ -121,23 +129,23 @@ export class TitleScene extends Phaser.Scene {
 
     // Premier lancement : JOUER commence par le tutoriel.
     const save = loadSave();
-    add(makeButton(this, width / 2 - 160, height * 0.6, SCREENS.play, FLAG.blue, () => (save.tutorialDone ? this.scene.start('CharacterSelect', {}) : this.startTutorial()), { w: 290, h: 84, font: 38 }).setDepth(4).setName('btn-play'));
-    add(makeButton(this, width / 2 + 160, height * 0.6, ONLINE.menuTitle, FLAG.red, () => this.goOnline(), { w: 290, h: 84, font: 34 }).setDepth(4).setName('btn-online'));
+    add(makeButton(this, width / 2 - 160, height * 0.64, SCREENS.play, FLAG.blue, () => (save.tutorialDone ? this.scene.start('CharacterSelect', {}) : this.startTutorial()), { w: 290, h: 84, font: 38 }).setDepth(4).setName('btn-play'));
+    add(makeButton(this, width / 2 + 160, height * 0.64, ONLINE.menuTitle, FLAG.red, () => this.goOnline(), { w: 290, h: 84, font: 34 }).setDepth(4).setName('btn-online'));
     if (this.notice) {
       add(
         this.add
-          .text(width / 2, height * 0.42, this.notice, { fontFamily: FONT_UI, fontStyle: '800', fontSize: '20px', color: FLAG_CSS.white, stroke: CSS.ink, strokeThickness: 6, align: 'center', wordWrap: { width: width * 0.5 } })
+          .text(width / 2, height * 0.5, this.notice, { fontFamily: FONT_UI, fontStyle: '800', fontSize: '20px', color: FLAG_CSS.white, stroke: CSS.ink, strokeThickness: 6, align: 'center', wordWrap: { width: width * 0.5 } })
           .setOrigin(0.5)
           .setDepth(5)
           .setName('title-notice'),
       );
     }
-    if (save.tutorialDone) add(makeButton(this, width / 2, height * 0.6 + 86, TUTORIAL.replay, FLAG.white, () => this.startTutorial(), { w: 210, h: 50, font: 20 }).setDepth(4).setName('btn-tutorial'));
+    if (save.tutorialDone) add(makeButton(this, width / 2, height * 0.64 + 86, TUTORIAL.replay, FLAG.white, () => this.startTutorial(), { w: 210, h: 50, font: 20 }).setDepth(4).setName('btn-tutorial'));
     const wins = totalWins(save);
     if (wins > 0) {
       add(
         this.add
-          .text(width / 2, height * 0.6 - 62, TUTORIAL.wins(wins).toUpperCase(), { fontFamily: FONT_TITLE, fontSize: '22px', color: CSS.cream, stroke: CSS.ink, strokeThickness: 6 })
+          .text(width / 2, height * 0.64 - 62, TUTORIAL.wins(wins).toUpperCase(), { fontFamily: FONT_TITLE, fontSize: '22px', color: CSS.cream, stroke: CSS.ink, strokeThickness: 6 })
           .setOrigin(0.5)
           .setDepth(3)
           .setName('title-wins'),

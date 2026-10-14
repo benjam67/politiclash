@@ -674,3 +674,5 @@ Les combattants se battent désormais pour devenir président ou présidente. Te
 - Menus aux couleurs du drapeau actuel : bleu marine `#002654`, blanc, rouge `#CE1126`. Bandeaux de titre bleu marine soulignés de blanc et de rouge ; boutons bleus, rouges ou blancs, texte blanc sur fond foncé ; difficultés en bleu, blanc, rouge ; menu en ligne sur fond bleu marine. Le combat garde ses couleurs.
 - Roadmap mise à jour : nouveau nom, histoire, noms et répliques définitifs.
 - Écran « tourne ton téléphone » : fond bleu marine, et le boxeur tricolore du logo au-dessus du titre (`public/logo-boxeur.webp`, 17 Ko).
+- Le logo du boxeur tricolore entre dans le jeu : en haut de l'écran d'accueil (au-dessus du bandeau du titre) et comme icône de l'application sur l'écran d'accueil du téléphone. Source unique : `raw/icons/logo-boxeur.png` ; `npm run icons` produit les icônes et `public/assets/ui/logo.webp`.
+- Choix du personnage : toucher un portrait le sélectionne sans passer à la suite ; le bouton « Valider ✔ » (texte dans `texts.ts`) confirme le choix, pour son combattant comme pour l'adversaire. « Tirage au sort » reste immédiat.

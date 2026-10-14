@@ -35,6 +35,8 @@ export class BootScene extends Phaser.Scene {
     // de victoire des deux de l'accueil. Le reste est chargé quand le combat commence (queueFighterImages).
     for (const id of new Set<FighterId>(PLAYABLE_IDS)) this.load.image(fighterKey(id, 'idle'), `fighters/${id}/idle.webp`);
     for (const id of PLAYABLE_IDS.slice(0, 2)) this.load.image(fighterKey(id, 'victory'), `fighters/${id}/victory.webp`);
+    // Logo du jeu (le boxeur tricolore), sur l'écran d'accueil.
+    this.load.image('logo', 'ui/logo.webp');
     // Accessoires des coups spéciaux, s'ils ont été fournis (sinon : projectiles provisoires dessinés en code).
     for (const name of Object.keys(assets.specialProps)) this.load.image(`prop_${name}`, `props/${name}.webp`);
   }

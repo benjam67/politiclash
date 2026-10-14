@@ -1,45 +1,41 @@
-// Génère les icônes PWA à partir de raw/icons/visage.png (visage carré, 220 × 220 px).
+// Génère les icônes PWA à partir de raw/icons/logo-boxeur.png (le boxeur tricolore du logo France Bagarre),
+// et l'image du logo utilisée par le jeu et l'écran « tourne ton téléphone » (public/assets/ui/logo.webp).
 import sharp from 'sharp';
 import fs from 'node:fs';
 import path from 'node:path';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+const SRC = path.join(ROOT, 'raw/icons/logo-boxeur.png');
 const OUT = path.join(ROOT, 'public/icons');
+const UI = path.join(ROOT, 'public/assets/ui');
 fs.mkdirSync(OUT, { recursive: true });
+fs.mkdirSync(UI, { recursive: true });
 
+const NAVY = '#002654';
+const meta = await sharp(SRC).metadata();
+const ratio = meta.height / meta.width;
 
-const bg = (size, safe) => {
-  const r = safe ? size * 0.5 : size * 0.46;
-  const spikes = Array.from({ length: 16 }, (_, i) => {
-    const a = (i / 16) * Math.PI * 2;
-    const R = i % 2 ? r * 0.78 : r;
-    return `${size / 2 + Math.cos(a) * R},${size / 2 + Math.sin(a) * R}`;
-  }).join(' ');
-  return Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
-    <rect width="${size}" height="${size}" rx="${safe ? 0 : size * 0.18}" fill="#1A1020"/>
-    <polygon points="${spikes}" fill="#E8304A"/>
-    <circle cx="${size / 2}" cy="${size / 2}" r="${r * 0.66}" fill="#FFC93C"/>
+/** Fond bleu marine, le logo au centre dans un cadre blanc. `safe` : icône « maskable » (tout tient dans le cercle central). */
+async function make(name, size, safe = false, round = true) {
+  const w = Math.round(size * (safe ? 0.72 : 0.84));
+  const h = Math.round(w * ratio);
+  const b = Math.max(2, Math.round(size * 0.022));
+  const logo = await sharp(SRC).resize(w, h, { kernel: 'lanczos3' }).png().toBuffer();
+  const bg = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
+    <rect width="${size}" height="${size}" rx="${round ? size * 0.18 : 0}" fill="${NAVY}"/>
+    <rect x="${(size - w) / 2 - b}" y="${(size - h) / 2 - b}" width="${w + 2 * b}" height="${h + 2 * b}" rx="${b}" fill="#fff"/>
   </svg>`);
-};
-
-async function make(name, size, safe = false) {
-  const faceSize = Math.round(size * (safe ? 0.56 : 0.7));
-  const face = await sharp(path.join(ROOT, 'raw/icons/visage.png'))
-    .resize(faceSize, faceSize)
-    .composite([{
-      input: Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${faceSize}" height="${faceSize}"><circle cx="${faceSize / 2}" cy="${faceSize / 2}" r="${faceSize / 2}" fill="#fff"/></svg>`),
-      blend: 'dest-in',
-    }])
-    .png()
-    .toBuffer();
-  await sharp(bg(size, safe))
-    .composite([{ input: face, left: Math.round((size - faceSize) / 2), top: Math.round((size - faceSize) / 2) }])
+  await sharp(bg)
+    .composite([{ input: logo, left: Math.round((size - w) / 2), top: Math.round((size - h) / 2) }])
     .png({ compressionLevel: 9 })
     .toFile(path.join(OUT, name));
 }
 
 await make('icon-192.png', 192);
 await make('icon-512.png', 512);
-await make('icon-maskable-512.png', 512, true);
-await make('apple-touch-icon.png', 180, true);
-console.log('icônes générées');
+await make('icon-maskable-512.png', 512, true, false);
+await make('apple-touch-icon.png', 180, false, false);
+
+// Le logo du jeu, agrandi ×2 pour les écrans à haute densité.
+await sharp(SRC).resize(meta.width * 2, meta.height * 2, { kernel: 'lanczos3' }).webp({ quality: 90 }).toFile(path.join(UI, 'logo.webp'));
+console.log('icônes et logo générés');
