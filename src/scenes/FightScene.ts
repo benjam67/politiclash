@@ -966,11 +966,15 @@ export class FightScene extends Phaser.Scene {
     }
     const { width } = this.scale;
     const items = [...REACTIONS, this.muted ? ONLINE.muteOn : ONLINE.muteOff];
-    const w = 150;
-    const x0 = width / 2 - ((items.length - 1) * (w + 8)) / 2;
+    const w = 190;
+    // Une ligne jusqu'à 8 boutons, sinon deux lignes.
+    const perRow = items.length > 8 ? Math.ceil(items.length / 2) : items.length;
     items.forEach((label, i) => {
       const mute = i === REACTIONS.length;
-      const b = makeButton(this, x0 + i * (w + 8), 150, label, mute ? (this.muted ? COLORS.pink : COLORS.cream) : COLORS.cyan, () => {
+      const row = Math.floor(i / perRow);
+      const inRow = Math.min(perRow, items.length - row * perRow);
+      const x0 = width / 2 - ((inRow - 1) * (w + 8)) / 2;
+      const b = makeButton(this, x0 + (i % perRow) * (w + 8), 150 + row * 56, label, mute ? (this.muted ? COLORS.pink : COLORS.cream) : COLORS.cyan, () => {
         if (mute) {
           this.muted = !this.muted;
           updateSave((sv) => ({ ...sv, muteReactions: this.muted }));

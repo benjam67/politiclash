@@ -240,5 +240,5 @@ export const ONLINE = {
   muteOff: 'Réactions',
 };
 
-/** Réactions toutes prêtes (pas de chat libre). PROVISOIRES, à remplacer par le propriétaire. */
-export const REACTIONS = ['Votez pour moi !', 'Pas de commentaire', 'Bien joué', 'Même pas mal', 'Recomptage !'];
+/** Réactions toutes prêtes (pas de chat libre), choisies par le propriétaire. Au-delà de 8, le menu passe sur deux lignes. */
+export const REACTIONS = ['Votez pour moi !', 'Pas de commentaire', 'Bien joué', 'Même pas mal', 'Recomptage !', 'Fake news !', '49.3 !', 'Eh gros sayez !', 'T’as trop la raaage', 'Bismillah c’est les ténèbres', 'Ici sa bz'];
