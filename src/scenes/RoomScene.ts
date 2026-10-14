@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { menuBackdrop } from '../ui/backdrop';
 import { fighterKey } from '../config/poses';
 import { PLAYABLE_IDS, ROSTER_SLOTS, spriteOf, type FighterId } from '../config/roster';
 import { STAGE_IDS } from '../config/stages';
@@ -87,7 +88,7 @@ export class RoomScene extends Phaser.Scene {
           .setOrigin(0.5),
       );
 
-    add(this.add.image(L.decor.x, L.decor.y, 'stage_bar').setOrigin(0, 0).setScale(L.decor.scale).setTint(0x6d6478));
+    add(menuBackdrop(this, 0x6d6478));
     add(this.add.rectangle(0, 0, width, height, COLORS.ink, 0.45).setOrigin(0));
     flagBand(this, width / 2, 50, width * 1.3, 72, -2).forEach(add);
     text(width / 2, 48, ONLINE.room(r.code), 40, FLAG_CSS.white, true).setAngle(-2).setName('room-title');

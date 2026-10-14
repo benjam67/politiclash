@@ -85,7 +85,7 @@ export const STAGE_IDS = Object.keys(STAGES) as StageId[];
 
 /**
  * Décors larges : chargés à la demande (écran du choix du lieu, ou combat lancé directement),
- * pour garder le chargement initial léger. Le bar, fond des menus, est chargé au démarrage.
+ * pour garder le chargement initial léger. L'Élysée, fond des menus, est chargé au démarrage avec le bar.
  */
 export function queueStageImages(scene: Phaser.Scene, only?: StageId) {
   const ids = only ? [only] : STAGE_IDS;

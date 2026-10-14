@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { menuBackdrop } from '../ui/backdrop';
 import { sfx } from '../audio/sfx';
 import { computeLayout } from '../logic/layout';
 import { makeButton } from '../ui/button';
@@ -80,7 +81,7 @@ export class TitleScene extends Phaser.Scene {
     const safe = safeInsets(this);
     const add = <T extends Phaser.GameObjects.GameObject>(o: T) => (this.items.push(o), o);
 
-    add(this.add.image(L.decor.x, L.decor.y, 'stage_bar').setOrigin(0, 0).setScale(L.decor.scale).setTint(0x8a7f92));
+    add(menuBackdrop(this, 0x8a7f92));
     add(this.add.rectangle(0, 0, width, height, COLORS.ink, 0.35).setOrigin(0));
 
     // Deux combattants encadrent le menu.

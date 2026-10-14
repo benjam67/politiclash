@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
+import { menuBackdrop } from '../ui/backdrop';
 import type { AiLevel } from '../ai/ai';
 import type { FighterId } from '../config/roster';
 import { queueStageImages, STAGE_IDS, STAGES, type StageId } from '../config/stages';
 import { SCREENS, STAGE_TEXTS } from '../config/texts';
-import { computeLayout } from '../logic/layout';
 import { sfx } from '../audio/sfx';
 import { makeButton } from '../ui/button';
 import { makeCard } from '../ui/card';
@@ -62,12 +62,11 @@ export class StageSelectScene extends Phaser.Scene {
     for (const o of this.items) o.destroy();
     this.items = [];
     const { width, height } = this.scale;
-    const L = computeLayout(width, height);
     const safe = safeInsets(this);
     const side = Math.max(safe.left, safe.right);
     const add = <T extends Phaser.GameObjects.GameObject>(o: T) => (this.items.push(o), o);
 
-    add(this.add.image(L.decor.x, L.decor.y, 'stage_bar').setOrigin(0, 0).setScale(L.decor.scale).setTint(0x6d6478));
+    add(menuBackdrop(this, 0x6d6478));
     add(this.add.rectangle(0, 0, width, height, COLORS.ink, 0.45).setOrigin(0));
     flagBand(this, width / 2, 58, width * 1.3, 84, -2).forEach(add);
     add(

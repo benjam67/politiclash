@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { menuBackdrop } from '../ui/backdrop';
 import { AI_LEVELS, levelLabel, type AiLevel } from '../ai/ai';
 import { fighterKey } from '../config/poses';
 import { PLAYABLE_IDS, ROSTER_SLOTS, spriteOf, type FighterId } from '../config/roster';
@@ -90,7 +91,7 @@ export class CharacterSelectScene extends Phaser.Scene {
     const side = Math.max(safe.left, safe.right);
     const add = <T extends Phaser.GameObjects.GameObject>(o: T) => (this.items.push(o), o);
 
-    add(this.add.image(L.decor.x, L.decor.y, 'stage_bar').setOrigin(0, 0).setScale(L.decor.scale).setTint(0x6d6478));
+    add(menuBackdrop(this, 0x6d6478));
     add(this.add.rectangle(0, 0, width, height, COLORS.ink, 0.45).setOrigin(0));
 
     // Bandeau de titre
