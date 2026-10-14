@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#1A1020" />
+    <meta name="theme-color" content="#002654" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="PolitiClash" />
-    <title>PolitiClash</title>
+    <meta name="apple-mobile-web-app-title" content="France Bagarre" />
+    <title>France Bagarre</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" type="image/png" href="icons/icon-192.png" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
@@ -26,6 +26,10 @@
         --pink: #ff3d8b;
         --cyan: #35c8f0;
         --cream: #fff7e8;
+        /* Drapeau tricolore actuel (bleu marine) */
+        --fblue: #002654;
+        --fwhite: #ffffff;
+        --fred: #ce1126;
       }
       html,
       body {
@@ -64,7 +68,7 @@
       #rotate .title {
         font-family: 'Dela Gothic One', system-ui, sans-serif;
         font-size: 30px;
-        color: var(--yellow);
+        color: var(--fwhite);
         transform: rotate(-4deg);
         text-shadow: 3px 3px 0 var(--red);
       }
@@ -102,17 +106,17 @@
         overflow: auto;
         box-sizing: border-box;
         padding: 12px 18px 14px;
-        background: var(--ink);
-        border: 5px solid var(--cream);
-        box-shadow: 8px 8px 0 var(--red);
+        background: var(--fblue);
+        border: 5px solid var(--fwhite);
+        box-shadow: 8px 8px 0 var(--fred);
         transform: rotate(-1deg);
         text-align: center;
       }
       #lobby .ttl {
         font-family: 'Dela Gothic One', system-ui, sans-serif;
         font-size: 26px;
-        color: var(--yellow);
-        text-shadow: 3px 3px 0 var(--red);
+        color: var(--fwhite);
+        text-shadow: 3px 3px 0 var(--fred);
         margin-bottom: 4px;
       }
       #lobby [data-view] {
@@ -146,7 +150,7 @@
         font-family: 'Dela Gothic One', system-ui, sans-serif;
         font-weight: 400;
         font-size: 17px;
-        color: var(--cyan);
+        color: var(--fwhite);
       }
       #lobby .mode.soon {
         opacity: 0.5;
@@ -154,10 +158,10 @@
       #lobby button {
         font-family: 'Dela Gothic One', system-ui, sans-serif;
         font-size: 17px;
-        color: var(--ink);
-        background: var(--yellow);
+        color: var(--fblue);
+        background: var(--fwhite);
         border: 5px solid var(--ink);
-        outline: 3px solid var(--cream);
+        outline: 3px solid var(--fred);
         padding: 8px 14px;
         margin: 5px 0;
         transform: rotate(-2deg);
@@ -168,7 +172,8 @@
         transform: rotate(-2deg) scale(0.95);
       }
       #lobby button.alt {
-        background: var(--cyan);
+        color: var(--fwhite);
+        background: var(--fred);
       }
       #lobby button.back {
         position: absolute;
@@ -193,7 +198,7 @@
         padding: 3px 8px;
         color: var(--ink);
         background: var(--cream);
-        border: 4px solid var(--yellow);
+        border: 4px solid var(--fred);
         -webkit-user-select: text;
         user-select: text;
       }
@@ -203,7 +208,7 @@
         line-height: 1.1;
         letter-spacing: 10px;
         color: var(--cream);
-        text-shadow: 4px 4px 0 var(--pink);
+        text-shadow: 4px 4px 0 var(--fred);
         -webkit-user-select: text;
         user-select: text;
       }
@@ -216,7 +221,7 @@
         text-transform: uppercase;
         color: var(--ink);
         background: var(--cream);
-        border: 5px solid var(--yellow);
+        border: 5px solid var(--fred);
         padding: 2px 0 2px 8px;
         -webkit-user-select: text;
         user-select: text;
@@ -224,7 +229,7 @@
       }
       #lobby .status {
         min-height: 20px;
-        color: var(--cyan);
+        color: var(--fwhite);
       }
       #lobby .status.err {
         color: var(--pink);
@@ -283,7 +288,7 @@
       </div>
     </div>
     <div id="rotate" role="alert">
-      <div class="title">POLITICLASH</div>
+      <div class="title">FRANCE BAGARRE</div>
       <div class="phone" aria-hidden="true"></div>
       <p>Tourne ton téléphone<br />pour en mettre une !</p>
     </div>

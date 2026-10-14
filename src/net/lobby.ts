@@ -2,7 +2,7 @@
 // ou le rejoindre. En HTML par-dessus le jeu, pour profiter du clavier du téléphone.
 // Renvoie le salon une fois les deux téléphones reliés, ou null si le joueur revient en arrière.
 import { PLAYABLE_IDS } from '../config/roster';
-import { ONLINE } from '../config/texts';
+import { ONLINE, GAME } from '../config/texts';
 import { loadSave, updateSave } from '../logic/save';
 import { FriendRoom, setCurrentRoom } from './friends';
 import { linkOptionsFromUrl, PeerLink } from './peer';
@@ -109,7 +109,7 @@ export function openLobby(opts: { join?: string } = {}): Promise<FriendRoom | nu
       const url = inviteLink(code);
       const el = q<HTMLElement>('[data-view="host"] [data-status]');
       try {
-        if (navigator.share) await navigator.share({ title: 'PolitiClash', text: ONLINE.shareText(code), url });
+        if (navigator.share) await navigator.share({ title: GAME.name, text: ONLINE.shareText(code), url });
         else {
           await navigator.clipboard.writeText(url);
           el.textContent = ONLINE.copied;

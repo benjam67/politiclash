@@ -10,9 +10,11 @@ import type { StageId } from './stages';
 
 /** Titre du jeu. À reporter aussi dans `index.html` et `public/manifest.webmanifest`. */
 export const GAME = {
-  title: 'POLITICLASH',
+  title: 'FRANCE BAGARRE',
+  /** Nom en casse normale (partage, onglet du navigateur). */
+  name: 'France Bagarre',
   /** Sous-titre décoratif en katakana. */
-  titleKana: 'ポリティクラッシュ',
+  titleKana: 'フランス・バガール',
   tagline: 'Deux joues. Un seul fauteuil.',
 };
 
@@ -193,7 +195,7 @@ export const ONLINE = {
   join: 'REJOINDRE',
   go: 'C’EST PARTI',
   share: 'PARTAGER LE LIEN',
-  shareText: (code: string) => `Je me présente contre toi ! Viens perdre la présidentielle sur PolitiClash, salon ${code}`,
+  shareText: (code: string) => `Je me présente contre toi ! Viens perdre la présidentielle sur France Bagarre, salon ${code}`,
   copied: 'Lien copié ! Envoie-le à ton adversaire.',
   creating: 'Création du salon…',
   waiting: 'En attente de ton adversaire…',

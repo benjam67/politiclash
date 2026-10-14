@@ -1,4 +1,4 @@
-# PolitiClash – Roadmap du jeu en ligne
+# France Bagarre – Roadmap du jeu en ligne
 
 Version du 13 octobre 2026. Ce document **remplace la phase 7** de `ROADMAP.md`. Le reste de la roadmap (règles, contraintes techniques, méthode de travail, vérifications) s'applique sans changement.
 

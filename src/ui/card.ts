@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { COLORS, CSS, FONT_TITLE } from './theme';
+import { COLORS, CSS, FONT_TITLE, FLAG, FLAG_CSS } from './theme';
 
 export interface CardOptions {
   w: number;
@@ -20,7 +20,7 @@ export function makeCard(scene: Phaser.Scene, x: number, y: number, name: string
   const c = scene.add.container(x, y).setName(name);
   const labelH = 38;
   const shadow = scene.add.rectangle(6, 7, o.w, o.h, COLORS.ink, 0.55);
-  const bg = scene.add.rectangle(0, 0, o.w, o.h, o.locked ? 0x3a2f45 : (o.color ?? COLORS.cream)).setStrokeStyle(o.selected ? 9 : 6, o.selected ? COLORS.yellow : COLORS.ink);
+  const bg = scene.add.rectangle(0, 0, o.w, o.h, o.locked ? 0x3a2f45 : (o.color ?? FLAG.white)).setStrokeStyle(o.selected ? 9 : 6, o.selected ? FLAG.red : COLORS.ink);
   c.add([shadow, bg]);
 
   const boxH = o.h - labelH - 12;
@@ -44,7 +44,7 @@ export function makeCard(scene: Phaser.Scene, x: number, y: number, name: string
     c.add(scene.add.rectangle(0, boxY, boxW, boxH, o.locked ? 0x2a2233 : COLORS.ink, o.locked ? 1 : 0.85));
     c.add(
       scene.add
-        .text(0, boxY, o.symbol ?? '?', { fontFamily: FONT_TITLE, fontSize: `${Math.round(boxH * 0.6)}px`, color: o.locked ? '#5d5268' : CSS.yellow })
+        .text(0, boxY, o.symbol ?? '?', { fontFamily: FONT_TITLE, fontSize: `${Math.round(boxH * 0.6)}px`, color: o.locked ? '#5d5268' : FLAG_CSS.white })
         .setOrigin(0.5),
     );
   }

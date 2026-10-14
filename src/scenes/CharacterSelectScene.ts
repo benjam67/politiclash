@@ -8,7 +8,7 @@ import { sfx } from '../audio/sfx';
 import { makeButton } from '../ui/button';
 import { makeCard } from '../ui/card';
 import { safeInsets } from '../ui/safe';
-import { COLORS, CSS, FONT_TITLE, FONT_UI } from '../ui/theme';
+import { COLORS, CSS, FONT_TITLE, FONT_UI, FLAG, FLAG_CSS, flagBand } from '../ui/theme';
 import type { StageSelectData } from './StageSelectScene';
 import { loadSave, updateSave } from '../logic/save';
 
@@ -94,10 +94,10 @@ export class CharacterSelectScene extends Phaser.Scene {
     add(this.add.rectangle(0, 0, width, height, COLORS.ink, 0.45).setOrigin(0));
 
     // Bandeau de titre
-    add(this.add.rectangle(width / 2, 58, width * 1.3, 84, COLORS.red).setStrokeStyle(7, COLORS.ink).setAngle(-2));
+    flagBand(this, width / 2, 58, width * 1.3, 84, -2).forEach(add);
     const title = add(
       this.add
-        .text(width / 2, 56, TITLES[this.step], { fontFamily: FONT_TITLE, fontSize: '46px', color: CSS.yellow, stroke: CSS.ink, strokeThickness: 10 })
+        .text(width / 2, 56, TITLES[this.step], { fontFamily: FONT_TITLE, fontSize: '46px', color: FLAG_CSS.white, stroke: CSS.ink, strokeThickness: 10 })
         .setOrigin(0.5)
         .setAngle(-2)
         .setName('select-title'),
@@ -124,17 +124,17 @@ export class CharacterSelectScene extends Phaser.Scene {
     if (this.left) big(this.left, true);
     if (this.right) big(this.right, false, this.right === this.left ? 0x9fc4ff : undefined);
     else if (this.random && this.step === 'level') {
-      add(this.add.text(width * 0.87, height * 0.6, '?', { fontFamily: FONT_TITLE, fontSize: '220px', color: CSS.yellow, stroke: CSS.ink, strokeThickness: 20 }).setOrigin(0.5));
+      add(this.add.text(width * 0.87, height * 0.6, '?', { fontFamily: FONT_TITLE, fontSize: '220px', color: FLAG_CSS.white, stroke: CSS.ink, strokeThickness: 20 }).setOrigin(0.5));
     }
 
     const cx = width / 2;
     if (this.step === 'level') {
       const record = loadSave().record;
       AI_LEVELS.forEach((lv, i) => {
-        const colors = [COLORS.cyan, COLORS.yellow, COLORS.pink];
+        const colors = [FLAG.blue, FLAG.white, FLAG.red];
         const y = height * 0.34 + i * 96;
         // Le niveau du dernier match est entouré ; sous chaque bouton, victoires et défaites à ce niveau.
-        if (lv === this.level) add(this.add.rectangle(cx, y, 344, 96, COLORS.cream, 0).setStrokeStyle(5, COLORS.cream).setAngle(-3).setName('level-current'));
+        if (lv === this.level) add(this.add.rectangle(cx, y, 344, 96, FLAG.white, 0).setStrokeStyle(5, FLAG.white).setAngle(-3).setName('level-current'));
         add(
           makeButton(this, cx, y, levelLabel(lv).toUpperCase(), colors[i], () => this.finish(lv), { w: 320, h: 74, font: 32 })
             .setDepth(4)
@@ -169,7 +169,7 @@ export class CharacterSelectScene extends Phaser.Scene {
         }
       }
       if (this.step === 'p2') {
-        add(makeButton(this, cx, top + ch * 1.5 + gap + 50, SCREENS.random, COLORS.cyan, () => this.pickRandom(), { w: 260, h: 58, font: 24 }).setDepth(4).setName('btn-random'));
+        add(makeButton(this, cx, top + ch * 1.5 + gap + 50, SCREENS.random, FLAG.red, () => this.pickRandom(), { w: 260, h: 58, font: 24 }).setDepth(4).setName('btn-random'));
       }
     }
 
@@ -181,7 +181,7 @@ export class CharacterSelectScene extends Phaser.Scene {
         .setOrigin(0.5, 1),
     );
     add(
-      makeButton(this, 96 + side, 58, '← RETOUR', COLORS.cream, () => this.back(), { w: 150, h: 46, font: 17 })
+      makeButton(this, 96 + side, 58, '← RETOUR', FLAG.white, () => this.back(), { w: 150, h: 46, font: 17 })
         .setDepth(6)
         .setName('btn-back'),
     );

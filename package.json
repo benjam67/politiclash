@@ -1,7 +1,7 @@
 {
   "name": "politiclash",
   "version": "1.0.0",
-  "description": "PolitiClash – jeu de combat de gifles en temps réel",
+  "description": "France Bagarre – jeu de combat de gifles en temps réel",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

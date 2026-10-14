@@ -1,16 +1,16 @@
-# PolitiClash – Roadmap de développement
+# France Bagarre – Roadmap de développement
 
-Version du 13 octobre 2026 (style de combat unique, barre Buzz et coups spéciaux propres à chaque personnage).
+Version du 14 octobre 2026 (nouveau nom, histoire de la course à l'Élysée, noms et répliques définitifs, menus tricolores).
 
 Ce document contient tout le contexte nécessaire pour qu'une nouvelle discussion code, teste et déploie le jeu en autonomie. Il remplace la roadmap du premier jeu (`soufflet`, gifles au tour par tour), dont il reprend la stack, les assets et la méthode.
 
-> **État** : phases 0 à 6 faites : le solo est complet (tutoriel, sauvegarde, boîtes de collision réglées sur les vraies poses, chargement à la demande). Phase 7 : voir `ROADMAP-EN-LIGNE.md`, qui remplace la phase 7 ci-dessous ; les phases 7a (socle réseau) et 7b (mode Entre amis) sont faites ; **jalon 3** : le propriétaire joue en ligne avec un ami. En attente : les noms et répliques définitifs. En cas d'écart, c'est le code qui fait foi et la roadmap s'adapte.
+> **État** : phases 0 à 6 faites : le solo est complet (tutoriel, sauvegarde, boîtes de collision réglées sur les vraies poses, chargement à la demande). Phase 7 : voir `ROADMAP-EN-LIGNE.md`, qui remplace la phase 7 ci-dessous ; les phases 7a (socle réseau) et 7b (mode Entre amis) sont faites ; **jalon 3** : le propriétaire joue en ligne avec un ami. Le 14 octobre : le jeu s'appelle **France Bagarre** (anciennement PolitiClash), l'histoire devient la course à l'Élysée, et les noms, coups spéciaux, répliques et réactions sont définitifs. En cas d'écart, c'est le code qui fait foi et la roadmap s'adapte.
 
 ## 1. Contexte et objectif
 
 Objectif : transformer le jeu de gifles au tour par tour en **vrai jeu de combat en temps réel**, avec déplacements, choix du personnage et choix du niveau.
 
-- **Pitch** : des femmes et des hommes politiques français, de tous les partis, règlent leurs comptes à coups de gifles. Ils se déplacent, sautent, s'accroupissent, se protègent et se giflent en temps réel. Ton absurde et exagéré, dans la tradition française de la caricature. Tous les bords sont représentés et tous en prennent pour leur grade.
+- **Pitch** : des femmes et des hommes politiques français, de tous les partis, se battent à coups de gifles pour devenir président ou présidente de la République. Chaque round est un tour d'élection (1er tour, 2e tour, vote final), et le vainqueur est élu. Ils se déplacent, sautent, s'accroupissent, se protègent et se giflent en temps réel. Ton absurde et exagéré, dans la tradition française de la caricature. Tous les bords sont représentés et tous en prennent pour leur grade.
 - **Un seul style de combat** : tous les combattants se déplacent et frappent de la même façon. Seul leur **coup spécial** les distingue.
 - **Plateforme** : jeu web (PWA) en mode paysage, jouable sur iOS et Android depuis un navigateur. Jouable aussi au clavier sur ordinateur (indispensable pour les tests).
 - **Modes** : d'abord **solo contre l'IA**. Dès que le solo fonctionne bien, **deux joueurs en ligne**. Pas de mode deux joueurs sur le même téléphone.
@@ -40,18 +40,21 @@ Les personnalités, les idées de coups, les noms et les répliques viennent du 
 - **Dépôt** : `benjam67/politiclash`, public. Il a été créé par import du dépôt du premier jeu, `benjam67/soufflet`.
 - **Le dépôt `soufflet` ne doit jamais être modifié.** Il reste en ligne tel quel à son adresse.
 - **Adresse du jeu** : https://benjam67.github.io/politiclash/
+- **Nom technique gardé** : le dépôt, l'adresse, les clés de sauvegarde et les identifiants réseau gardent le mot `politiclash`. Les changer ferait perdre les sauvegardes des joueurs et casserait les liens partagés ; seul le nom affiché est « France Bagarre ».
 - **Déploiement** : à chaque push sur `main`, GitHub Actions lance les tests, construit le jeu et le publie sur la branche `gh-pages`, que GitHub Pages sert.
 
 ### Combattants intégrés (11 octobre 2026)
 
 | Nom affiché | Identifiant | Coup spécial (voir section 7) |
 | --- | --- | --- |
-| Manu Macs | `aviateur` | Poudre de perlimpinpin et explosion dorée |
-| Narine le Zen | `tailleur` | Petite danse et coup de hanche |
-| Baby | `cadet` | Pinte bue cul sec et cassée sur la tête |
-| Bompardiou | `barbe` | Faucille et marteau lancés |
-| JLM | `doyen` | Hurlement |
-| Jordan | `binocle` | Dos tourné, tir par les fesses |
+| Manu Macs | `aviateur` | Poudre de perlimpinpin : poudre dorée et explosion |
+| Narine le Zen | `tailleur` | Coupé-Décalé : petite danse et coup de hanche |
+| Macron Junior (ex-Baby) | `cadet` | La Tournée générale : pinte bue cul sec et cassée sur la tête |
+| Tête d'Ampoule (ex-Bompardiou) | `barbe` | Le Kapital : faucille et marteau lancés |
+| Méluche (ex-JLM) | `doyen` | La Perquis' : hurlement |
+| Jordan Le Mytho (ex-Jordan) | `binocle` | Le Secret de Tolbiac : dos tourné, tir par les fesses |
+
+Noms, coups spéciaux, répliques de l'éditorialiste et réactions en ligne sont définitifs (14 octobre) et vivent dans `src/config/texts.ts`. Tous les textes affichés y sont, y compris les annonces, les mots sur les coups et les boutons des écrans.
 
 Les six ont leurs 23 poses communes et le même style de combat. Bernard et Lola ont été retirés du code et des tests en phase 5.
 
@@ -210,7 +213,7 @@ Réglage de la phase 5 (simulation) : +9, +14, +25 et +20, pour 1,1 à 1,3 coup 
 
 **La cinématique**
 - Le coup spécial **touche toujours** : une fois lancé, il ne peut ni être évité ni bloqué.
-- Les personnages dont le spécial frappe de près (Narine le Zen, Baby, Manu Macs) **se collent automatiquement à l'adversaire** au début de la cinématique. Ceux qui frappent à distance (JLM, Bompardiou, Jordan) restent où ils sont.
+- Les personnages dont le spécial frappe de près (Narine le Zen, Macron Junior, Manu Macs) **se collent automatiquement à l'adversaire** au début de la cinématique. Ceux qui frappent à distance (Méluche, Tête d'Ampoule, Jordan Le Mytho) restent où ils sont.
 - Le chrono s'arrête pendant la cinématique. Le lanceur est invulnérable.
 - **Dégâts : 35 PV.** Le coup met à terre et rend sonné.
 - **Garde au bon moment** : un signal (éclair et son sec) précède l'impact. Si la victime met la garde dans les 100 ms (6 pas) qui suivent le signal, elle ne perd que 18 PV. Trop tôt ou trop tard : 35 PV.
@@ -262,6 +265,8 @@ Ces règles s'appliquent dès la phase 1. Elles conditionnent le jeu en ligne de
 
 Style anime de baston des années 90, comique et exagéré, identique au premier jeu. Les personnages politiques sont générés par le propriétaire dans ce même style, en caricature. La référence visuelle de l'interface et des effets reste la [maquette Slap Fighter](https://claude.ai/artifact/993HtiDhMQQGK2257KPoG2).
 
+**Menus aux couleurs du drapeau** (14 octobre) : bleu marine `#002654` (le bleu foncé historique, revenu en 2020 à la place du bleu clair de 1976), blanc `#FFFFFF` et rouge `#CE1126`. Bandeaux de titre bleu marine soulignés de blanc et de rouge, boutons bleus, rouges ou blancs. Ces couleurs sont dans `FLAG` (`src/ui/theme.ts`) et dans le menu en ligne (`index.html`). Le combat garde ses couleurs vives (barres de vie dorées, effets).
+
 Les animations fonctionnent par **changement de pose**, sans animation fluide : une pose par action, deux à quatre pour la marche, trois pour un coup spécial. De petits mouvements codés (rebond, étirement, pas en avant, tremblement) et les effets du jeu (paillettes, explosion, onde de choc, éclats de verre) donnent la vie.
 
 ## 7. Assets
@@ -280,7 +285,7 @@ La liste complète des poses, les tailles, les planches et les règles pour les 
 
 - **Poses communes** : 21 par personnage. Les six combattants les ont déjà.
 - **Poses du coup spécial** : 3 par personnage (`special1`, `special2`, `special3`), propres à chacun. Elles remplacent les anciennes poses `special` et `special2`, identiques pour tous.
-- **Accessoires** : 2 images séparées, dans `raw/props/` : le projectile de Jordan et la faucille et le marteau de Bompardiou.
+- **Accessoires** : 2 images séparées, dans `raw/props/` : le projectile de Jordan Le Mytho et la faucille et le marteau de Tête d'Ampoule.
 - Les poses du coup spécial et les deux accessoires des six combattants sont intégrés (13 octobre), ainsi que les nouvelles tenues de Manu Macs, Narine le Zen, Jordan et JLM.
 
 ### Les six coups spéciaux
@@ -288,13 +293,13 @@ La liste complète des poses, les tailles, les planches et les règles pour les 
 | Perso | Portée | Déroulé | Poses | Effets tracés par le jeu |
 | --- | --- | --- | --- | --- |
 | Narine le Zen | Près | Petite danse (une main à la taille, l'autre bras à l'horizontale, avant-bras vers le ciel), puis coup de hanche | danse 1, danse 2, coup de hanche | Étoiles, recul |
-| Baby | Près | Sort une pinte, la boit cul sec, la casse sur la tête de l'adversaire | pinte en main, boit, frappe | Mousse, éclats de verre |
+| Macron Junior | Près | Sort une pinte, la boit cul sec, la casse sur la tête de l'adversaire | pinte en main, boit, frappe | Mousse, éclats de verre |
 | Manu Macs | Près | Souffle de la poudre de perlimpinpin, se tourne face au joueur bras levés, explosion | poudre dans la main, souffle, bras levés face au joueur | Nuage de paillettes dorées, explosion dorée |
-| JLM | Distance | Inspire, puis hurle sur l'adversaire | inspire, hurle, hurle bras écartés | Onde de choc, adversaire repoussé |
-| Bompardiou | Distance | Lance une faucille et un marteau | élan, lancer, fier | Projectile qui tournoie (image fournie) |
-| Jordan | Distance | Se retourne dos à l'adversaire et tire par les fesses | se retourne, penché dos tourné, se redresse | Projectile (image fournie), petit nuage |
+| Méluche | Distance | Inspire, puis hurle sur l'adversaire | inspire, hurle, hurle bras écartés | Onde de choc, adversaire repoussé |
+| Tête d'Ampoule | Distance | Lance une faucille et un marteau | élan, lancer, fier | Projectile qui tournoie (image fournie) |
+| Jordan Le Mytho | Distance | Se retourne dos à l'adversaire et tire par les fesses | se retourne, penché dos tourné, se redresse | Projectile (image fournie), petit nuage |
 
-Les noms des coups spéciaux et les répliques du commentateur restent à écrire par le propriétaire dans `texts.ts`.
+Les noms des coups spéciaux et les répliques de l'éditorialiste sont dans `texts.ts` (choisis par le propriétaire le 14 octobre). Les répliques sont dites par l'éditorialiste, à la troisième personne ; l'écran de victoire accorde « élu » ou « élue » selon le personnage.
 
 ### Poses provisoires : le code n'attend pas les dessins
 
@@ -375,7 +380,7 @@ Uniquement aux 3 jalons, ou en cas de choix qui ne peut pas être annulé facile
 
 ### Phase 5 · Style unique, barre Buzz et coups spéciaux ✔
 
-**Faite le 13 octobre 2026.** Détail et réglages dans `CHANGELOG.md`. Poses des spéciaux et accessoires intégrés le même jour ; noms et répliques encore provisoires.
+**Faite le 13 octobre 2026.** Détail et réglages dans `CHANGELOG.md`. Poses des spéciaux et accessoires intégrés le même jour ; noms et répliques définitifs le 14 octobre.
 
 - Fusion des gabarits en un seul style de combat ; arrondi des coups bloqués (minimum 1 PV).
 - Barre Buzz sous la barre de vie, gains sur les coups qui touchent et les esquives réussies.
@@ -420,14 +425,15 @@ Uniquement aux 3 jalons, ou en cas de choix qui ne peut pas être annulé facile
 
 | Quand | Quoi |
 | --- | --- |
-| Quand il veut | Les noms des coups spéciaux et les répliques, dans `texts.ts` |
+| Avant la Partie rapide | La liste des pseudos tirés au hasard, dans `texts.ts` |
 | Avant le jalon 2 si possible | Un décor en version large (2 écrans) |
 
 ## 11. Instruction du projet Claude
 
 ```
-Ce projet développe « PolitiClash », un jeu de combat de gifles en temps réel avec des
-caricatures de personnalités politiques françaises, dans le dépôt GitHub benjam67/politiclash.
+Ce projet développe « France Bagarre » (anciennement PolitiClash), un jeu de combat de gifles
+en temps réel où des caricatures de personnalités politiques françaises se battent pour
+l'Élysée, dans le dépôt GitHub benjam67/politiclash.
 Il part d'une copie du dépôt soufflet, qui ne doit jamais être modifié.
 Le document ROADMAP.md fait référence : règles, contraintes techniques, méthode, phases.
 Claude code le moteur ; l'habillage (dessins, noms, répliques, idées de coups spéciaux)

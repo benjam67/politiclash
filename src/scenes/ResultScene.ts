@@ -7,7 +7,7 @@ import { computeLayout } from '../logic/layout';
 import { sfx } from '../audio/sfx';
 import { makeButton } from '../ui/button';
 import { safeInsets } from '../ui/safe';
-import { COLORS, CSS, FONT_TITLE } from '../ui/theme';
+import { COLORS, CSS, FONT_TITLE, FLAG, FLAG_CSS, flagBand } from '../ui/theme';
 import type { FightData, FoeKind } from './FightScene';
 import type { AiLevel } from '../ai/ai';
 import { updateSave, withResult } from '../logic/save';
@@ -106,13 +106,14 @@ export class ResultScene extends Phaser.Scene {
     fighter(0);
     fighter(1);
 
-    const band = add(this.add.rectangle(width / 2, height * 0.2, width * 1.3, 140, COLORS.red).setStrokeStyle(8, COLORS.ink).setAngle(-4));
+    const [band, ...stripes] = flagBand(this, width / 2, height * 0.2, width * 1.3, 140, -4).reverse().map(add);
+    stripes.forEach((o) => o.setDepth(1));
     band.setDepth(1);
     const winner = FIGHTER_TEXTS[r.ids[r.winner]];
     const name = winner.short.toUpperCase();
     const title = add(
       this.add
-        .text(width / 2, height * 0.19, SCREENS.winner(name, winner.elected), { fontFamily: FONT_TITLE, fontSize: '68px', color: CSS.yellow, stroke: CSS.ink, strokeThickness: 13 })
+        .text(width / 2, height * 0.19, SCREENS.winner(name, winner.elected), { fontFamily: FONT_TITLE, fontSize: '68px', color: FLAG_CSS.white, stroke: CSS.ink, strokeThickness: 13 })
         .setOrigin(0.5)
         .setAngle(-4)
         .setDepth(3)
@@ -134,9 +135,9 @@ export class ResultScene extends Phaser.Scene {
       return;
     }
     const again: FightData = { left: r.ids[0], right: r.ids[1], stage: r.stage, p2: r.p2, level: r.level, autoplay: r.autoplay };
-    add(makeButton(this, width / 2, by, SCREENS.again, COLORS.yellow, () => this.scene.start('Fight', again), { w: 320, h: 76, font: 34 }).setDepth(4).setName('btn-again'));
-    add(makeButton(this, width / 2 - 135, by + 92, SCREENS.other, COLORS.cyan, () => this.scene.start('CharacterSelect', { left: r.ids[0], level: r.level }), { w: 250, h: 58, font: 22 }).setDepth(4).setName('btn-other'));
-    add(makeButton(this, width / 2 + 135, by + 92, SCREENS.home, COLORS.cream, () => this.scene.start('Title'), { w: 250, h: 58, font: 22 }).setDepth(4));
+    add(makeButton(this, width / 2, by, SCREENS.again, FLAG.blue, () => this.scene.start('Fight', again), { w: 320, h: 76, font: 34 }).setDepth(4).setName('btn-again'));
+    add(makeButton(this, width / 2 - 135, by + 92, SCREENS.other, FLAG.red, () => this.scene.start('CharacterSelect', { left: r.ids[0], level: r.level }), { w: 250, h: 58, font: 22 }).setDepth(4).setName('btn-other'));
+    add(makeButton(this, width / 2 + 135, by + 92, SCREENS.home, FLAG.white, () => this.scene.start('Title'), { w: 250, h: 58, font: 22 }).setDepth(4));
   }
 
   /** En ligne : revanche (il faut que les deux la demandent), changer de perso (retour au salon), menu. */
@@ -145,26 +146,26 @@ export class ResultScene extends Phaser.Scene {
     const room = this.room;
     const add = <T extends Phaser.GameObjects.GameObject>(o: T) => (this.items.push(o), o);
     if (!room || room.closed) {
-      add(makeButton(this, width / 2, by, ONLINE.menu, COLORS.yellow, () => this.scene.start('Title'), { w: 320, h: 76, font: 34 }).setDepth(4));
+      add(makeButton(this, width / 2, by, ONLINE.menu, FLAG.blue, () => this.scene.start('Title'), { w: 320, h: 76, font: 34 }).setDepth(4));
       return;
     }
     const who = room.them?.pseudo ?? '';
     if (room.again.me) {
       add(this.add.text(width / 2, by, ONLINE.againWait(who), { fontFamily: FONT_UI, fontStyle: '800', fontSize: '24px', color: CSS.cream, stroke: CSS.ink, strokeThickness: 6 }).setOrigin(0.5).setDepth(4).setName('result-wait'));
     } else {
-      add(makeButton(this, width / 2, by, ONLINE.again, COLORS.yellow, () => room.askAgain(), { w: 320, h: 76, font: 34 }).setDepth(4).setName('btn-again'));
+      add(makeButton(this, width / 2, by, ONLINE.again, FLAG.blue, () => room.askAgain(), { w: 320, h: 76, font: 34 }).setDepth(4).setName('btn-again'));
     }
     if (room.again.them && !room.again.me) {
-      add(this.add.text(width / 2, by - 58, ONLINE.againThem(who), { fontFamily: FONT_UI, fontStyle: '800', fontSize: '20px', color: CSS.yellow, stroke: CSS.ink, strokeThickness: 5 }).setOrigin(0.5).setDepth(4).setName('result-them-again'));
+      add(this.add.text(width / 2, by - 58, ONLINE.againThem(who), { fontFamily: FONT_UI, fontStyle: '800', fontSize: '20px', color: FLAG_CSS.white, stroke: CSS.ink, strokeThickness: 5 }).setOrigin(0.5).setDepth(4).setName('result-them-again'));
     }
     add(
-      makeButton(this, width / 2 - 135, by + 92, ONLINE.changeFighter, COLORS.cyan, () => {
+      makeButton(this, width / 2 - 135, by + 92, ONLINE.changeFighter, FLAG.red, () => {
         room.backToRoom();
         this.scene.start('Room');
       }, { w: 250, h: 58, font: 20 }).setDepth(4).setName('btn-change'),
     );
     add(
-      makeButton(this, width / 2 + 135, by + 92, ONLINE.menu, COLORS.cream, () => {
+      makeButton(this, width / 2 + 135, by + 92, ONLINE.menu, FLAG.white, () => {
         room.leave();
         this.scene.start('Title');
       }, { w: 250, h: 58, font: 22 }).setDepth(4),

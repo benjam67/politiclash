@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { sfx } from '../audio/sfx';
 import { computeLayout } from '../logic/layout';
 import { makeButton } from '../ui/button';
-import { COLORS, CSS, FONT_TITLE, FONT_UI } from '../ui/theme';
+import { COLORS, CSS, FONT_TITLE, FONT_UI, FLAG, FLAG_CSS, flagBand } from '../ui/theme';
 import { fighterKey } from '../config/poses';
 import { needsInstallHint, safeInsets } from '../ui/safe';
 import { PLAYABLE_IDS, spriteOf } from '../config/roster';
@@ -97,11 +97,12 @@ export class TitleScene extends Phaser.Scene {
     );
 
     // Titre
-    const band = add(this.add.rectangle(width / 2, height * 0.2, width * 1.3, 150, COLORS.red).setStrokeStyle(8, COLORS.ink).setAngle(-4));
+    const [band, ...stripes] = flagBand(this, width / 2, height * 0.2, width * 1.3, 150, -4).reverse().map(add);
+    stripes.forEach((o) => o.setDepth(1));
     band.setDepth(1);
     const title = add(
       this.add
-        .text(width / 2, height * 0.18, GAME.title, { fontFamily: FONT_TITLE, fontSize: '96px', color: CSS.yellow, stroke: CSS.ink, strokeThickness: 16 })
+        .text(width / 2, height * 0.18, GAME.title, { fontFamily: FONT_TITLE, fontSize: '96px', color: FLAG_CSS.white, stroke: CSS.ink, strokeThickness: 16 })
         .setOrigin(0.5)
         .setAngle(-4)
         .setDepth(3)
@@ -120,18 +121,18 @@ export class TitleScene extends Phaser.Scene {
 
     // Premier lancement : JOUER commence par le tutoriel.
     const save = loadSave();
-    add(makeButton(this, width / 2 - 160, height * 0.6, SCREENS.play, COLORS.yellow, () => (save.tutorialDone ? this.scene.start('CharacterSelect', {}) : this.startTutorial()), { w: 290, h: 84, font: 38 }).setDepth(4).setName('btn-play'));
-    add(makeButton(this, width / 2 + 160, height * 0.6, ONLINE.menuTitle, COLORS.cyan, () => this.goOnline(), { w: 290, h: 84, font: 34 }).setDepth(4).setName('btn-online'));
+    add(makeButton(this, width / 2 - 160, height * 0.6, SCREENS.play, FLAG.blue, () => (save.tutorialDone ? this.scene.start('CharacterSelect', {}) : this.startTutorial()), { w: 290, h: 84, font: 38 }).setDepth(4).setName('btn-play'));
+    add(makeButton(this, width / 2 + 160, height * 0.6, ONLINE.menuTitle, FLAG.red, () => this.goOnline(), { w: 290, h: 84, font: 34 }).setDepth(4).setName('btn-online'));
     if (this.notice) {
       add(
         this.add
-          .text(width / 2, height * 0.42, this.notice, { fontFamily: FONT_UI, fontStyle: '800', fontSize: '20px', color: CSS.yellow, stroke: CSS.ink, strokeThickness: 6, align: 'center', wordWrap: { width: width * 0.5 } })
+          .text(width / 2, height * 0.42, this.notice, { fontFamily: FONT_UI, fontStyle: '800', fontSize: '20px', color: FLAG_CSS.white, stroke: CSS.ink, strokeThickness: 6, align: 'center', wordWrap: { width: width * 0.5 } })
           .setOrigin(0.5)
           .setDepth(5)
           .setName('title-notice'),
       );
     }
-    if (save.tutorialDone) add(makeButton(this, width / 2, height * 0.6 + 86, TUTORIAL.replay, COLORS.cream, () => this.startTutorial(), { w: 210, h: 50, font: 20 }).setDepth(4).setName('btn-tutorial'));
+    if (save.tutorialDone) add(makeButton(this, width / 2, height * 0.6 + 86, TUTORIAL.replay, FLAG.white, () => this.startTutorial(), { w: 210, h: 50, font: 20 }).setDepth(4).setName('btn-tutorial'));
     const wins = totalWins(save);
     if (wins > 0) {
       add(

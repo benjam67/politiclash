@@ -56,13 +56,13 @@ test('l’accueil porte le nouveau nom et le bouton JOUER mène au choix du pers
   await skipTutorial(page);
   await page.goto('./');
   await waitReady(page, 'Title');
-  await expect(page).toHaveTitle('PolitiClash');
+  await expect(page).toHaveTitle('France Bagarre');
   const title = await page.evaluate(() => {
     type O = { name: string; text?: string };
     const sc = window.__slap!.game!.scene.getScene('Title') as unknown as { children: { list: O[] } };
     return sc.children.list.find((o) => o.name === 'title')!.text;
   });
-  expect(title).toBe('POLITICLASH');
+  expect(title).toBe('FRANCE BAGARRE');
   await page.screenshot({ path: `${SHOTS}/phase0-accueil.png` });
   await tapNamed(page, 'Title', 'btn-play');
   await waitScene(page, 'CharacterSelect');
@@ -87,7 +87,7 @@ test('manifest PWA valide', async ({ page, request }) => {
   const res = await request.get(new URL(href!, page.url()).toString());
   expect(res.ok()).toBe(true);
   const m = await res.json();
-  expect(m.name).toBe('PolitiClash');
+  expect(m.name).toBe('France Bagarre');
   expect(m.display).toBe('fullscreen');
   expect(m.orientation).toBe('landscape');
   for (const icon of m.icons) {

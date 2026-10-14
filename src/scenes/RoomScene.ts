@@ -11,7 +11,7 @@ import type { MatchStart } from '../net/room';
 import { makeButton } from '../ui/button';
 import { makeCard } from '../ui/card';
 import { safeInsets } from '../ui/safe';
-import { COLORS, CSS, FONT_TITLE, FONT_UI } from '../ui/theme';
+import { COLORS, CSS, FONT_TITLE, FONT_UI, FLAG, FLAG_CSS, flagBand } from '../ui/theme';
 import { portraitOf } from './CharacterSelectScene';
 import type { FightData } from './FightScene';
 
@@ -89,8 +89,8 @@ export class RoomScene extends Phaser.Scene {
 
     add(this.add.image(L.decor.x, L.decor.y, 'stage_bar').setOrigin(0, 0).setScale(L.decor.scale).setTint(0x6d6478));
     add(this.add.rectangle(0, 0, width, height, COLORS.ink, 0.45).setOrigin(0));
-    add(this.add.rectangle(width / 2, 50, width * 1.3, 72, COLORS.red).setStrokeStyle(7, COLORS.ink).setAngle(-2));
-    text(width / 2, 48, ONLINE.room(r.code), 40, CSS.yellow, true).setAngle(-2).setName('room-title');
+    flagBand(this, width / 2, 50, width * 1.3, 72, -2).forEach(add);
+    text(width / 2, 48, ONLINE.room(r.code), 40, FLAG_CSS.white, true).setAngle(-2).setName('room-title');
 
     // Les deux joueurs sur les côtés : moi à ma place (gauche si hôte), l'adversaire en face.
     const s = L.fighterScale * 0.95;
@@ -112,13 +112,13 @@ export class RoomScene extends Phaser.Scene {
         );
         if (mirror) img.setTint(0x9fc4ff);
       } else {
-        text(x, height * 0.6, '?', 180, CSS.yellow, true);
+        text(x, height * 0.6, '?', 180, FLAG_CSS.white, true);
       }
       text(x, 112, info ? info.pseudo : ONLINE.waitingThem, 22, CSS.cream).setName(left ? 'room-left-name' : 'room-right-name');
-      if (info?.fighter) text(x, 138, FIGHTER_TEXTS[info.fighter].short.toUpperCase(), 16, CSS.yellow);
+      if (info?.fighter) text(x, 138, FIGHTER_TEXTS[info.fighter].short.toUpperCase(), 16, FLAG_CSS.white);
       if (info?.ready) {
-        add(this.add.rectangle(x, height * 0.42, 150, 48, COLORS.yellow).setStrokeStyle(5, COLORS.ink).setAngle(-6).setDepth(5));
-        text(x, height * 0.42, ONLINE.isReady, 24, CSS.ink, true).setAngle(-6).setDepth(6).setName(left ? 'room-left-ready' : 'room-right-ready');
+        add(this.add.rectangle(x, height * 0.42, 150, 48, FLAG.blue).setStrokeStyle(5, COLORS.ink).setAngle(-6).setDepth(5));
+        text(x, height * 0.42, ONLINE.isReady, 24, FLAG_CSS.white, true).setAngle(-6).setDepth(6).setName(left ? 'room-left-ready' : 'room-right-ready');
       }
     }
 
@@ -140,9 +140,9 @@ export class RoomScene extends Phaser.Scene {
     const ly = top + ch * 1.5 + gap + 30;
     const stageName = `${ONLINE.stage} : ${STAGE_TEXTS[r.stage].name.toUpperCase()}`;
     if (r.isHost) {
-      add(makeButton(this, cx, ly, `◀  ${stageName}  ▶`, COLORS.cyan, () => this.nextStage(), { w: 400, h: 50, font: 20 }).setName('btn-stage').setDepth(4));
+      add(makeButton(this, cx, ly, `◀  ${stageName}  ▶`, FLAG.red, () => this.nextStage(), { w: 400, h: 50, font: 20 }).setName('btn-stage').setDepth(4));
     } else {
-      text(cx, ly - 10, stageName, 20, CSS.cyan, true).setName('room-stage');
+      text(cx, ly - 10, stageName, 20, FLAG_CSS.white, true).setName('room-stage');
       text(cx, ly + 16, ONLINE.hostPicksStage, 14);
     }
 
@@ -150,7 +150,7 @@ export class RoomScene extends Phaser.Scene {
     const by = Math.min(ly + 68, height - safe.bottom - 74);
     const ready = r.me.ready;
     add(
-      makeButton(this, cx, by, ready ? ONLINE.notReady : ONLINE.ready, ready ? COLORS.cream : COLORS.yellow, () => this.room.setReady(!this.room.me.ready), { w: 240, h: 64, font: 30 })
+      makeButton(this, cx, by, ready ? ONLINE.notReady : ONLINE.ready, ready ? FLAG.white : FLAG.blue, () => this.room.setReady(!this.room.me.ready), { w: 240, h: 64, font: 30 })
         .setName('btn-ready')
         .setDepth(4),
     );
@@ -166,7 +166,7 @@ export class RoomScene extends Phaser.Scene {
     this.pingText = text(width - 20 - side, height - 14 - safe.bottom, '', 14).setOrigin(1, 1).setName('room-ping').setDepth(7) as Phaser.GameObjects.Text;
     this.weakText = text(width - 20 - side, height - 36 - safe.bottom, ONLINE.weak, 13, CSS.pink).setOrigin(1, 1).setDepth(7) as Phaser.GameObjects.Text;
     this.showPing();
-    add(makeButton(this, 96 + side, 50, ONLINE.quit, COLORS.cream, () => this.quit(), { w: 150, h: 44, font: 16 }).setDepth(6).setName('btn-quit'));
+    add(makeButton(this, 96 + side, 50, ONLINE.quit, FLAG.white, () => this.quit(), { w: 150, h: 44, font: 16 }).setDepth(6).setName('btn-quit'));
     this.publish();
   }
 

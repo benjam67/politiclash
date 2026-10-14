@@ -1,6 +1,12 @@
 import Phaser from 'phaser';
 import { COLORS, CSS, FONT_TITLE } from './theme';
 
+/** Vrai si le fond est foncé (texte blanc dessus). */
+function isDark(color: number) {
+  const r = (color >> 16) & 255, g = (color >> 8) & 255, b = color & 255;
+  return 0.299 * r + 0.587 * g + 0.114 * b < 140;
+}
+
 /** Bouton incliné à gros contour ; le libellé est réduit s'il le faut pour tenir dans le cadre. */
 export function makeButton(
   scene: Phaser.Scene,
@@ -17,7 +23,7 @@ export function makeButton(
   const shadow = scene.add.rectangle(6, 7, W, H, COLORS.ink, 0.55).setAngle(-3);
   const bg = scene.add.rectangle(0, 0, W, H, color).setStrokeStyle(6, COLORS.ink).setAngle(-3);
   const t = scene.add
-    .text(0, 0, label, { fontFamily: FONT_TITLE, fontSize: `${size.font ?? 28}px`, color: CSS.ink })
+    .text(0, 0, label, { fontFamily: FONT_TITLE, fontSize: `${size.font ?? 28}px`, color: isDark(color) ? '#FFFFFF' : CSS.ink })
     .setOrigin(0.5)
     .setAngle(-3);
   const maxW = W - 40;
