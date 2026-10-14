@@ -94,19 +94,19 @@ export const FIGHTER_TEXTS: Record<FighterId, FighterTexts> = {
     specialLines: ['C’est entraînant ça… Qu’est-ce que c’est ?', 'Dis donc, ça déménage !'],
   },
   cadet: {
-    name: 'Baby', short: 'Baby', katakana: 'ベビー', special: 'La Tournée générale', elected: 'ÉLU',
+    name: 'Macron Junior', short: 'Macron Junior', katakana: 'マクロン・ジュニア', special: 'La Tournée générale', elected: 'ÉLU',
     specialLines: ['Cul sec ! Et la pinte finit sur le crâne !', 'C’est sa tournée, c’était dans son programme !', 'Promesse tenue !'],
   },
   barbe: {
-    name: 'Bompardiou', short: 'Bompardiou', katakana: 'ボンパルディウ', special: 'Le Kapital', elected: 'ÉLU',
+    name: 'Tête d’Ampoule', short: 'Tête d’Ampoule', katakana: 'テット・ダンプール', special: 'Le Kapital', elected: 'ÉLU',
     specialLines: ['La faucille et le marteau tournoient… en plein dans le mille !', 'C’est pour vous, camarades !'],
   },
   doyen: {
-    name: 'JLM', short: 'JLM', katakana: 'ジェイエルエム', special: 'La Perquis’', elected: 'ÉLU',
+    name: 'Méluche', short: 'Méluche', katakana: 'メルシュ', special: 'La Perquis’', elected: 'ÉLU',
     specialLines: ['La République, c’est lui !', 'Pas besoin de micro, on l’entend jusqu’à l’hémicycle !'],
   },
   binocle: {
-    name: 'Jordan', short: 'Jordan', katakana: 'ジョルダン', special: 'Le Secret de Tolbiac', elected: 'ÉLU',
+    name: 'Jordan Le Mytho', short: 'Jordan Le Mytho', katakana: 'ジョルダン・ル・ミト', special: 'Le Secret de Tolbiac', elected: 'ÉLU',
     specialLines: ['C’était donc vrai !', 'Le secret de Tolbiac est enfin révélé… et ça sent mauvais !'],
   },
 };

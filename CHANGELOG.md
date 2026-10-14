@@ -665,3 +665,4 @@ Les combattants se battent désormais pour devenir président ou présidente. Te
 - En ligne : Primaire ouverte, terrain, nouveau débat, candidature retirée, nouvelles réactions.
 - Tous les textes affichés sont maintenant dans `src/config/texts.ts` (annonces, étiquettes, boutons des écrans). Les boutons ont des noms fixes pour les tests (`btn-play`, `btn-random`, `btn-again`, `btn-other`, `btn-change`).
 - Coups spéciaux : Poudre de perlimpinpin, Coupé-Décalé, La Tournée générale, Le Kapital, La Perquis’, Le Secret de Tolbiac. Répliques de l’éditorialiste choisies par le propriétaire.
+- Nouveaux noms : Macron Junior (ex-Baby), Tête d’Ampoule (ex-Bompardiou), Méluche (ex-JLM), Jordan Le Mytho (ex-Jordan).
