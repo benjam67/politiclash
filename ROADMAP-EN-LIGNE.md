@@ -39,7 +39,10 @@ Le combat est déjà prêt pour le jeu en ligne : la simulation est déterminist
 
 ## 3. Phases
 
-### Phase 7a · Socle réseau
+### Phase 7a · Socle réseau ✔
+
+**Faite le 14 octobre 2026** (détail et mesures dans `CHANGELOG.md`). 600 matchs par le faux tuyau, aucune désynchronisation ; retour en arrière sous 0,1 ms par image avec processeur ×4. Ajouté en route : le retard d'entrée est choisi selon le ping (3 à 6 pas), à mesurer avant le match en 7b.
+
 
 - Échange des entrées, retard d'entrée, retour en arrière jusqu'à 8 pas.
 - Contrôle de désynchronisation et recalage.

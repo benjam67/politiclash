@@ -68,6 +68,8 @@ export interface FightData {
   buzz?: number;
   /** Tutoriel : exercices guidés contre un partenaire d'entraînement. */
   tutorial?: boolean;
+  /** Essai de charge du jeu en ligne : à chaque pas, rejoue en plus les N derniers pas (pire cas du retour en arrière). */
+  rollback?: number;
 }
 
 interface FighterView {
@@ -136,6 +138,10 @@ export class FightScene extends Phaser.Scene {
   /** Ce que montre le panneau du tutoriel (pour ne le redessiner que quand ça change). */
   private tutoShown = '';
   private touchMode = false;
+  private rollbackLoad = 0;
+  private history: { s: FightState; a: InputFrame; b: InputFrame }[] = [];
+  /** Temps passé à rejouer, par image (ms), pour les mesures. */
+  private rollbackMs: number[] = [];
 
   private state!: FightState;
   private acc = 0;
@@ -168,6 +174,9 @@ export class FightScene extends Phaser.Scene {
     this.seed = data.seed ?? Math.floor(Math.random() * 1e9);
     this.startBuzz = data.buzz ?? 0;
     this.tuto = data.tutorial ? createTuto() : null;
+    this.rollbackLoad = data.rollback ?? 0;
+    this.history = [];
+    this.rollbackMs = [];
     this.tutoUi = [];
     this.tutoShown = '';
     if (this.tuto) {
@@ -304,6 +313,7 @@ export class FightScene extends Phaser.Scene {
       const f2 = typeof forced.p2 === 'function' ? forced.p2(this.state) : forced.p2;
       const in0 = this.p1Ai ? this.p1Ai.read(this.state, 0) : mergeInputs(this.keyboard.read(), this.touch.read(), f1 ?? {});
       const in1: InputFrame = f2 ? mergeInputs(f2) : this.tuto ? tutoPartner(this.tuto, this.state) : this.p2.read(this.state, 1);
+      if (this.rollbackLoad > 0) this.replayLoad(in0, in1);
       this.state = step(this.state, in0, in1);
       if (this.tuto) this.tuto = tutoAfterStep(this.tuto, this.state);
       for (const e of this.state.ev) this.onEvent(e);
@@ -741,6 +751,18 @@ export class FightScene extends Phaser.Scene {
     if (!e.parried) this.slowUntil = performance.now() + 420;
   }
 
+  /** Essai de charge : rejoue les derniers pas comme le ferait un retour en arrière, et garde la durée. */
+  private replayLoad(in0: InputFrame, in1: InputFrame) {
+    this.history.push({ s: this.state, a: in0, b: in1 });
+    if (this.history.length > this.rollbackLoad) this.history.shift();
+    const t0 = performance.now();
+    let s = this.history[0].s;
+    for (const h of this.history) s = step(s, h.a, h.b);
+    hashState(s);
+    this.rollbackMs.push(performance.now() - t0);
+    if (this.rollbackMs.length > 600) this.rollbackMs.shift();
+  }
+
   // ── Tutoriel ───────────────────────────────────────────────────────────
 
   /** Panneau de consigne sous les barres de vie, puis écran de fin. Redessiné seulement quand il change. */
@@ -870,6 +892,7 @@ export class FightScene extends Phaser.Scene {
       camera: { ...this.cam },
       fps: this.game.loop.actualFps,
       timeLeft: Math.ceil(s.timeLeft / SIM.stepsPerSecond),
+      rollbackMs: this.rollbackMs.length ? [...this.rollbackMs] : null,
       tuto: this.tuto ? { step: tutoStep(this.tuto), index: this.tuto.i, n: this.tuto.n, pause: this.tuto.pause, done: tutoDone(this.tuto) } : null,
     };
     window.__slap.fx = { ...this.fx.stats, special: { ...this.sfxSpecial.stats }, ...(this.crowd?.stats ?? {}), ...this.commentator.stats, sounds: sfx.played.slice(-40) };

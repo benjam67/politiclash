@@ -4,7 +4,7 @@ Version du 13 octobre 2026 (style de combat unique, barre Buzz et coups spéciau
 
 Ce document contient tout le contexte nécessaire pour qu'une nouvelle discussion code, teste et déploie le jeu en autonomie. Il remplace la roadmap du premier jeu (`soufflet`, gifles au tour par tour), dont il reprend la stack, les assets et la méthode.
 
-> **État** : phases 0 à 6 faites : le solo est complet (tutoriel, sauvegarde, boîtes de collision réglées sur les vraies poses, chargement à la demande). Prochaine étape : la phase 7, décrite dans `ROADMAP-EN-LIGNE.md`, qui remplace la phase 7 ci-dessous. En attente : les noms et répliques définitifs. En cas d'écart, c'est le code qui fait foi et la roadmap s'adapte.
+> **État** : phases 0 à 6 faites : le solo est complet (tutoriel, sauvegarde, boîtes de collision réglées sur les vraies poses, chargement à la demande). Phase 7 : voir `ROADMAP-EN-LIGNE.md`, qui remplace la phase 7 ci-dessous ; la 7a (socle réseau) est faite, la 7b (mode Entre amis) est la suivante. En attente : les noms et répliques définitifs. En cas d'écart, c'est le code qui fait foi et la roadmap s'adapte.
 
 ## 1. Contexte et objectif
 

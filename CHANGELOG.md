@@ -315,6 +315,43 @@ Décisions du 13 octobre (roadmap mise à jour, sections 3 et 7). `ROADMAP.md` r
 - Image calculée en 3,8 ms en moyenne (9,9 ms au pire) avec processeur ×4.
 - Lancés à plusieurs en parallèle, quelques tests navigateur dépassent leurs délais sur la machine de test (trop lente) ; ils passent tous lancés un par un.
 
+## Phase 7a · Socle réseau — 2026-10-14
+
+Première étape de `ROADMAP-EN-LIGNE.md`. Rien de visible en jeu pour l'instant : c'est le moteur que les modes Entre amis (7b) et Partie rapide (7d) utiliseront. Aucun réseau réel n'est utilisé ; tout est essayé avec un faux réseau.
+
+**Session en ligne** (`src/net/rollback.ts`, indépendante du transport et de Phaser)
+- Les deux téléphones font tourner la même simulation et ne s'échangent que leurs entrées (un entier par pas).
+- **Retard d'entrée** : 3 pas (50 ms) par défaut. `delayForPing` conseille de 3 à 6 pas selon le ping mesuré avant le match (à brancher en 7b).
+- **Prédiction et retour en arrière** : sans nouvelles de l'adversaire, on suppose qu'il garde les mêmes touches ; si c'est faux, on reprend l'état gardé et on rejoue, **8 pas au plus**. Au-delà, le jeu attend.
+- **Redondance** : chaque paquet renvoie toutes les entrées que l'autre n'a pas encore confirmées. Une perte ou un désordre ne demande aucune réémission.
+- **Contrôle de désynchronisation** : toutes les secondes (60 pas confirmés), chacun envoie l'empreinte de son état. En cas d'écart, l'hôte envoie son état et l'invité s'y recale, puis rejoue jusqu'au pas actuel.
+- **Horloges** : si un téléphone tourne un peu plus vite que l'autre, il attend une image de temps en temps.
+- **Coupures** : jeu figé avec « instable » après 250 ms sans nouvelles (ou 250 ms d'attente), pause à 3 s, match perdu à 15 s. Ce que ça donne au vainqueur est décidé par chaque mode.
+- **Annonces** : les effets (gifle, cris) partent tout de suite, une seule fois même si le pas est rejoué. Les annonces qui changent le cours du match (round, combat, K.O., fin du chrono, fin de round) attendent que leur pas soit confirmé : on n'annonce jamais un K.O. démenti. La fin du match n'est déclarée qu'une fois confirmée.
+
+**Banc d'essai** (`src/net/fakePipe.ts`, `src/net/bench.ts`)
+- Faux tuyau : latence, gigue (paquets dans le désordre), pertes, coupures. Les messages passent par du JSON comme sur le vrai réseau.
+- Deux sessions reliées, chacune jouée par une IA qui ne voit que son propre écran (prédictions comprises). À la fin : même état des deux côtés, et même état que le match rejoué hors réseau avec les entrées échangées.
+
+**Résultats** (`npm run sim`, 200 matchs IA contre IA par ligne, six combattants et trois niveaux mélangés)
+
+| Réseau (par sens) | Retard | Terminés et identiques | Désync. | Plus long retour | Images en attente | Débit |
+| --- | --- | --- | --- | --- | --- | --- |
+| 100 ms | 3 pas | 200 / 200 | 0 | 5 pas | 0 % | 5,3 Ko/s |
+| 150 ms | 4 pas | 200 / 200 | 0 | 8 pas | 0 % | 6,1 Ko/s |
+| 200 ms + 5 % de pertes | 3 pas | 200 / 200 | 0 | 8 pas | 19 % | 6,4 Ko/s |
+| 200 ms + 5 % de pertes | 4 pas | 200 / 200 | 0 | 8 pas | 11 % | 6,6 Ko/s |
+| 200 ms + 5 % de pertes | 6 pas | 200 / 200 | 0 | 8 pas | 0,8 % | 6,9 Ko/s |
+
+Environ 3 retours en arrière par seconde. À 200 ms par sens (400 ms d'aller-retour, un très mauvais réseau), un retard de 3 pas fait attendre le jeu une image sur cinq : d'où le retard choisi selon le ping, et l'avertissement « connexion faible » prévu au-delà de 150 ms.
+
+**Charge** : avec 8 pas rejoués et une empreinte calculée **à chaque image** (pire cas, 20 fois plus que dans les matchs ci-dessus), processeur ralenti 4 fois, pendant un combat IA avec coups spéciaux : retour en arrière sous 0,1 ms par image, image entière 3,0 ms en moyenne (9,3 ms au pire). Essai : `?rollback=8`.
+
+**Vérifications**
+- 225 tests unitaires (13 de plus : faux tuyau ; réseau parfait, 100 ms, 200 ms et pertes ; annonces une seule fois ; état faussé chez l'invité détecté et recalé ; horloge 2 % plus rapide ; coupures de 2 s, 8 s et 20 s ; jeu bloqué à 8 pas sans adversaire ; retard appliqué ; retard selon le ping).
+- Trouvé par les tests : avant d'avoir reçu le moindre paquet, le jeu croyait être en avance sur l'adversaire et sautait une image.
+- Reste visible : 1 à 2 petits effets par match (« sonné », une gifle) prédits puis démentis par l'entrée réelle. Sans effet sur le combat.
+
 ## Premier jeu · Phase 0 · Mise en place — 2026-10-01
 
 **Fait**

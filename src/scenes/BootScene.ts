@@ -55,7 +55,7 @@ export class BootScene extends Phaser.Scene {
  * `?scene=tuto` (le tutoriel), `?scene=fight&p1=aviateur&p2=doyen&stage=bar` (identifiants de `roster.ts`), `&level=easy|normal|hard` (niveau de l'IA), `?autoplay=1` (démo : IA contre IA),
  * `&foe=idle|wander|dummy` (adversaire d'essai à la place de l'IA : immobile, promeneur, mannequin),
  * `&intro=0` (sans l'annonce du round),
- * `&seed=42` (adversaire reproductible), `&buzz=100` (barres Buzz remplies au départ, essais du coup spécial), `&touch=1` (contrôles tactiles sur ordinateur). Sans paramètre : écran d'accueil.
+ * `&seed=42` (adversaire reproductible), `&buzz=100` (barres Buzz remplies au départ, essais du coup spécial), `&touch=1` (contrôles tactiles sur ordinateur), `&rollback=8` (essai de charge du jeu en ligne). Sans paramètre : écran d'accueil.
  */
 export function fightDataFromUrl(search: string): FightData {
   const q = new URLSearchParams(search);
@@ -74,6 +74,7 @@ export function fightDataFromUrl(search: string): FightData {
     intro: q.get('intro') !== '0',
     seed: q.has('seed') && Number.isFinite(seed) ? seed : undefined,
     buzz: q.has('buzz') ? Math.max(0, Math.min(100, Number(q.get('buzz')) || 0)) : undefined,
+    rollback: q.has('rollback') ? Math.max(0, Math.min(16, Number(q.get('rollback')) || 0)) : undefined,
   };
 }
 
