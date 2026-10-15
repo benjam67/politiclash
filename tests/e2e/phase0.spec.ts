@@ -64,7 +64,7 @@ test('l’accueil porte le nouveau nom et le bouton JOUER mène au choix du pers
   });
   expect(title).toBe('FRANCE BAGARRE');
   await page.screenshot({ path: `${SHOTS}/phase0-accueil.png` });
-  await tapNamed(page, 'Title', 'btn-play');
+  await tapNamed(page, 'Title', 'btn-free');
   await waitScene(page, 'CharacterSelect');
   await expectNoErrors(errors);
 });

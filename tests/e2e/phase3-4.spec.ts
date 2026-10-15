@@ -37,7 +37,7 @@ test.describe('phase 4 : choix du personnage et du niveau', () => {
     const errors = collectErrors(page);
     await page.goto('./');
     await waitReady(page, 'Title');
-    await tapNamed(page, 'Title', 'btn-play');
+    await tapNamed(page, 'Title', 'btn-free');
     await waitScene(page, 'CharacterSelect');
     expect(await st(page)).toMatchObject({ step: 'p1', left: null });
     // 6 cases, toutes occupées : plus de case « Bientôt ».
@@ -88,7 +88,7 @@ test.describe('phase 4 : choix du personnage et du niveau', () => {
     const errors = collectErrors(page);
     await page.goto('./');
     await waitReady(page, 'Title');
-    await tapNamed(page, 'Title', 'btn-play');
+    await tapNamed(page, 'Title', 'btn-free');
     await waitScene(page, 'CharacterSelect');
     const step = (s: string) => page.waitForFunction((v) => (window.__slap!.state as { step: string }).step === v, s);
 

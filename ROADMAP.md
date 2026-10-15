@@ -1,10 +1,10 @@
 # France Bagarre – Roadmap de développement
 
-Version du 14 octobre 2026 (nouveau nom, histoire de la course à l'Élysée, noms et répliques définitifs, menus tricolores).
+Version du 15 octobre 2026 (campagne présidentielle en solo, phase 6 bis).
 
 Ce document contient tout le contexte nécessaire pour qu'une nouvelle discussion code, teste et déploie le jeu en autonomie. Il remplace la roadmap du premier jeu (`soufflet`, gifles au tour par tour), dont il reprend la stack, les assets et la méthode.
 
-> **État** : phases 0 à 6 faites : le solo est complet (tutoriel, sauvegarde, boîtes de collision réglées sur les vraies poses, chargement à la demande). Phase 7 : voir `ROADMAP-EN-LIGNE.md`, qui remplace la phase 7 ci-dessous ; les phases 7a (socle réseau) et 7b (mode Entre amis) sont faites ; **jalon 3 validé le 15 octobre** (match à distance entre deux Wi-Fi différents, sans problème) ; prochaine étape : phase 7c (Partie rapide), qui attend le choix du service serveur et relais par le propriétaire. Le 14 octobre : le jeu s'appelle **France Bagarre** (anciennement PolitiClash), l'histoire devient la course à l'Élysée, et les noms, coups spéciaux, répliques et réactions sont définitifs. En cas d'écart, c'est le code qui fait foi et la roadmap s'adapte.
+> **État** : phases 0 à 6 faites, et **phase 6 bis (campagne présidentielle) faite le 15 octobre** : le joueur bat les 5 autres candidats à la suite pour devenir président ou présidente, avec rematch illimité, reprise après fermeture et palmarès ; textes provisoires en attente de ceux du propriétaire. Phase 7 : voir `ROADMAP-EN-LIGNE.md`, qui remplace la phase 7 ci-dessous ; les phases 7a (socle réseau) et 7b (mode Entre amis) sont faites ; **jalon 3 validé le 15 octobre** (match à distance entre deux Wi-Fi différents) ; prochaine étape : phase 7c (Partie rapide), qui attend le choix du service serveur et relais par le propriétaire. Le jeu s'appelle **France Bagarre** (anciennement PolitiClash). En cas d'écart, c'est le code qui fait foi et la roadmap s'adapte.
 
 ## 1. Contexte et objectif
 
@@ -13,7 +13,7 @@ Objectif : transformer le jeu de gifles au tour par tour en **vrai jeu de combat
 - **Pitch** : des femmes et des hommes politiques français, de tous les partis, se battent à coups de gifles pour devenir président ou présidente de la République. Chaque round est un tour d'élection (1er tour, 2e tour, vote final), et le vainqueur est élu. Ils se déplacent, sautent, s'accroupissent, se protègent et se giflent en temps réel. Ton absurde et exagéré, dans la tradition française de la caricature. Tous les bords sont représentés et tous en prennent pour leur grade.
 - **Un seul style de combat** : tous les combattants se déplacent et frappent de la même façon. Seul leur **coup spécial** les distingue.
 - **Plateforme** : jeu web (PWA) en mode paysage, jouable sur iOS et Android depuis un navigateur. Jouable aussi au clavier sur ordinateur (indispensable pour les tests).
-- **Modes** : d'abord **solo contre l'IA**. Dès que le solo fonctionne bien, **deux joueurs en ligne**. Pas de mode deux joueurs sur le même téléphone.
+- **Modes** : d'abord **solo contre l'IA**, en **campagne présidentielle** (tous les rivaux à la suite) ou en **combat libre** (un match au choix). Dès que le solo fonctionne bien, **deux joueurs en ligne**. Pas de mode deux joueurs sur le même téléphone.
 - **Équipe** : un seul développeur, en vibecoding. Claude code, teste et déploie en autonomie ; le propriétaire du projet ne teste qu'aux jalons indiqués.
 - **Priorité** : le plaisir de la gifle avant tout. Chaque phase doit rester jouable et déployée.
 - **Hors périmètre** : publication sur les stores, monétisation, comptes utilisateurs, mode deux joueurs en local.
@@ -92,7 +92,7 @@ politiclash/
     logic/                règles pures, sans Phaser, déterministes
     input/                tactile, clavier, IA, réseau : une seule interface
     ai/                   IA (produit des entrées, comme un joueur)
-    scenes/               Boot, Title, CharacterSelect, StageSelect, Fight, Result
+    scenes/               Boot, Title, CharacterSelect, StageSelect, Campaign, Fight, Result, President, Room
     ui/                   barres de vie, barre Buzz, jauges, chrono, bandeaux, contrôles tactiles
     fx/                   impact, tremblement, particules, foule, effets des spéciaux
     audio/                sons et musique générés en code
@@ -401,6 +401,20 @@ Uniquement aux 3 jalons, ou en cas de choix qui ne peut pas être annulé facile
 - Boîtes de collision mesurées sur les vraies poses : corps élargi de 26 à 38 px, le reste confirmé.
 - Chargement initial de 3,57 à 0,71 Mo (poses chargées au lancement du combat).
 
+### Phase 6 bis · Campagne présidentielle ✔
+
+**Faite le 15 octobre 2026**, à la demande du propriétaire. Détail dans `CHANGELOG.md`.
+
+- À l'accueil : « Entrer en campagne » (ou « Reprendre la campagne »), « Combat libre » (l'ancien solo), « En ligne », « Tutoriel ».
+- Le joueur choisit son candidat et affronte les 5 autres, dans un ordre tiré au hasard. Chaque match reste une élection en 3 tours, lieu tiré au hasard.
+- Difficulté qui monte (`CAMPAIGN.levels` dans `balance.ts`) : match 1 en Facile, 2 et 3 en Normal, 4 et 5 en Difficile.
+- Écran « Sur la route de l'Élysée » avant chaque match (prochain rival, niveau, parcours, recomptages), abandon en deux appuis.
+- Victoire : élection contestée, rival suivant. Défaite : « Recomptage ! », rematch illimité contre le même rival.
+- Après le dernier rival : grande scène finale « Élu président / Élue présidente de la République ».
+- Sauvegarde : campagne en cours reprise après fermeture ; palmarès par candidat (étoile sur les portraits, record de recomptages).
+- Textes dans `CAMPAIGN_TEXTS` (`texts.ts`) : **provisoires**, à remplacer par ceux du propriétaire.
+- *Validé quand* : tests unitaires de la campagne ; test navigateur d'une campagne entière (un vrai match, une défaite et son recomptage, une reprise après fermeture, la scène finale) ; combat et jeu en ligne inchangés.
+
 ### Phase 7 · Deux joueurs en ligne (remplacée par `ROADMAP-EN-LIGNE.md`)
 
 - Connexion directe entre deux téléphones avec **PeerJS** et un code de salon.
@@ -425,6 +439,7 @@ Uniquement aux 3 jalons, ou en cas de choix qui ne peut pas être annulé facile
 
 | Quand | Quoi |
 | --- | --- |
+| Quand il veut | Les textes définitifs de la campagne (`CAMPAIGN_TEXTS` dans `texts.ts`), à la place des textes provisoires |
 | Avant la Partie rapide | La liste des pseudos tirés au hasard, dans `texts.ts` |
 | Avant le jalon 2 si possible | Un décor en version large (2 écrans) |
 

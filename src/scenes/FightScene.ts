@@ -3,7 +3,7 @@ import { BUZZ, GUARD, MATCH, SIM, STAGE, STYLE } from '../config/balance';
 import { PLAYABLE_IDS, ROSTER, spriteOf, type FighterId } from '../config/roster';
 import { CHEEK } from '../config/sprites';
 import { queueStageImages, STAGES, type StageId } from '../config/stages';
-import { FIGHTER_TEXTS, ONLINE, TUTORIAL } from '../config/texts';
+import { CAMPAIGN_TEXTS, FIGHTER_TEXTS, ONLINE, TUTORIAL } from '../config/texts';
 import { currentRoom, type FriendRoom } from '../net/friends';
 import { NetSession, type NetStatus } from '../net/rollback';
 import type { MatchStart } from '../net/room';
@@ -45,7 +45,9 @@ import type { ResultData } from './ResultScene';
 import { queueFighterImages } from './BootScene';
 import { showLoadingBar } from '../ui/loading';
 import { createTuto, TUTO_STEPS, tutoAfterStep, tutoDone, tutoPartner, tutoProgress, tutoStep, type Tuto } from '../logic/tutorial';
-import { updateSave } from '../logic/save';
+import { loadSave, updateSave } from '../logic/save';
+import { campaignFoe } from '../logic/campaign';
+import type { CharacterSelectData } from './CharacterSelectScene';
 import { makeButton } from '../ui/button';
 import { ReactionMenu, reactButton, reactionBubble } from '../ui/reactions';
 import { FONT_UI } from '../ui/theme';
@@ -72,6 +74,10 @@ export interface FightData {
   buzz?: number;
   /** Tutoriel : exercices guidés contre un partenaire d'entraînement. */
   tutorial?: boolean;
+  /** Après le tutoriel : l'écran du choix du candidat (campagne ou combat libre). */
+  tutoNext?: CharacterSelectData;
+  /** Match de la campagne présidentielle (l'adversaire et le niveau viennent de la campagne sauvegardée). */
+  campaign?: boolean;
   /** Essai de charge du jeu en ligne : à chaque pas, rejoue en plus les N derniers pas (pire cas du retour en arrière). */
   rollback?: number;
   /** Match en ligne (mode Entre amis) : réglages envoyés par l'hôte. */
@@ -140,6 +146,9 @@ export class FightScene extends Phaser.Scene {
   private startBuzz = 0;
   /** Tutoriel en cours (null : combat normal). */
   private tuto: Tuto | null = null;
+  private tutoNext: CharacterSelectData | undefined;
+  /** Match de campagne : son rang (à partir de 1) et le nombre d'adversaires. */
+  private campaign: { i: number; n: number } | null = null;
   private tutoUi: Phaser.GameObjects.GameObject[] = [];
   /** Ce que montre le panneau du tutoriel (pour ne le redessiner que quand ça change). */
   private tutoShown = '';
@@ -193,6 +202,9 @@ export class FightScene extends Phaser.Scene {
     this.seed = data.seed ?? Math.floor(Math.random() * 1e9);
     this.startBuzz = data.buzz ?? 0;
     this.tuto = data.tutorial ? createTuto() : null;
+    this.tutoNext = data.tutoNext;
+    const c = data.campaign ? loadSave().campaign : null;
+    this.campaign = c && campaignFoe(c) === this.ids[1] && c.fighter === this.ids[0] ? { i: c.beaten + 1, n: c.order.length } : null;
     this.rollbackLoad = data.rollback ?? 0;
     this.online = data.online ?? null;
     this.room = this.online ? currentRoom() : null;
@@ -289,7 +301,7 @@ export class FightScene extends Phaser.Scene {
     });
     // Niveau de l'IA, discret, sous le chrono.
     this.levelTag = this.add
-      .text(0, 0, this.online ? ONLINE.vs(this.room?.them?.pseudo ?? '') : this.tuto ? '' : this.p2Kind === 'ai' ? (this.autoplay ? `DÉMO · ${levelLabel(this.level).toUpperCase()}` : `IA ${levelLabel(this.level).toUpperCase()}`) : '', { fontFamily: FONT_TITLE, fontSize: '15px', color: CSS.cream, stroke: CSS.ink, strokeThickness: 5 })
+      .text(0, 0, this.online ? ONLINE.vs(this.room?.them?.pseudo ?? '') : this.tuto ? '' : this.p2Kind === 'ai' ? (this.autoplay ? `DÉMO · ${levelLabel(this.level).toUpperCase()}` : this.campaign ? CAMPAIGN_TEXTS.fightTag(this.campaign.i, this.campaign.n, levelLabel(this.level).toUpperCase()) : `IA ${levelLabel(this.level).toUpperCase()}`) : '', { fontFamily: FONT_TITLE, fontSize: '15px', color: CSS.cream, stroke: CSS.ink, strokeThickness: 5 })
       .setOrigin(0.5, 0)
       .setDepth(100);
 
@@ -708,7 +720,7 @@ export class FightScene extends Phaser.Scene {
         break;
       }
       case 'matchEnd': {
-        const data: ResultData = { ids: this.ids, stage: this.stageId, winner: e.winner, wins: [s.wins[0], s.wins[1]], p2: this.p2Kind, level: this.level, autoplay: this.autoplay };
+        const data: ResultData = { ids: this.ids, stage: this.stageId, winner: e.winner, wins: [s.wins[0], s.wins[1]], p2: this.p2Kind, level: this.level, autoplay: this.autoplay, campaign: !!this.campaign };
         this.scene.start('Result', data);
         break;
       }
@@ -1041,7 +1053,7 @@ export class FightScene extends Phaser.Scene {
   /** Tutoriel fini ou passé : il ne sera plus proposé ; on va choisir son combattant. */
   private endTuto() {
     updateSave((sv) => ({ ...sv, tutorialDone: true }));
-    this.scene.start('CharacterSelect', { left: this.ids[0] });
+    this.scene.start('CharacterSelect', { mode: 'free', ...this.tutoNext, left: this.ids[0] });
   }
 
   // ── État visible par les tests ─────────────────────────────────────────
@@ -1071,6 +1083,7 @@ export class FightScene extends Phaser.Scene {
       foe: this.p2Kind,
       level: this.level,
       autoplay: this.autoplay,
+      campaign: this.campaign,
       step: s.step,
       hash: hashState(s),
       phase: s.phase,

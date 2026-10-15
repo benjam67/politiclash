@@ -20,7 +20,10 @@ export const GAME = {
 
 /** Écrans d'accueil, de choix et de fin de match. */
 export const SCREENS = {
+  /** Accueil : la campagne présidentielle (solo, tous les candidats à la suite). */
   play: 'ENTRER EN CAMPAGNE',
+  /** Accueil : un match seul contre l'IA, adversaire et lieu au choix. */
+  free: 'COMBAT LIBRE',
   pickFighter: 'QUI SE PRÉSENTE ?',
   pickFoe: 'FACE À QUI ?',
   pickLevel: 'DIFFICULTÉ',
@@ -33,8 +36,54 @@ export const SCREENS = {
   /** Fin de match. `elected` vient de FIGHTER_TEXTS (ÉLU ou ÉLUE). */
   winner: (short: string, elected: string) => `${short} EST ${elected} !`,
   again: 'NOUVEAU DÉBAT',
-  other: 'NOUVELLE CAMPAGNE',
+  other: 'CHANGER DE CANDIDAT',
   home: 'ACCUEIL',
+};
+
+/**
+ * Campagne présidentielle (solo) : battre tous les autres candidats pour entrer à l'Élysée.
+ * TEXTES PROVISOIRES (15 octobre), écrits par Claude en attendant ceux du propriétaire.
+ * Les phrases tirées au hasard sont des listes : on peut en ajouter ou en retirer.
+ */
+export const CAMPAIGN_TEXTS = {
+  resume: 'REPRENDRE LA CAMPAGNE',
+  /** Écran avant chaque match. */
+  nextTitle: 'SUR LA ROUTE DE L’ÉLYSÉE',
+  step: (i: number, n: number) => (i === n ? 'DERNIER ADVERSAIRE' : `ADVERSAIRE ${i} SUR ${n}`),
+  /** Petite phrase sur le prochain adversaire ({foe} est remplacé par son nom). */
+  teasers: [
+    'Selon un sondage réalisé auprès de trois pigeons, {foe} part favori.',
+    '{foe} a déjà fait imprimer les affiches de la victoire.',
+    '{foe} promet de raser gratis. Et de gifler gratis.',
+    'Les joues de {foe} sont assurées tous risques.',
+    '{foe} s’entraîne depuis des mois sur des sondeurs.',
+  ],
+  finalTeaser: 'Dernier obstacle avant l’Élysée : {foe}. Pas de pression.',
+  go: 'AU DÉBAT !',
+  abandon: 'ABANDONNER',
+  abandonSure: 'VRAIMENT ?',
+  home: 'ACCUEIL',
+  /** Tampon sur les adversaires déjà battus. */
+  beaten: 'K.O.',
+  retries: (n: number) => (n === 0 ? 'Aucun recomptage' : n === 1 ? '1 recomptage' : `${n} recomptages`),
+  /** Pendant le combat, sous le chrono. */
+  fightTag: (i: number, n: number, level: string) => `CAMPAGNE ${i}/${n} · ${level}`,
+  /** Fin d'un match gagné, avant le dernier : l'élection est contestée. */
+  contested: (left: number) => (left === 1 ? 'Mais un dernier candidat conteste le résultat. Ultime scrutin !' : `Mais ${left} candidats contestent le résultat. On revote !`),
+  next: 'PROCHAIN SCRUTIN',
+  /** Fin d'un match perdu. */
+  lost: ['Défaite ? Non : « un simple accident de parcours ».', 'Les sondages s’étaient trompés. Évidemment.', 'Officiellement, c’est la faute de la météo.', 'Une défaite ? Disons un « succès différé ».'],
+  rematch: 'RECOMPTAGE !',
+  /** Grande scène finale. `elected` vient de FIGHTER_TEXTS (ÉLU ou ÉLUE). */
+  finalTitle: (short: string, elected: string) => `${short} EST ${elected}`,
+  finalSub: (elected: string) => (elected === 'ÉLUE' ? 'PRÉSIDENTE DE LA RÉPUBLIQUE !' : 'PRÉSIDENT DE LA RÉPUBLIQUE !'),
+  speeches: ['« Mes chers compatriotes, tendez l’autre joue. »', '« Mon premier décret : la gifle devient sport national. »', '« Je remercie mes adversaires. Surtout leurs joues. »', '« Ce soir, c’est toute la France qui a la joue rouge. »'],
+  finalStats: (n: number, retries: string) => `${n} adversaires giflés · ${retries}`,
+  newCampaign: 'NOUVELLE CAMPAGNE',
+  /** Palmarès, sur les portraits du choix du candidat. */
+  badge: (wins: number) => (wins === 1 ? '★ ÉLYSÉE' : `★ ÉLYSÉE ×${wins}`),
+  laurels: (elected: string, wins: number, best: number) => `Déjà ${elected.toLowerCase()} ${wins === 1 ? 'une fois' : `${wins} fois`} · record : ${best === 0 ? 'aucun recomptage' : best === 1 ? '1 recomptage' : `${best} recomptages`}`,
+  palmares: (k: number, n: number) => (k === 0 ? 'Personne n’a encore atteint l’Élysée.' : `Palmarès : ${k} candidat${k > 1 ? 's' : ''} sur ${n} déjà passé${k > 1 ? 's' : ''} par l’Élysée`),
 };
 
 /** Grandes annonces au centre de l'écran pendant le combat. */

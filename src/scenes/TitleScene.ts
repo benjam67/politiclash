@@ -7,11 +7,12 @@ import { COLORS, CSS, FONT_TITLE, FONT_UI, FLAG, FLAG_CSS, flagBand } from '../u
 import { fighterKey } from '../config/poses';
 import { needsInstallHint, safeInsets } from '../ui/safe';
 import { PLAYABLE_IDS, spriteOf } from '../config/roster';
-import { GAME, ONLINE, SCREENS, TUTORIAL } from '../config/texts';
+import { CAMPAIGN_TEXTS, GAME, ONLINE, SCREENS, TUTORIAL } from '../config/texts';
 import { openLobby } from '../net/lobby';
 import { normalizeCode } from '../net/room';
 import { loadSave, totalWins } from '../logic/save';
 import type { FightData } from './FightScene';
+import type { CharacterSelectData } from './CharacterSelectScene';
 
 /** Écran d'accueil : le bouton JOUER mène au choix du personnage. */
 export class TitleScene extends Phaser.Scene {
@@ -66,10 +67,11 @@ export class TitleScene extends Phaser.Scene {
     }
   }
 
-  private startTutorial() {
+  /** Le tutoriel, puis (`next`) l'écran où il mène : le choix du candidat, pour la campagne ou le combat libre. */
+  private startTutorial(next?: CharacterSelectData) {
     const save = loadSave();
     const left = save.lastFighter ?? PLAYABLE_IDS[0];
-    const data: FightData = { left, right: PLAYABLE_IDS.find((id) => id !== left) ?? left, stage: 'bar', tutorial: true };
+    const data: FightData = { left, right: PLAYABLE_IDS.find((id) => id !== left) ?? left, stage: 'bar', tutorial: true, tutoNext: next };
     this.scene.start('Fight', data);
   }
 
@@ -128,10 +130,15 @@ export class TitleScene extends Phaser.Scene {
         .setDepth(3),
     );
 
-    // Premier lancement : JOUER commence par le tutoriel.
+    // Premier lancement : la campagne comme le combat libre commencent par le tutoriel.
     const save = loadSave();
-    add(makeButton(this, width / 2 - 160, height * 0.64, SCREENS.play, FLAG.blue, () => (save.tutorialDone ? this.scene.start('CharacterSelect', {}) : this.startTutorial()), { w: 290, h: 84, font: 38 }).setDepth(4).setName('btn-play'));
-    add(makeButton(this, width / 2 + 160, height * 0.64, ONLINE.menuTitle, FLAG.red, () => this.goOnline(), { w: 290, h: 84, font: 34 }).setDepth(4).setName('btn-online'));
+    const play = (next: CharacterSelectData) => (save.tutorialDone ? this.scene.start('CharacterSelect', next) : this.startTutorial(next));
+    const by = height * 0.64;
+    // Campagne en cours : on la reprend à l'écran du prochain adversaire.
+    if (save.campaign) add(makeButton(this, width / 2 - 160, by, CAMPAIGN_TEXTS.resume, FLAG.blue, () => this.scene.start('Campaign'), { w: 290, h: 84, font: 30 }).setDepth(4).setName('btn-resume'));
+    else add(makeButton(this, width / 2 - 160, by, SCREENS.play, FLAG.blue, () => play({ mode: 'campaign' }), { w: 290, h: 84, font: 38 }).setDepth(4).setName('btn-campaign'));
+    add(makeButton(this, width / 2 + 160, by, ONLINE.menuTitle, FLAG.red, () => this.goOnline(), { w: 290, h: 84, font: 34 }).setDepth(4).setName('btn-online'));
+    add(makeButton(this, width / 2 - (save.tutorialDone ? 160 : 0), by + 86, SCREENS.free, FLAG.white, () => play({ mode: 'free' }), { w: 250, h: 54, font: 22 }).setDepth(4).setName('btn-free'));
     if (this.notice) {
       add(
         this.add
@@ -141,7 +148,7 @@ export class TitleScene extends Phaser.Scene {
           .setName('title-notice'),
       );
     }
-    if (save.tutorialDone) add(makeButton(this, width / 2, height * 0.64 + 86, TUTORIAL.replay, FLAG.white, () => this.startTutorial(), { w: 210, h: 50, font: 20 }).setDepth(4).setName('btn-tutorial'));
+    if (save.tutorialDone) add(makeButton(this, width / 2 + 160, by + 86, TUTORIAL.replay, FLAG.white, () => this.startTutorial(), { w: 250, h: 54, font: 22 }).setDepth(4).setName('btn-tutorial'));
     const wins = totalWins(save);
     if (wins > 0) {
       add(

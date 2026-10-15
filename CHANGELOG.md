@@ -683,3 +683,18 @@ Les combattants se battent désormais pour devenir président ou présidente. Te
 - **Jalon 3 validé** : match en ligne entre deux Wi-Fi différents, à distance, sans problème.
 - La réplique du coup spécial était remplacée une demi-seconde plus tard par le commentaire de la parade (« Démenti immédiat… »). Elle reste maintenant affichée au moins 2,6 s ; seuls le K.O. et la fin du chrono passent devant.
 - Réactions aussi dans le salon en ligne (choix des candidats) : bouton 💬 en haut à droite, bulle sous le pseudo de chaque joueur. Menu, limite d'envoi et coupure partagés avec le combat (`src/ui/reactions.ts`) ; la coupure vaut pour les deux écrans.
+
+## 15 octobre 2026 · Phase 6 bis : la campagne présidentielle
+
+Le solo a maintenant un but : battre tous les autres candidats pour entrer à l'Élysée. Choix du propriétaire du 15 octobre.
+
+- **Accueil** : « Entrer en campagne » (ou « Reprendre la campagne » s'il y en a une en cours), « Combat libre » (l'ancien solo, adversaire, difficulté et lieu au choix), « En ligne », « Tutoriel ». Au premier lancement, campagne comme combat libre passent d'abord par le tutoriel, qui mène ensuite au bon choix du candidat.
+- **Déroulé** : le joueur choisit son candidat ; ses 5 rivaux sont tirés dans un ordre au hasard (jamais lui-même). Chaque match reste une élection en 3 tours, dans un lieu tiré au hasard.
+- **Difficulté** (`CAMPAIGN.levels` dans `balance.ts`) : match 1 en Municipales (Facile), 2 et 3 en Législatives (Normal), 4 et 5 en Présidentielle (Difficile). Avec plus de candidats plus tard, la liste s'étire à la même proportion.
+- **Écran « Sur la route de l'Élysée »** avant chaque match : le joueur face à son prochain rival, le rang du match, le niveau, une petite phrase, le parcours (rivaux battus tamponnés K.O., rivaux à venir en « ? ») et le nombre de recomptages. Abandon en deux appuis (« Vraiment ? »).
+- **Fin de match** : victoire → « … EST ÉLU(E) ! », mais l'élection est contestée par les candidats restants, bouton « Prochain scrutin ». Défaite → bouton « Recomptage ! » (même rival, même niveau, rematchs illimités), « Abandonner » ou « Accueil ».
+- **Grande scène finale** : « NARINE EST ÉLUE / PRÉSIDENTE DE LA RÉPUBLIQUE ! » devant l'Élysée, confettis tricolores, rivaux vaincus en rang, premier discours tiré au hasard, bilan (adversaires giflés, recomptages).
+- **Sauvegarde** : la campagne en cours est gardée après chaque match (on ferme le jeu, on reprend au même rival) ; palmarès par candidat (campagnes gagnées, record de recomptages), affiché par une étoile « ★ Élysée » sur les portraits et une ligne d'aide au choix du candidat. Une sauvegarde abîmée ou une liste de candidats changée efface seulement la campagne en cours.
+- **Textes** : tous dans `CAMPAIGN_TEXTS` (`texts.ts`), **provisoires**, écrits par Claude en attendant ceux du propriétaire. Le bouton « Nouvelle campagne » de l'écran de fin du combat libre devient « Changer de candidat », pour ne pas se confondre avec la campagne.
+- **Combat** : inchangé (même simulation, même jeu en ligne). Sous le chrono : « CAMPAGNE 2/5 · LÉGISLATIVES ».
+- **Tests** : 7 tests unitaires (ordre, niveaux, rematch, palmarès, sauvegarde abîmée) ; 3 tests navigateur (campagne entière avec un vrai premier match, une défaite et son recomptage, une reprise après fermeture et la scène finale ; abandon ; tutoriel au premier lancement). Le bouton du combat libre s'appelle `btn-free` dans les tests.

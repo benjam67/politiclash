@@ -3,6 +3,7 @@
 import { PLAYABLE_IDS, type FighterId } from '../config/roster';
 import { STAGE_IDS, type StageId } from '../config/stages';
 import { cleanPseudo } from '../net/room';
+import { sanitizeCampaign, sanitizePalmares, type Campaign, type Palmares } from './campaign';
 
 export type Level = 'easy' | 'normal' | 'hard';
 const LEVELS: Level[] = ['easy', 'normal', 'hard'];
@@ -25,12 +26,16 @@ export interface SaveData {
   pseudo: string;
   /** Réactions de l'adversaire coupées. */
   muteReactions: boolean;
+  /** Campagne présidentielle en cours (null : aucune). */
+  campaign: Campaign | null;
+  /** Campagnes gagnées, par candidat. */
+  palmares: Palmares;
 }
 
 export const STORAGE_KEY = 'politiclash.save';
 
 export function defaultSave(): SaveData {
-  return { v: 1, tutorialDone: false, level: 'normal', lastFighter: null, lastStage: null, record: { easy: { w: 0, l: 0 }, normal: { w: 0, l: 0 }, hard: { w: 0, l: 0 } }, pseudo: '', muteReactions: false };
+  return { v: 1, tutorialDone: false, level: 'normal', lastFighter: null, lastStage: null, record: { easy: { w: 0, l: 0 }, normal: { w: 0, l: 0 }, hard: { w: 0, l: 0 } }, pseudo: '', muteReactions: false, campaign: null, palmares: {} };
 }
 
 const count = (n: unknown) => (typeof n === 'number' && Number.isFinite(n) && n >= 0 ? Math.min(1e6, Math.floor(n)) : 0);
@@ -46,6 +51,8 @@ export function sanitize(raw: unknown): SaveData {
   if ((STAGE_IDS as string[]).includes(r.lastStage as string)) out.lastStage = r.lastStage as StageId;
   if (typeof r.pseudo === 'string') out.pseudo = cleanPseudo(r.pseudo);
   out.muteReactions = r.muteReactions === true;
+  out.campaign = sanitizeCampaign(r.campaign);
+  out.palmares = sanitizePalmares(r.palmares);
   const rec = r.record && typeof r.record === 'object' ? (r.record as Record<string, unknown>) : {};
   for (const lv of LEVELS) {
     const x = rec[lv] && typeof rec[lv] === 'object' ? (rec[lv] as Record<string, unknown>) : {};

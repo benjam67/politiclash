@@ -3,7 +3,7 @@ import { menuBackdrop } from '../ui/backdrop';
 import { AI_LEVELS, levelLabel, type AiLevel } from '../ai/ai';
 import { fighterKey } from '../config/poses';
 import { PLAYABLE_IDS, ROSTER_SLOTS, spriteOf, type FighterId } from '../config/roster';
-import { FIGHTER_TEXTS, SCREENS } from '../config/texts';
+import { CAMPAIGN_TEXTS, FIGHTER_TEXTS, SCREENS } from '../config/texts';
 import { computeLayout } from '../logic/layout';
 import { sfx } from '../audio/sfx';
 import { makeButton } from '../ui/button';
@@ -12,10 +12,13 @@ import { safeInsets } from '../ui/safe';
 import { COLORS, CSS, FONT_TITLE, FONT_UI, FLAG, FLAG_CSS, flagBand } from '../ui/theme';
 import type { StageSelectData } from './StageSelectScene';
 import { loadSave, updateSave } from '../logic/save';
+import { startCampaign } from '../logic/campaign';
 
 type Step = 'p1' | 'p2' | 'level';
 
 export interface CharacterSelectData {
+  /** Campagne présidentielle (on choisit seulement son candidat) ou combat libre (défaut). */
+  mode?: 'campaign' | 'free';
   /** Choix précédents, proposés de nouveau quand on revient de l'écran de résultat. */
   left?: FighterId;
   level?: AiLevel;
@@ -40,6 +43,7 @@ export class CharacterSelectScene extends Phaser.Scene {
   private right: FighterId | null = null;
   private random = false;
   private level: AiLevel = 'normal';
+  private mode: 'campaign' | 'free' = 'free';
 
   constructor() {
     super('CharacterSelect');
@@ -54,6 +58,7 @@ export class CharacterSelectScene extends Phaser.Scene {
     this.right = null;
     this.random = false;
     this.level = data?.level ?? save.level;
+    this.mode = data?.mode ?? 'free';
   }
 
   create() {
@@ -73,7 +78,7 @@ export class CharacterSelectScene extends Phaser.Scene {
   }
 
   private publish() {
-    if (window.__slap) window.__slap.state = { mode: 'select', step: this.step, left: this.left, right: this.right, random: this.random, level: this.level };
+    if (window.__slap) window.__slap.state = { mode: 'select', campaign: this.mode === 'campaign', step: this.step, left: this.left, right: this.right, random: this.random, level: this.level };
   }
 
   private go(step: Step) {
@@ -152,6 +157,7 @@ export class CharacterSelectScene extends Phaser.Scene {
         }
       });
     } else {
+      const palmares = loadSave().palmares;
       // Grille de 6 cases, 3 par ligne.
       const cols = 3;
       const cw = 168;
@@ -164,7 +170,14 @@ export class CharacterSelectScene extends Phaser.Scene {
         const y = top + Math.floor(i / cols) * (ch + gap);
         if (id) {
           const chosen = this.step === 'p1' ? this.left === id : this.right === id;
-          add(makeCard(this, x, y, `card-${id}`, { w: cw, h: ch, label: FIGHTER_TEXTS[id].short.toUpperCase(), image: portraitOf(id), selected: chosen, onClick: () => this.pick(id) }));
+          const card = add(makeCard(this, x, y, `card-${id}`, { w: cw, h: ch, label: FIGHTER_TEXTS[id].short.toUpperCase(), image: portraitOf(id), selected: chosen, onClick: () => this.pick(id) }));
+          // Campagne : les candidats qui ont déjà atteint l'Élysée portent une étoile.
+          const laurels = this.mode === 'campaign' ? palmares[id] : undefined;
+          if (laurels) {
+            const badge = this.add.text(0, -ch / 2 + 4, CAMPAIGN_TEXTS.badge(laurels.wins), { fontFamily: FONT_TITLE, fontSize: '17px', color: FLAG_CSS.white, backgroundColor: FLAG_CSS.red, padding: { x: 8, y: 3 } }).setOrigin(0.5, 0.5).setAngle(-6);
+            card.add(badge);
+            card.setData('laurels', true);
+          }
         } else {
           add(makeCard(this, x, y, `card-soon-${i}`, { w: cw, h: ch, label: SCREENS.soon, locked: true }));
         }
@@ -182,11 +195,17 @@ export class CharacterSelectScene extends Phaser.Scene {
     }
 
     // Aide en bas, et retour.
-    const help = this.step === 'p1' ? 'Touche un portrait, puis valide.' : this.step === 'p2' ? 'Touche un portrait, puis valide. Le même des deux côtés, c’est permis.' : 'Tu pourras changer à chaque match.';
+    const laurels = this.mode === 'campaign' && this.left ? loadSave().palmares[this.left] : undefined;
+    const help = this.mode === 'campaign'
+      ? laurels && this.left
+        ? CAMPAIGN_TEXTS.laurels(FIGHTER_TEXTS[this.left].elected, laurels.wins, laurels.bestRetries)
+        : CAMPAIGN_TEXTS.palmares(Object.keys(loadSave().palmares).length, PLAYABLE_IDS.length)
+      : this.step === 'p1' ? 'Touche un portrait, puis valide.' : this.step === 'p2' ? 'Touche un portrait, puis valide. Le même des deux côtés, c’est permis.' : 'Tu pourras changer à chaque match.';
     add(
       this.add
         .text(cx, height - 12 - safe.bottom, help, { fontFamily: FONT_UI, fontStyle: '800', fontSize: '17px', color: CSS.cream, stroke: CSS.ink, strokeThickness: 5 })
-        .setOrigin(0.5, 1),
+        .setOrigin(0.5, 1)
+        .setName('select-help'),
     );
     add(
       makeButton(this, 96 + side, 58, '← RETOUR', FLAG.white, () => this.back(), { w: 150, h: 46, font: 17 })
@@ -208,8 +227,15 @@ export class CharacterSelectScene extends Phaser.Scene {
   }
 
   private confirm() {
-    if (this.step === 'p1' && this.left) this.go('p2');
+    if (this.step === 'p1' && this.left && this.mode === 'campaign') this.startCampaign(this.left);
+    else if (this.step === 'p1' && this.left) this.go('p2');
     else if (this.step === 'p2' && this.right) this.go('level');
+  }
+
+  /** Nouvelle campagne : adversaires mélangés, sauvegardée tout de suite (on peut fermer le jeu et reprendre). */
+  private startCampaign(fighter: FighterId) {
+    updateSave((sv) => ({ ...sv, lastFighter: fighter, campaign: startCampaign(fighter) }));
+    this.scene.start('Campaign');
   }
 
   private pickRandom() {

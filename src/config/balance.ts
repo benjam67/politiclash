@@ -207,3 +207,13 @@ export const STAGE = {
   crowdTint: 0xb3a49c,
   patronTint: 0xd4c6bd,
 };
+
+/**
+ * Campagne présidentielle (mode solo) : le joueur affronte tous les autres candidats, dans un ordre tiré au hasard.
+ * Niveau de l'IA pour chaque match, dans l'ordre (choix du propriétaire, 15 octobre) :
+ * match 1 en Facile, 2 et 3 en Normal, 4 et 5 en Difficile.
+ * S'il y a plus ou moins d'adversaires, la liste est étirée ou resserrée à la même proportion.
+ */
+export const CAMPAIGN = {
+  levels: ['easy', 'normal', 'normal', 'hard', 'hard'] as const,
+};
