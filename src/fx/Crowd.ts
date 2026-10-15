@@ -123,6 +123,9 @@ export class Crowd {
   }
 }
 
+/** Durée minimale d'affichage de la réplique d'un coup spécial. */
+const SPECIAL_LINE_MS = 2600;
+
 /** Bandeau du commentateur en bas de l'écran. */
 export class Commentator {
   private c: Phaser.GameObjects.Container;
@@ -154,8 +157,13 @@ export class Commentator {
   private yShown = 0;
   private yHidden = 0;
 
+  /** Jusqu'à quand la réplique du coup spécial reste affichée sans être remplacée. */
+  private lockUntil = 0;
+
   /** Dit une phrase de la catégorie donnée (jamais deux fois de suite la même). */
   say(kind: CommentKind) {
+    // La réplique du coup spécial a la priorité ; seuls le K.O. et la fin du chrono passent devant.
+    if (this.scene.time.now < this.lockUntil && kind !== 'ko' && kind !== 'timeUp') return;
     const list = COMMENTS[kind];
     let i = Math.floor(Math.random() * list.length);
     if (list.length > 1 && i === this.last[kind]) i = (i + 1) % list.length;
@@ -167,10 +175,11 @@ export class Commentator {
   sayLine(id: FighterId) {
     const n = FIGHTER_TEXTS[id].specialLines.length;
     if (n === 0) return;
-    this.show(`com_sp_${id}_${Math.floor(Math.random() * n)}`);
+    this.lockUntil = this.scene.time.now + SPECIAL_LINE_MS;
+    this.show(`com_sp_${id}_${Math.floor(Math.random() * n)}`, SPECIAL_LINE_MS + 300);
   }
 
-  private show(key: string) {
+  private show(key: string, holdMs = 2300) {
     this.stats.comments++;
     this.stats.lastKey = key;
 
@@ -181,7 +190,7 @@ export class Commentator {
     this.scene.tweens.killTweensOf(this.c);
     this.scene.tweens.add({ targets: this.c, y: this.yShown, duration: 160, ease: 'Quad.Out' });
     this.hideTimer?.remove(false);
-    this.hideTimer = this.scene.time.delayedCall(2300, () => this.hide());
+    this.hideTimer = this.scene.time.delayedCall(holdMs, () => this.hide());
   }
 
   hide() {

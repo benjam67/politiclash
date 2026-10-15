@@ -52,7 +52,7 @@ Le combat est déjà prêt pour le jeu en ligne : la simulation est déterminist
 
 ### Phase 7b · Mode Entre amis ✔
 
-**Faite le 14 octobre 2026** (détail dans `CHANGELOG.md`). Match complet entre deux navigateurs sans désynchronisation, avec et sans 100 ms de latence ; le lien d'invitation ouvre le salon. Ajouté : réactions toutes prêtes (texte provisoire), pseudo libre, contrôle de version. En attente : le jalon 3 sur de vrais téléphones.
+**Faite le 14 octobre 2026** (détail dans `CHANGELOG.md`). Match complet entre deux navigateurs sans désynchronisation, avec et sans 100 ms de latence ; le lien d'invitation ouvre le salon. Ajouté : réactions toutes prêtes (texte définitif le 14 octobre), pseudo libre, contrôle de version. **Jalon 3 validé le 15 octobre** : match à distance entre deux Wi-Fi différents, sans problème. Le cas des réseaux mobiles (4G/5G) reste à confirmer.
 
 
 - Écran « Jouer en ligne » → « Entre amis » → « Créer un salon » ou « Rejoindre ».

@@ -4,7 +4,7 @@ Version du 14 octobre 2026 (nouveau nom, histoire de la course à l'Élysée, no
 
 Ce document contient tout le contexte nécessaire pour qu'une nouvelle discussion code, teste et déploie le jeu en autonomie. Il remplace la roadmap du premier jeu (`soufflet`, gifles au tour par tour), dont il reprend la stack, les assets et la méthode.
 
-> **État** : phases 0 à 6 faites : le solo est complet (tutoriel, sauvegarde, boîtes de collision réglées sur les vraies poses, chargement à la demande). Phase 7 : voir `ROADMAP-EN-LIGNE.md`, qui remplace la phase 7 ci-dessous ; les phases 7a (socle réseau) et 7b (mode Entre amis) sont faites ; **jalon 3** : le propriétaire joue en ligne avec un ami. Le 14 octobre : le jeu s'appelle **France Bagarre** (anciennement PolitiClash), l'histoire devient la course à l'Élysée, et les noms, coups spéciaux, répliques et réactions sont définitifs. En cas d'écart, c'est le code qui fait foi et la roadmap s'adapte.
+> **État** : phases 0 à 6 faites : le solo est complet (tutoriel, sauvegarde, boîtes de collision réglées sur les vraies poses, chargement à la demande). Phase 7 : voir `ROADMAP-EN-LIGNE.md`, qui remplace la phase 7 ci-dessous ; les phases 7a (socle réseau) et 7b (mode Entre amis) sont faites ; **jalon 3 validé le 15 octobre** (match à distance entre deux Wi-Fi différents, sans problème) ; prochaine étape : phase 7c (Partie rapide), qui attend le choix du service serveur et relais par le propriétaire. Le 14 octobre : le jeu s'appelle **France Bagarre** (anciennement PolitiClash), l'histoire devient la course à l'Élysée, et les noms, coups spéciaux, répliques et réactions sont définitifs. En cas d'écart, c'est le code qui fait foi et la roadmap s'adapte.
 
 ## 1. Contexte et objectif
 
