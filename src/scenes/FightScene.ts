@@ -3,7 +3,7 @@ import { BUZZ, GUARD, MATCH, SIM, STAGE, STYLE } from '../config/balance';
 import { PLAYABLE_IDS, ROSTER, spriteOf, type FighterId } from '../config/roster';
 import { CHEEK } from '../config/sprites';
 import { queueStageImages, STAGES, type StageId } from '../config/stages';
-import { FIGHTER_TEXTS, ONLINE, REACTIONS, TUTORIAL } from '../config/texts';
+import { FIGHTER_TEXTS, ONLINE, TUTORIAL } from '../config/texts';
 import { currentRoom, type FriendRoom } from '../net/friends';
 import { NetSession, type NetStatus } from '../net/rollback';
 import type { MatchStart } from '../net/room';
@@ -45,8 +45,9 @@ import type { ResultData } from './ResultScene';
 import { queueFighterImages } from './BootScene';
 import { showLoadingBar } from '../ui/loading';
 import { createTuto, TUTO_STEPS, tutoAfterStep, tutoDone, tutoPartner, tutoProgress, tutoStep, type Tuto } from '../logic/tutorial';
-import { loadSave, updateSave } from '../logic/save';
+import { updateSave } from '../logic/save';
 import { makeButton } from '../ui/button';
+import { ReactionMenu, reactButton, reactionBubble } from '../ui/reactions';
 import { FONT_UI } from '../ui/theme';
 
 export type Side = 'left' | 'right';
@@ -160,9 +161,6 @@ export class FightScene extends Phaser.Scene {
   private ended = false;
   private offRoom: (() => void) | null = null;
   private reactBtn: Phaser.GameObjects.Text | null = null;
-  private reactMenu: Phaser.GameObjects.GameObject[] = [];
-  private lastReact = 0;
-  private muted = false;
 
   private state!: FightState;
   private acc = 0;
@@ -206,9 +204,6 @@ export class FightScene extends Phaser.Scene {
     this.ended = false;
     this.offRoom = null;
     this.reactBtn = null;
-    this.reactMenu = [];
-    this.lastReact = 0;
-    this.muted = loadSave().muteReactions;
     if (this.online) {
       this.ids = [...this.online.fighters];
       this.stageId = this.online.stage;
@@ -848,13 +843,8 @@ export class FightScene extends Phaser.Scene {
       },
     });
     // Réactions : un bouton sous celui du son.
-    this.reactBtn = this.add
-      .text(0, 0, '💬', { fontSize: '40px' })
-      .setOrigin(0.5)
-      .setDepth(130)
-      .setInteractive({ useHandCursor: true })
-      .setName('btn-react');
-    this.reactBtn.on('pointerup', () => this.toggleReactMenu());
+    const menu = new ReactionMenu(this, (i) => this.sendReaction(i));
+    this.reactBtn = reactButton(this, () => menu.toggle()).setDepth(130);
   }
 
   /** Entrée de ce téléphone pour le prochain pas. */
@@ -958,61 +948,16 @@ export class FightScene extends Phaser.Scene {
     }
   }
 
-  private toggleReactMenu() {
-    if (this.reactMenu.length) {
-      for (const o of this.reactMenu) o.destroy();
-      this.reactMenu = [];
-      return;
-    }
-    const { width } = this.scale;
-    const items = [...REACTIONS, this.muted ? ONLINE.muteOn : ONLINE.muteOff];
-    const w = 190;
-    // Une ligne jusqu'à 8 boutons, sinon deux lignes.
-    const perRow = items.length > 8 ? Math.ceil(items.length / 2) : items.length;
-    items.forEach((label, i) => {
-      const mute = i === REACTIONS.length;
-      const row = Math.floor(i / perRow);
-      const inRow = Math.min(perRow, items.length - row * perRow);
-      const x0 = width / 2 - ((inRow - 1) * (w + 8)) / 2;
-      const b = makeButton(this, x0 + (i % perRow) * (w + 8), 150 + row * 56, label, mute ? (this.muted ? COLORS.pink : COLORS.cream) : COLORS.cyan, () => {
-        if (mute) {
-          this.muted = !this.muted;
-          updateSave((sv) => ({ ...sv, muteReactions: this.muted }));
-        } else this.sendReaction(i);
-        this.toggleReactMenu();
-      }, { w, h: 46, font: 16 })
-        .setDepth(140)
-        .setName(mute ? 'btn-react-mute' : `btn-react-${i}`);
-      this.reactMenu.push(b);
-    });
-  }
-
   private sendReaction(i: number) {
-    // Au plus une réaction toutes les 1,5 s.
-    const now = performance.now();
-    if (now - this.lastReact < 1500) return;
-    this.lastReact = now;
     this.room?.react(i);
     this.showReaction(this.me, i);
   }
 
-  /** Bulle au-dessus d'un combattant pendant 2 s. Celles de l'adversaire sont cachées s'il a été coupé. */
+  /** Bulle au-dessus d'un combattant pendant 2 s. */
   private showReaction(who: 0 | 1, i: number) {
-    if (who !== this.me && this.muted) return;
-    const text = REACTIONS[i];
-    if (!text) return;
     const f = this.state.f[who];
     const p = this.toScreen(f.x / SUB, f.y / SUB + ROSTER[f.id].body.stand.h + 60);
-    const bubble = this.add
-      .text(p.x, p.y, text, { fontFamily: FONT_UI, fontStyle: '800', fontSize: '22px', color: CSS.ink, backgroundColor: CSS.cream, padding: { x: 12, y: 6 } })
-      .setOrigin(0.5, 1)
-      .setDepth(120)
-      .setName(`reaction-${who}`);
-    if (window.__slap) {
-      const w = window.__slap as unknown as { reactions?: string[] };
-      (w.reactions ??= []).push(`${who}:${text}`);
-    }
-    this.tweens.add({ targets: bubble, y: p.y - 30, alpha: 0, delay: 1600, duration: 400, onComplete: () => bubble.destroy() });
+    reactionBubble(this, p.x, p.y, i, who, who === this.me);
   }
 
   // ── Tutoriel ───────────────────────────────────────────────────────────

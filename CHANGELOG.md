@@ -682,3 +682,4 @@ Les combattants se battent désormais pour devenir président ou présidente. Te
 
 - **Jalon 3 validé** : match en ligne entre deux Wi-Fi différents, à distance, sans problème.
 - La réplique du coup spécial était remplacée une demi-seconde plus tard par le commentaire de la parade (« Démenti immédiat… »). Elle reste maintenant affichée au moins 2,6 s ; seuls le K.O. et la fin du chrono passent devant.
+- Réactions aussi dans le salon en ligne (choix des candidats) : bouton 💬 en haut à droite, bulle sous le pseudo de chaque joueur. Menu, limite d'envoi et coupure partagés avec le combat (`src/ui/reactions.ts`) ; la coupure vaut pour les deux écrans.

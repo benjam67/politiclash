@@ -11,6 +11,7 @@ import { currentRoom, type FriendRoom, type LeaveReason } from '../net/friends';
 import type { MatchStart } from '../net/room';
 import { makeButton } from '../ui/button';
 import { makeCard } from '../ui/card';
+import { ReactionMenu, reactButton, reactionBubble } from '../ui/reactions';
 import { safeInsets } from '../ui/safe';
 import { COLORS, CSS, FONT_TITLE, FONT_UI, FLAG, FLAG_CSS, flagBand } from '../ui/theme';
 import { portraitOf } from './CharacterSelectScene';
@@ -25,6 +26,9 @@ export class RoomScene extends Phaser.Scene {
   private room!: FriendRoom;
   private off: (() => void) | null = null;
   private notice = '';
+  /** Menu des réactions : hors de `items`, pour rester ouvert quand le salon se redessine. */
+  private reactMenu: ReactionMenu | null = null;
+  private reactBtn: Phaser.GameObjects.Text | null = null;
 
   constructor() {
     super('Room');
@@ -42,6 +46,9 @@ export class RoomScene extends Phaser.Scene {
       return;
     }
     this.room = room;
+    this.reactMenu = new ReactionMenu(this, (i) => this.sendReaction(i), 196, 40);
+    const menu = this.reactMenu;
+    this.reactBtn = reactButton(this, () => menu.toggle()).setDepth(30);
     this.build();
     this.off = room.listen({
       change: () => this.build(),
@@ -49,6 +56,7 @@ export class RoomScene extends Phaser.Scene {
       link: () => this.build(),
       start: (s) => this.startFight(s),
       leave: (why) => this.left(why),
+      react: (i) => this.showReaction(false, i),
     });
     this.scale.on(Phaser.Scale.Events.RESIZE, this.build, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -167,6 +175,9 @@ export class RoomScene extends Phaser.Scene {
     this.pingText = text(width - 20 - side, height - 14 - safe.bottom, '', 14).setOrigin(1, 1).setName('room-ping').setDepth(7) as Phaser.GameObjects.Text;
     this.weakText = text(width - 20 - side, height - 36 - safe.bottom, ONLINE.weak, 13, CSS.pink).setOrigin(1, 1).setDepth(7) as Phaser.GameObjects.Text;
     this.showPing();
+    // Réactions : bouton 💬 en haut à droite, en face de QUITTER.
+    this.reactBtn?.setPosition(width - 48 - side, 50).setVisible(!!r.them);
+    if (!r.them) this.reactMenu?.close();
     add(makeButton(this, 96 + side, 50, ONLINE.quit, FLAG.white, () => this.quit(), { w: 150, h: 44, font: 16 }).setDepth(6).setName('btn-quit'));
     this.publish();
   }
@@ -180,6 +191,19 @@ export class RoomScene extends Phaser.Scene {
     this.pingText.setText(r.ping === null ? '' : ONLINE.ping(r.ping)).setColor(r.weak ? CSS.pink : CSS.cream);
     this.weakText.setVisible(r.weak);
     this.publish();
+  }
+
+  private sendReaction(i: number) {
+    this.room.react(i);
+    this.showReaction(true, i);
+  }
+
+  /** Bulle sous le pseudo du joueur, de son côté de l'écran. */
+  private showReaction(mine: boolean, i: number) {
+    const r = this.room;
+    const left = mine ? r.isHost : !r.isHost;
+    const who = (left ? 0 : 1) as 0 | 1;
+    reactionBubble(this, this.scale.width * (left ? 0.13 : 0.87), 205, i, who, mine, 30);
   }
 
   private pick(id: FighterId) {

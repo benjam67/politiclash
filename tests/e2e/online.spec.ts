@@ -161,6 +161,43 @@ test.describe('phase 7b : Entre amis', () => {
     await expectNoErrors(errors);
   });
 
+  test('réactions dans le salon, pendant le choix des candidats', async ({ browser }) => {
+    const { host, guest, errors } = await connect(browser);
+    const reactions = (p: Page) => p.evaluate(() => (window as unknown as { __slap: { reactions?: string[] } }).__slap.reactions ?? []);
+    // L'hôte réagit : la bulle s'affiche chez lui (côté gauche) et chez l'invité.
+    await tapNamed(host, 'Room', 'btn-react');
+    await tapNamed(host, 'Room', 'btn-react-7');
+    await guest.waitForFunction(() => ((window as unknown as { __slap: { reactions?: string[] } }).__slap.reactions ?? []).some((r) => r.startsWith('0:')), null, { timeout: 10_000 });
+    expect(await reactions(host)).toContain('0:Eh gros sayez !');
+    // L'invité répond.
+    await tapNamed(guest, 'Room', 'btn-react');
+    await tapNamed(guest, 'Room', 'btn-react-0');
+    await host.waitForFunction(() => ((window as unknown as { __slap: { reactions?: string[] } }).__slap.reactions ?? []).some((r) => r.startsWith('1:')), null, { timeout: 10_000 });
+    expect(await reactions(host)).toContain('1:Votez pour moi !');
+    // Capture : deux bulles, animations figées (avec deux fenêtres, l'horloge du jeu saute et la bulle disparaît avant la capture).
+    await host.waitForTimeout(1600);
+    await host.evaluate(() => {
+      const sc = window.__slap!.game!.scene.getScene('Room') as unknown as { showReaction: (mine: boolean, i: number) => void; tweens: Phaser.Tweens.TweenManager };
+      sc.showReaction(true, 9);
+      sc.showReaction(false, 4);
+      sc.tweens.pauseAll();
+    });
+    await host.waitForTimeout(250);
+    await host.screenshot({ path: `${SHOTS}/7b-reactions-salon.png` });
+    await host.evaluate(() => (window.__slap!.game!.scene.getScene('Room') as unknown as { tweens: Phaser.Tweens.TweenManager }).tweens.resumeAll());
+    // Coupées : celles de l'adversaire ne s'affichent plus, les siennes si.
+    await tapNamed(host, 'Room', 'btn-react');
+    await host.screenshot({ path: `${SHOTS}/7b-reactions-salon-menu.png` });
+    await tapNamed(host, 'Room', 'btn-react-mute');
+    const before = (await reactions(host)).length;
+    await tapNamed(guest, 'Room', 'btn-react');
+    await tapNamed(guest, 'Room', 'btn-react-1');
+    await guest.waitForFunction(() => ((window as unknown as { __slap: { reactions?: string[] } }).__slap.reactions ?? []).length >= 3);
+    await host.waitForTimeout(800);
+    expect((await reactions(host)).length).toBe(before);
+    await expectNoErrors(errors);
+  });
+
   test('réactions, revanche à deux, départ d’un joueur en plein match', async ({ browser }) => {
     // L'invité ne joue pas : le match est court (on vérifie ici le déroulé, pas le combat).
     const { host, guest, errors } = await connect(browser, 'netbot=hard', 'netbot=idle');
