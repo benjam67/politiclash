@@ -413,6 +413,7 @@ Uniquement aux 3 jalons, ou en cas de choix qui ne peut pas être annulé facile
 - Après le dernier rival : grande scène finale « Élu président / Élue présidente de la République ».
 - Sauvegarde : campagne en cours reprise après fermeture ; palmarès par candidat (étoile sur les portraits, record de recomptages).
 - Textes dans `CAMPAIGN_TEXTS` (`texts.ts`) : **provisoires**, à remplacer par ceux du propriétaire.
+- IA renforcée en Normal et Difficile le même jour (Facile inchangé) : voir `CHANGELOG.md`.
 - *Validé quand* : tests unitaires de la campagne ; test navigateur d'une campagne entière (un vrai match, une défaite et son recomptage, une reprise après fermeture, la scène finale) ; combat et jeu en ligne inchangés.
 
 ### Phase 7 · Deux joueurs en ligne (remplacée par `ROADMAP-EN-LIGNE.md`)

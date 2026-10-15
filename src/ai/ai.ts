@@ -45,8 +45,9 @@ export interface AiProfile {
 
 export const AI_PROFILES: Record<AiLevel, AiProfile> = {
   easy: { reaction: 26, think: [26, 60], defend: 0.12, duck: 0, punish: 0.25, combo: 0.3, mix: 0.1, interrupt: 0.15, breakGuard: 0.05, bigShare: 0.3, aimError: 22, buzzUse: 0.4, buzzSafe: false, parry: 0.1 },
-  normal: { reaction: 15, think: [12, 32], defend: 0.45, duck: 0.15, punish: 0.6, combo: 0.7, mix: 0.25, interrupt: 0.5, breakGuard: 0.3, bigShare: 0.22, aimError: 9, buzzUse: 0.6, buzzSafe: true, parry: 0.35 },
-  hard: { reaction: 8, think: [4, 16], defend: 0.8, duck: 0.4, punish: 0.95, combo: 0.9, mix: 0.4, interrupt: 0.85, breakGuard: 0.6, bigShare: 0.2, aimError: 3.5, buzzUse: 0.85, buzzSafe: true, parry: 0.65 },
+  // Normal et Difficile renforcés le 15 octobre (le propriétaire gagnait tout) ; Facile inchangé.
+  normal: { reaction: 12, think: [9, 24], defend: 0.6, duck: 0.25, punish: 0.75, combo: 0.8, mix: 0.3, interrupt: 0.65, breakGuard: 0.4, bigShare: 0.22, aimError: 6.5, buzzUse: 0.7, buzzSafe: true, parry: 0.5 },
+  hard: { reaction: 6, think: [2, 8], defend: 0.9, duck: 0.5, punish: 1, combo: 0.95, mix: 0.55, interrupt: 0.95, breakGuard: 0.7, bigShare: 0.3, aimError: 1.5, buzzUse: 0.9, buzzSafe: true, parry: 0.9 },
 };
 
 interface PlanStep {
@@ -83,8 +84,9 @@ export class AiSource implements InputSource {
   private cineSeen = -1;
   private parryAt = -1;
 
-  constructor(readonly level: AiLevel, seed = 1) {
-    this.profile = AI_PROFILES[level];
+  /** `profile` : réglages imposés à la place de ceux du niveau (comparaisons d'anciens et de nouveaux réglages). */
+  constructor(readonly level: AiLevel, seed = 1, profile?: AiProfile) {
+    this.profile = profile ?? AI_PROFILES[level];
     this.rng = createRng(seed);
   }
 

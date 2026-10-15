@@ -698,3 +698,13 @@ Le solo a maintenant un but : battre tous les autres candidats pour entrer à l'
 - **Textes** : tous dans `CAMPAIGN_TEXTS` (`texts.ts`), **provisoires**, écrits par Claude en attendant ceux du propriétaire. Le bouton « Nouvelle campagne » de l'écran de fin du combat libre devient « Changer de candidat », pour ne pas se confondre avec la campagne.
 - **Combat** : inchangé (même simulation, même jeu en ligne). Sous le chrono : « CAMPAGNE 2/5 · LÉGISLATIVES ».
 - **Tests** : 7 tests unitaires (ordre, niveaux, rematch, palmarès, sauvegarde abîmée) ; 3 tests navigateur (campagne entière avec un vrai premier match, une défaite et son recomptage, une reprise après fermeture et la scène finale ; abandon ; tutoriel au premier lancement). Le bouton du combat libre s'appelle `btn-free` dans les tests.
+
+## 15 octobre 2026 · IA plus forte en Normal et Difficile
+
+Le propriétaire a gagné toute sa campagne sans perdre un match. Facile ne change pas ; Normal et Difficile sont renforcés (`AI_PROFILES` dans `src/ai/ai.ts`).
+
+- **Normal** : réagit en 0,20 s au lieu de 0,25 s, hésite moins, garde plus (60 % au lieu de 45 %), s'accroupit plus sous les gifles, punit et interrompt plus, vise mieux la zone dorée, réussit plus souvent la garde au bon moment contre le Buzz (50 % au lieu de 35 %).
+- **Difficile** : réagit en 0,10 s au lieu de 0,13 s (le plancher « humain » gardé par les tests), décide presque sans pause, garde à 90 %, punit chaque ouverture, mélange plus de coups de pied, plus de grosses gifles et presque toujours en zone dorée, pare le Buzz 9 fois sur 10.
+- **Mesures** (200 matchs chacune) : le nouveau Normal bat l'ancien 75 % du temps ; le nouveau Difficile bat l'ancien 69 % du temps et l'ancien Normal 95 %. Nouveau test `tests/sim/compare.test.ts`, qui garde ces écarts et vérifie que Facile n'a pas bougé.
+- **Équilibre** : 53 séries sur 53 dans les critères ; rounds de 24 s (Normal) et 29 s (Difficile) en moyenne, 1,1 à 1,3 spécial par round, aucun personnage au-dessus de 56 %.
+- `AiSource` accepte des réglages imposés (pour comparer d'anciens et de nouveaux réglages).
