@@ -708,3 +708,10 @@ Le propriétaire a gagné toute sa campagne sans perdre un match. Facile ne chan
 - **Mesures** (200 matchs chacune) : le nouveau Normal bat l'ancien 75 % du temps ; le nouveau Difficile bat l'ancien 69 % du temps et l'ancien Normal 95 %. Nouveau test `tests/sim/compare.test.ts`, qui garde ces écarts et vérifie que Facile n'a pas bougé.
 - **Équilibre** : 53 séries sur 53 dans les critères ; rounds de 24 s (Normal) et 29 s (Difficile) en moyenne, 1,1 à 1,3 spécial par round, aucun personnage au-dessus de 56 %.
 - `AiSource` accepte des réglages imposés (pour comparer d'anciens et de nouveaux réglages).
+
+## Correctif iPhone · Écran « tourne ton téléphone » — 2026-10-17
+
+Sur iPhone, l'écran « tourne ton téléphone » pouvait rester affiché une fois le téléphone en paysage.
+
+- La détection portrait/paysage passe de la seule règle CSS à un petit script dans `index.html` : il compare la largeur et la hauteur visibles et revérifie 100, 300 et 700 ms après chaque rotation (Safari donne parfois ses mesures en retard). La règle CSS reste en secours sans script.
+- Nouvelle ligne sur l'écran : « Rien ne bouge ? … coupe le verrou de rotation (le cadenas) ». Avec le verrou actif, l'iPhone ne prévient jamais la page de la rotation.

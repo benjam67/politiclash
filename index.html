@@ -246,10 +246,24 @@
         55%, 80% { transform: rotate(-90deg); }
         100% { transform: rotate(0deg); }
       }
+      #rotate .hint {
+        font-size: 13px;
+        font-weight: 500;
+        opacity: 0.8;
+        max-width: 280px;
+      }
+      /* L'orientation est décidée par le script ci-dessous (plus fiable que la règle CSS sur iPhone).
+         Sans script, on garde la règle CSS en secours. */
+      html:not(.orient-js) #rotate {
+        display: none;
+      }
       @media (orientation: portrait) {
-        #rotate {
+        html:not(.orient-js) #rotate {
           display: flex;
         }
+      }
+      html.is-portrait #rotate {
+        display: flex;
       }
     </style>
   </head>
@@ -299,7 +313,30 @@
       <div class="title">FRANCE BAGARRE</div>
       <div class="phone" aria-hidden="true"></div>
       <p>Tourne ton téléphone<br />pour en mettre une !</p>
+      <p class="hint">Rien ne bouge ? Sur iPhone, ouvre le centre de contrôle et coupe le verrou de rotation (le cadenas).</p>
     </div>
+    <script>
+      // Portrait ou paysage ? On compare la largeur et la hauteur visibles, et on revérifie un peu
+      // après chaque rotation : sur iPhone, les mesures arrivent parfois en retard.
+      (function () {
+        var root = document.documentElement;
+        root.classList.add('orient-js');
+        var check = function () {
+          var w = window.innerWidth || root.clientWidth;
+          var h = window.innerHeight || root.clientHeight;
+          root.classList.toggle('is-portrait', h > w);
+        };
+        var later = function () {
+          check();
+          [100, 300, 700].forEach(function (ms) { setTimeout(check, ms); });
+        };
+        check();
+        window.addEventListener('resize', later);
+        window.addEventListener('orientationchange', later);
+        if (window.visualViewport) window.visualViewport.addEventListener('resize', later);
+        if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener('change', later);
+      })();
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
