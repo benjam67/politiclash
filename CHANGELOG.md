@@ -831,8 +831,8 @@ Choix du propriétaire : le jeu quitte GitHub Pages pour Cloudflare (déjà hôt
 - `www.france-bagarre.fr` renvoie vers `france-bagarre.fr` (une seule adresse, donc une seule sauvegarde par joueur).
 - Serveur : nouvelles adresses autorisées (`france-bagarre.fr`, `www.`, adresse workers.dev du site). Le serveur garde son adresse `france-bagarre.ben-aub.workers.dev`.
 
-**Étape 2 (quand Cloudflare annonce le domaine actif)**
-- Brancher `france-bagarre.fr` et `www` sur le Worker du site.
-- Remplacer gh-pages par une page qui renvoie vers `france-bagarre.fr` (en gardant le code de salon des liens d'invitation).
+**Étape 2 (faite le 8 novembre, après l'activation du domaine et l'émission du certificat HTTPS)**
+- `france-bagarre.fr` et `www` branchés sur le Worker du site ; le déploiement vérifie que le domaine sert la nouvelle version avant de publier la page de renvoi.
+- gh-pages remplacé par une page qui renvoie vers `france-bagarre.fr` (en gardant le code de salon des liens d'invitation).
 
 **À savoir** : les sauvegardes du navigateur sont liées à l'adresse du site ; sur le nouveau domaine, chaque joueur repart de zéro (tutoriel, campagne, palmarès). Le classement est sur le serveur, mais l'identifiant qui y relie le joueur est dans le navigateur : sur le nouveau domaine, le joueur repart avec un nouvel identifiant, et son ancien pseudo reste pris par l'ancien. Peu de joueurs à ce jour ; un transfert pourra être ajouté si besoin.

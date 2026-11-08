@@ -39,9 +39,9 @@ Les personnalités, les idées de coups, les noms et les répliques viennent du 
 
 - **Dépôt** : `benjam67/politiclash`, public. Il a été créé par import du dépôt du premier jeu, `benjam67/soufflet`.
 - **Le dépôt `soufflet` ne doit jamais être modifié.** Il reste en ligne tel quel à son adresse.
-- **Adresse du jeu** : https://benjam67.github.io/politiclash/
-- **Nom technique gardé** : le dépôt, l'adresse, les clés de sauvegarde et les identifiants réseau gardent le mot `politiclash`. Les changer ferait perdre les sauvegardes des joueurs et casserait les liens partagés ; seul le nom affiché est « France Bagarre ».
-- **Déploiement** : à chaque push sur `main`, GitHub Actions lance les tests, construit le jeu et le publie sur la branche `gh-pages`, que GitHub Pages sert.
+- **Adresse du jeu** : https://france-bagarre.fr/ (depuis le 8 novembre 2026 ; domaine acheté chez OVH, géré par Cloudflare). `www.france-bagarre.fr` et l'ancienne adresse https://benjam67.github.io/politiclash/ renvoient vers lui.
+- **Nom technique gardé** : le dépôt, les clés de sauvegarde et les identifiants réseau gardent le mot `politiclash`. Les changer ferait perdre les sauvegardes des joueurs et casserait les liens partagés ; seul le nom affiché est « France Bagarre ».
+- **Déploiement** : à chaque push sur `main`, GitHub Actions lance les tests, construit le jeu et le publie sur Cloudflare (Worker `france-bagarre-site`, dossier `site/`), puis vérifie que `france-bagarre.fr` sert la nouvelle version. La branche `gh-pages` ne contient plus qu'une page de renvoi. Le serveur du mode en ligne est un autre Worker (`server/`, adresse `france-bagarre.ben-aub.workers.dev`).
 
 ### Combattants intégrés (11 octobre 2026)
 
@@ -62,7 +62,7 @@ Les six ont leurs 23 poses communes et le même style de combat. Bernard et Lola
 
 | Élément | Sort |
 | --- | --- |
-| Phaser 3 + TypeScript + Vite, GitHub Pages, PWA, écran « tourne ton téléphone » | Conservé tel quel |
+| Phaser 3 + TypeScript + Vite, PWA, écran « tourne ton téléphone » | Conservé tel quel |
 | Conventions d'ancrage, d'échelle et de miroir des sprites | Conservées |
 | Scènes Boot et Title | Conservées, simplifiées |
 | Interface (barres de vie, jauge de charge, chrono, losanges de rounds, bandeaux, onomatopées) et effets (impact, tremblement, particules, foule, commentateur) | Conservés, rebranchés sur le nouveau combat |
@@ -332,7 +332,7 @@ Claude enchaîne les phases seul et vérifie lui-même chaque étape. Le propri�
 
 1. Coder la phase, avec des commits réguliers sur `main`.
 2. Faire passer **toutes** les vérifications ci-dessous.
-3. Pousser, attendre le déploiement GitHub Pages et vérifier que la version en ligne se charge.
+3. Pousser, attendre le déploiement Cloudflare et vérifier que la version en ligne se charge.
 4. Noter dans `CHANGELOG.md` ce qui a été fait et les réglages choisis.
 5. Passer à la phase suivante sans attendre, sauf aux jalons.
 
