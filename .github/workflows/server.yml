@@ -52,8 +52,13 @@ jobs:
         run: |
           URL="${{ steps.deploy.outputs.deployment-url }}"
           echo "Adresse du serveur : $URL"
-          sleep 5
-          curl -fsS "$URL/health" | tee health.json
+          # Un nouveau sous-domaine workers.dev met quelques minutes à recevoir son certificat HTTPS : on attend.
+          for i in $(seq 1 30); do
+            curl -fsS "$URL/health" -o health.json && break
+            echo "Pas encore joignable ($i/30), nouvel essai dans 10 s…"
+            sleep 10
+          done
+          cat health.json
           grep -q '"turn":true' health.json
           curl -fsS -X POST -H "Origin: https://benjam67.github.io" "$URL/ice" -o ice.json
           grep -q 'turn:' ice.json && echo "Relais : accès fournis."
