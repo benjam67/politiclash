@@ -64,9 +64,9 @@ Le combat est déjà prêt pour le jeu en ligne : la simulation est déterminist
 - *Validé quand* : deux navigateurs jouent un match complet sans désynchronisation, y compris à 100 ms de latence ; le lien d'invitation ouvre directement le bon salon.
 - **Jalon 3 : le propriétaire joue en ligne avec un ami** (inchangé).
 
-### Phase 7c · Serveur et relais ⚠ choix du propriétaire
+### Phase 7c · Serveur et relais ✔
 
-**En cours (8 novembre 2026).** Choix du propriétaire : **Cloudflare** (Workers + relais TURN), sur son compte existant. Serveur en ligne : `https://france-bagarre.ben-aub.workers.dev` (dossier `server/`, déployé par GitHub Actions). Le mode Entre amis l'utilise déjà : connexion directe si possible, relais sinon ; le salon affiche « directe » ou « par le relais ». Reste à valider : le relais depuis un téléphone en 4G, et fixer avec le propriétaire le seuil d'alerte de facturation. La file d'attente (Durable Object) sera ajoutée au même serveur en phase 7d.
+**Faite et validée le 8 novembre 2026.** Choix du propriétaire : **Cloudflare** (Workers + relais TURN), sur son compte existant. Serveur en ligne : `https://france-bagarre.ben-aub.workers.dev` (dossier `server/`, déployé par GitHub Actions, vérifié après chaque déploiement). Le mode Entre amis l'utilise : connexion directe si possible, relais sinon ; le salon affiche « directe » ou « par le relais ». Validé par le propriétaire : match en 5G (connexion directe) et match avec le relais forcé (`?relay=1`). Corrigés en route : un toucher dans le menu en ligne qui lançait la campagne sous le menu, et « Salon introuvable » quand l'hôte partageait le lien. Reste : seuil de l'alerte de facturation à fixer par le propriétaire. La file d'attente (Durable Object) sera ajoutée au même serveur en phase 7d.
 
 La Partie rapide a besoin de deux choses que GitHub Pages ne fournit pas, car il ne sert que des fichiers :
 
