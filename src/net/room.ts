@@ -41,10 +41,10 @@ export function normalizeCode(input: string): string | null {
 /** Identifiant PeerJS de l'hôte d'un salon. */
 export const peerIdFor = (code: string) => `politiclash-v${PROTOCOL_VERSION}-${code}`;
 
-/** Lien à partager : il ouvre directement le salon. On garde seulement les réglages de test (`peer`, `lag`). */
+/** Lien à partager : il ouvre directement le salon. On garde seulement les réglages de test (`peer`, `lag`, `server`, `relay`). */
 export function inviteLink(code: string, href: string = location.href): string {
   const u = new URL(href);
-  const keep = ['peer', 'lag'].map((k) => [k, u.searchParams.get(k)] as const);
+  const keep = ['peer', 'lag', 'server', 'relay'].map((k) => [k, u.searchParams.get(k)] as const);
   u.search = '';
   u.hash = '';
   u.searchParams.set('salon', code);

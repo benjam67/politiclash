@@ -735,3 +735,8 @@ Sur iPhone, l'écran « tourne ton téléphone » pouvait rester affiché une fo
 - 251 tests unitaires (9 de plus : le serveur avec Cloudflare simulé, dont la clé qui ne ressort jamais, les autres sites refusés, Cloudflare en panne ; côté jeu, accès gardés puis redemandés avant expiration, et jeu qui continue sans serveur).
 - Nouveau test à deux navigateurs avec un faux serveur local : chaque téléphone demande ses accès une fois, la connexion se fait, le salon affiche « directe ». Les autres tests en ligne passent.
 - Reste à faire par le propriétaire : créer la clé du relais et le jeton de déploiement, et les mettre dans les secrets GitHub. Puis vérifier le relais depuis un téléphone en 4G.
+
+**Mise en ligne du serveur — 8 novembre 2026**
+- Le propriétaire a créé la clé du relais, le jeton de déploiement et le sous-domaine `ben-aub.workers.dev`, et mis les secrets dans GitHub. Serveur en ligne : `https://france-bagarre.ben-aub.workers.dev`. Vérification automatique après déploiement : `/health` répond avec le relais configuré, `/ice` fournit des accès au relais, un autre site est refusé.
+- Le jeu utilise désormais ce serveur. Le lien d'invitation garde aussi les réglages d'essai `relay` et `server`. Les tests à deux navigateurs tournent sans le vrai serveur (`server=` vide).
+- Un nouveau sous-domaine workers.dev met quelques minutes à recevoir son certificat HTTPS : la vérification après déploiement attend jusqu'à 5 minutes.

@@ -85,6 +85,8 @@ describe('côté jeu', () => {
   it('adresse du serveur : celle du jeu, ou celle de l’adresse de la page (essais)', () => {
     expect(serverUrl('?server=http://127.0.0.1:8787/')).toBe('http://127.0.0.1:8787');
     expect(serverUrl('?server=')).toBe('');
+    expect(serverUrl('?server=&server=http://a')).toBe('http://a');
+    expect(serverUrl('')).toBe('https://france-bagarre.ben-aub.workers.dev');
   });
 
   it('réglage du relais : automatique, ou toujours (`?relay=1`)', () => {

@@ -62,4 +62,7 @@ jobs:
           grep -q '"turn":true' health.json
           curl -fsS -X POST -H "Origin: https://benjam67.github.io" "$URL/ice" -o ice.json
           grep -q 'turn:' ice.json && echo "Relais : accès fournis."
+          # Un autre site ne doit pas pouvoir se servir du relais.
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H "Origin: https://ailleurs.example" "$URL/ice")
+          test "$CODE" = 403 && echo "Autre site : refusé (403)." 
           echo "### Serveur en ligne : $URL" >> "$GITHUB_STEP_SUMMARY"

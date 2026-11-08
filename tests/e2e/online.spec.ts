@@ -2,7 +2,8 @@ import { expect, test, type Browser, type BrowserContext, type Page } from '@pla
 import { collectErrors, expectNoErrors, SHOTS, tapNamed, waitScene } from './helpers';
 
 // Deux navigateurs, chacun son téléphone, reliés par un serveur de mise en relation local.
-const PEER = 'peer=127.0.0.1:9000';
+// Sans le vrai serveur du jeu (`server=` vide) : les tests ne dépendent pas d'Internet.
+const PEER = 'peer=127.0.0.1:9000&server=';
 
 interface NetInfo {
   me: number;
