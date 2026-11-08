@@ -501,5 +501,15 @@
       })();
     </script>
     <script type="module" src="/src/main.ts"></script>
+    <!-- Cloudflare Web Analytics (mesure d'audience, sans cookie). Seulement sur le jeu publié : ni essais en local, ni tests automatiques. -->
+    <script>
+      if (/^(www\.)?france-bagarre\.fr$/.test(location.hostname) && !navigator.webdriver) {
+        var cfwa = document.createElement('script');
+        cfwa.type = 'module';
+        cfwa.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+        cfwa.setAttribute('data-cf-beacon', '{"token": "6ba60d0c0dfa461992c39fb36bd901f7"}');
+        document.body.appendChild(cfwa);
+      }
+    </script>
   </body>
 </html>
