@@ -2,7 +2,7 @@
 // téléphones sont reliés. L'hôte fait foi pour le lieu, le départ du match et le retard d'entrée.
 import { PLAYABLE_IDS, type FighterId } from '../config/roster';
 import { STAGE_IDS, type StageId } from '../config/stages';
-import { PeerLink, type LinkStatus } from './peer';
+import { PeerLink, type LinkStatus, type Route } from './peer';
 import { delayForPing } from './rollback';
 import { RULES_VERSION, cleanPseudo, indexOf, type CtlMsg, type GameMsg, type MatchStart, type Role } from './room';
 
@@ -37,6 +37,8 @@ export class FriendRoom {
   stage: StageId;
   /** Aller-retour médian mesuré (ms), null tant qu'on n'a pas de mesure. */
   ping: number | null = null;
+  /** Chemin de la connexion (directe ou par le relais), relevé toutes les 3 s. */
+  route: Route | null = null;
   /** Le match en cours ou le dernier joué. */
   match: MatchStart | null = null;
   /** Revanche demandée, par moi et par l'autre. */
@@ -266,6 +268,14 @@ export class FriendRoom {
 
   private sendPing() {
     if (!this.link.connected) return;
+    if (this.pingId % 6 === 0) {
+      void this.link.route?.().then((r) => {
+        if (r && r !== this.route) {
+          this.route = r;
+          this.emit((l) => l.ping?.());
+        }
+      });
+    }
     this.pingId += 1;
     this.pings.set(this.pingId, performance.now());
     if (this.pings.size > 20) this.pings.delete(Math.min(...this.pings.keys()));

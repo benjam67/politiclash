@@ -715,3 +715,23 @@ Sur iPhone, l'écran « tourne ton téléphone » pouvait rester affiché une fo
 
 - La détection portrait/paysage passe de la seule règle CSS à un petit script dans `index.html` : il compare la largeur et la hauteur visibles et revérifie 100, 300 et 700 ms après chaque rotation (Safari donne parfois ses mesures en retard). La règle CSS reste en secours sans script.
 - Nouvelle ligne sur l'écran : « Rien ne bouge ? … coupe le verrou de rotation (le cadenas) ». Avec le verrou actif, l'iPhone ne prévient jamais la page de la rotation.
+
+## 8 novembre 2026 · Phase 7c (début) : serveur et relais sur Cloudflare
+
+**Choix du propriétaire** : Cloudflare (Workers pour le serveur, relais TURN de Cloudflare), sur son compte existant. Comparé à un VPS Oracle gratuit : rien à entretenir, HTTPS fourni, pas de risque que la machine soit reprise pour inactivité. Offres vérifiées le 8 novembre : relais à 1 000 Go gratuits puis 0,05 $ le Go (un match par le relais ≈ 1 à 2 Mo) ; Durable Objects gratuits jusqu'à 100 000 requêtes par jour (pour la file d'attente de la phase 7d).
+
+**Serveur** (`server/`, Cloudflare Worker `france-bagarre`)
+- `GET /health` : état du serveur, et si le relais est configuré.
+- `POST /ice` : demande à Cloudflare des accès au relais valables 4 h et les rend au jeu. La clé du relais reste sur le serveur (secrets `TURN_KEY_ID`, `TURN_KEY_API_TOKEN`). Réservé aux pages du jeu (`https://benjam67.github.io` et les essais en local), refusé aux autres sites. Les adresses sur le port 53, bloqué par les navigateurs, sont retirées.
+- **Déploiement automatique** (`.github/workflows/server.yml`) à chaque changement du dossier `server/`, ou à la main depuis l'onglet Actions : tests du serveur, déploiement, puis vérification que `/health` répond et que `/ice` fournit bien un relais. Tant que les secrets Cloudflare manquent dans GitHub, le déploiement est sauté sans erreur.
+
+**Jeu**
+- Avant d'ouvrir un salon ou de le rejoindre, le jeu demande les accès au relais au serveur (`net/ice.ts`, gardés jusqu'à 30 min avant leur fin). Entre amis : connexion directe si possible, relais sinon. Serveur absent, en panne ou trop lent (4 s) : on continue sans relais, comme avant.
+- Le salon affiche le chemin de la connexion à côté du ping : « Connexion : 45 ms · directe » ou « · par le relais ».
+- Essais : `?relay=1` force le passage par le relais (pour vérifier qu'il marche, même en Wi-Fi) ; `?server=adresse` remplace l'adresse du serveur.
+- L'adresse du serveur (`src/config/server.ts`) est vide tant qu'il n'est pas déployé : le jeu se comporte alors exactement comme avant.
+
+**Vérifications**
+- 251 tests unitaires (9 de plus : le serveur avec Cloudflare simulé, dont la clé qui ne ressort jamais, les autres sites refusés, Cloudflare en panne ; côté jeu, accès gardés puis redemandés avant expiration, et jeu qui continue sans serveur).
+- Nouveau test à deux navigateurs avec un faux serveur local : chaque téléphone demande ses accès une fois, la connexion se fait, le salon affiche « directe ». Les autres tests en ligne passent.
+- Reste à faire par le propriétaire : créer la clé du relais et le jeton de déploiement, et les mettre dans les secrets GitHub. Puis vérifier le relais depuis un téléphone en 4G.

@@ -251,6 +251,21 @@ test.describe('phase 7b : Entre amis', () => {
     await expectNoErrors(errors);
   });
 
+  test('serveur du jeu : accès demandés avant la connexion, chemin affiché dans le salon', async ({ browser, request }) => {
+    const before = ((await (await request.get('http://127.0.0.1:9001/calls')).json()) as { calls: number }).calls;
+    const { host, guest, errors } = await connect(browser, 'server=http://127.0.0.1:9001');
+    const after = ((await (await request.get('http://127.0.0.1:9001/calls')).json()) as { calls: number }).calls;
+    // Une demande par téléphone.
+    expect(after - before).toBe(2);
+    // En local, la connexion est directe ; le salon l'affiche à côté du ping.
+    await host.waitForFunction(() => (window.__slap!.state as { route?: string }).route === 'direct', null, { timeout: 20_000 });
+    await guest.waitForFunction(() => (window.__slap!.state as { route?: string }).route === 'direct', null, { timeout: 20_000 });
+    const ping = await host.evaluate(() => (window.__slap!.game!.scene.getScene('Room').children.list.find((o) => o.name === 'room-ping') as unknown as { text: string }).text);
+    expect(ping).toMatch(/Connexion : \d+ ms · directe/);
+    await host.screenshot({ path: `${SHOTS}/7c-salon-chemin.png` });
+    await expectNoErrors(errors);
+  });
+
   test('erreurs : code trop court, salon introuvable', async ({ browser }) => {
     const page = await phone(browser);
     const errors = collectErrors(page);

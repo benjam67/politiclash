@@ -1,8 +1,11 @@
 // Liaison entre les deux téléphones (PeerJS / WebRTC). L'hôte s'enregistre sous l'identifiant du salon,
 // l'invité s'y connecte avec le code. Deux canaux : `ctl` (fiable et ordonné : le salon) et `game` (non
 // ordonné : les entrées du match ; un paquet perdu ne retient pas les suivants, la session sait les remettre
-// dans l'ordre). Seule la mise en relation passe par un serveur (celui, public, de PeerJS).
+// dans l'ordre). La mise en relation passe par le service public de PeerJS. Quand la connexion directe est
+// impossible (certains réseaux mobiles), WebRTC passe par le relais de Cloudflare, dont le serveur du jeu
+// fournit les accès (`ice.ts`).
 import type { DataConnection, Peer, PeerOptions } from 'peerjs';
+import { getIceServers } from './ice';
 import { peerIdFor, type CtlMsg, type GameMsg, type Role } from './room';
 
 export type LinkStatus = 'connecting' | 'waiting' | 'connected' | 'reconnecting' | 'closed';
@@ -20,7 +23,15 @@ export interface LinkOptions {
   peer: PeerOptions;
   /** Latence ajoutée à chaque message reçu (ms) : essais avec un réseau lent (`?lag=100`). */
   lag: number;
+  /**
+   * `auto` : connexion directe si possible, relais sinon (Entre amis). `only` : toujours par le relais
+   * (Partie rapide : l'adresse IP de l'un n'est jamais transmise à l'autre ; essais : `?relay=1`).
+   */
+  relay: 'auto' | 'only';
 }
+
+/** Chemin pris par la connexion : directe, ou par le relais. */
+export type Route = 'direct' | 'relay';
 
 /** Réglages lus dans l'adresse : serveur de mise en relation local (`?peer=hôte:port`, tests) et latence simulée. */
 export function linkOptionsFromUrl(search: string): LinkOptions {
@@ -31,7 +42,7 @@ export function linkOptionsFromUrl(search: string): LinkOptions {
     const [host, port] = p.split(':');
     peer = { host, port: Number(port) || 9000, path: '/politiclash', secure: false };
   }
-  return { peer, lag: Math.max(0, Math.min(1000, Number(q.get('lag')) || 0)) };
+  return { peer, lag: Math.max(0, Math.min(1000, Number(q.get('lag')) || 0)), relay: q.get('relay') === '1' ? 'only' : 'auto' };
 }
 
 export class PeerLink {
@@ -62,6 +73,8 @@ export class PeerLink {
   private timers: number[] = [];
   private everConnected = false;
   private destroyed = false;
+  /** Le serveur a fourni un relais. */
+  relayAvailable = false;
 
   private constructor(
     readonly role: Role,
@@ -75,7 +88,11 @@ export class PeerLink {
    */
   static async open(role: Role, code: string, opts: LinkOptions): Promise<PeerLink> {
     const s = new PeerLink(role, code, opts);
-    const { Peer } = await import('peerjs');
+    // Accès au relais : demandés en même temps que PeerJS se charge. Sans serveur, on part sans relais.
+    const [{ Peer }, ice] = await Promise.all([import('peerjs'), getIceServers()]);
+    const peerOpts: PeerOptions = { ...opts.peer };
+    if (ice) peerOpts.config = { iceServers: ice, iceTransportPolicy: opts.relay === 'only' ? 'relay' : 'all' };
+    s.relayAvailable = !!ice;
     await new Promise<void>((resolve, reject) => {
       let settled = false;
       const ok = () => {
@@ -89,7 +106,7 @@ export class PeerLink {
         s.destroy();
         reject(new Error(e));
       };
-      const peer = role === 'host' ? new Peer(peerIdFor(code), opts.peer) : new Peer(opts.peer);
+      const peer = role === 'host' ? new Peer(peerIdFor(code), peerOpts) : new Peer(peerOpts);
       s.peer = peer;
       peer.on('open', () => {
         if (role === 'host') {
@@ -131,6 +148,29 @@ export class PeerLink {
 
   get connected() {
     return !!this.ctl?.open && !!this.game?.open;
+  }
+
+  /** Chemin pris par le canal du match (statistiques WebRTC), null si inconnu. */
+  async route(): Promise<Route | null> {
+    const pc = (this.game as unknown as { peerConnection?: RTCPeerConnection } | null)?.peerConnection;
+    if (!pc) return null;
+    try {
+      const stats = await pc.getStats();
+      let pairId: string | undefined;
+      stats.forEach((r) => {
+        if (r.type === 'transport' && r.selectedCandidatePairId) pairId = r.selectedCandidatePairId;
+      });
+      let pair: { localCandidateId?: string; remoteCandidateId?: string } | undefined;
+      stats.forEach((r) => {
+        if (r.type !== 'candidate-pair') return;
+        if (pairId ? r.id === pairId : r.state === 'succeeded' && r.nominated) pair = r;
+      });
+      if (!pair) return null;
+      const types = [pair.localCandidateId, pair.remoteCandidateId].map((id) => (id ? stats.get(id)?.candidateType : undefined));
+      return types.includes('relay') ? 'relay' : 'direct';
+    } catch {
+      return null;
+    }
   }
 
   /** Message du salon. Rend faux si la liaison est coupée (perdu). */

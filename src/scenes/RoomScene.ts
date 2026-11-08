@@ -76,7 +76,7 @@ export class RoomScene extends Phaser.Scene {
   private publish() {
     const r = this.room;
     if (window.__slap)
-      window.__slap.state = { mode: 'room', code: r.code, role: r.role, me: { ...r.me }, them: r.them ? { ...r.them } : null, stage: r.stage, ping: r.ping, connected: r.link.connected };
+      window.__slap.state = { mode: 'room', code: r.code, role: r.role, me: { ...r.me }, them: r.them ? { ...r.them } : null, stage: r.stage, ping: r.ping, route: r.route, connected: r.link.connected };
   }
 
   private build() {
@@ -188,7 +188,8 @@ export class RoomScene extends Phaser.Scene {
   private showPing() {
     const r = this.room;
     if (!this.pingText || !this.weakText || !this.pingText.active) return;
-    this.pingText.setText(r.ping === null ? '' : ONLINE.ping(r.ping)).setColor(r.weak ? CSS.pink : CSS.cream);
+    const route = r.route ? ` · ${ONLINE.route[r.route]}` : '';
+    this.pingText.setText(r.ping === null ? '' : ONLINE.ping(r.ping) + route).setColor(r.weak ? CSS.pink : CSS.cream);
     this.weakText.setVisible(r.weak);
     this.publish();
   }

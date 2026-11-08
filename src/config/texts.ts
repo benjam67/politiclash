@@ -272,6 +272,8 @@ export const ONLINE = {
   pressReady: 'Appuie sur PRÊT quand tu veux.',
   waitReady: (who: string) => `On attend ${who}…`,
   ping: (ms: number) => `Connexion : ${ms} ms`,
+  /** Chemin de la connexion, à côté du ping. */
+  route: { direct: 'directe', relay: 'par le relais' } as Record<string, string>,
   weak: 'Connexion faible : le jeu pourra ralentir.',
   // Combat
   vs: (who: string) => `EN LIGNE · CONTRE ${who.toUpperCase()}`,

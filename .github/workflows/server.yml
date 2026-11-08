@@ -1,0 +1,60 @@
+name: Serveur (Cloudflare Worker)
+
+# Déploie le serveur du jeu (dossier server/) sur Cloudflare quand il change, puis vérifie qu'il répond.
+# Il faut ces secrets du dépôt (Settings → Secrets and variables → Actions) :
+#   CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN (modèle « Edit Cloudflare Workers »),
+#   TURN_KEY_ID, TURN_KEY_API_TOKEN (Realtime → TURN Server dans le tableau de bord Cloudflare).
+# Tant qu'ils manquent, le déploiement est sauté sans erreur.
+on:
+  push:
+    branches: [main]
+    paths: ['server/**', '.github/workflows/server.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: server
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      HAS_SECRETS: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Tests du serveur
+        run: npx vitest run tests/unit/server.test.ts
+      - name: Secrets absents
+        if: env.HAS_SECRETS != 'true'
+        run: echo "::warning::Secrets Cloudflare absents dans GitHub, déploiement sauté."
+      - name: Déployer
+        id: deploy
+        if: env.HAS_SECRETS == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: server
+          wranglerVersion: '4'
+          secrets: |
+            TURN_KEY_ID
+            TURN_KEY_API_TOKEN
+        env:
+          TURN_KEY_ID: ${{ secrets.TURN_KEY_ID }}
+          TURN_KEY_API_TOKEN: ${{ secrets.TURN_KEY_API_TOKEN }}
+      - name: Vérifier que le serveur répond et fournit le relais
+        if: env.HAS_SECRETS == 'true'
+        run: |
+          URL="${{ steps.deploy.outputs.deployment-url }}"
+          echo "Adresse du serveur : $URL"
+          sleep 5
+          curl -fsS "$URL/health" | tee health.json
+          grep -q '"turn":true' health.json
+          curl -fsS -X POST -H "Origin: https://benjam67.github.io" "$URL/ice" -o ice.json
+          grep -q 'turn:' ice.json && echo "Relais : accès fournis."
+          echo "### Serveur en ligne : $URL" >> "$GITHUB_STEP_SUMMARY"
