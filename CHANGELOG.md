@@ -842,3 +842,14 @@ Choix du propriétaire : le jeu quitte GitHub Pages pour Cloudflare (déjà hôt
 **Icône d'onglet et aperçu des liens — 8 novembre 2026**
 - `favicon.ico` (16, 32, 48 px) et `icons/favicon-32.png`, cadrés sur la tête et le gant du boxeur (le bandeau entier devenait illisible à cette taille). Produits par `npm run icons`.
 - Aperçu des liens partagés (WhatsApp, Messages, réseaux) : balises Open Graph dans `index.html` et image `public/share.jpg` (1200 × 630 : hémicycle, les six candidats en garde, logo et nom du jeu), produite par `npm run share`. Le déploiement vérifie que l'image et l'icône sont servies.
+
+## 8 novembre 2026 · Statistiques de jeu anonymes et page privée
+
+À la demande du propriétaire : savoir quels persos sont les plus joués, avec des statistiques générales, dont le **coup de prédilection** de chaque candidat (le coup qui a fait le plus de dégâts en cumulé).
+
+- **Simulation** : `FightState.dealt` compte les dégâts infligés par chaque combattant, par coup (gifle rapide, aérienne, coup de pied, balayette, grosse gifle, spécial), coups bloqués compris. Calculé d'après les événements du pas, sur une copie neuve (le retour en arrière en ligne reste exact). Ne décide de rien dans le combat.
+- **Fiches** (`src/net/stats.ts`) : à la fin de chaque match, une fiche anonyme part au serveur (mode, persos, côtés joués par une personne, gagnant, lieu, niveau de l'IA, durée, rounds, dégâts par coup, abandon) ; pour la campagne : début, victoire finale (avec les recomptages), abandon. Seulement depuis france-bagarre.fr, jamais pendant les tests automatiques, le tutoriel, les démos ou contre un adversaire d'essai. En ligne, un seul téléphone envoie (celui de gauche, ou celui qui reste après un abandon).
+- **Serveur** : nouveau Durable Object `StatsDO` (migration v3), qui ne garde que des totaux par jour. Fiches vérifiées champ par champ, seulement depuis les pages du jeu, 20 par minute et par appareil au plus (empreinte de l'adresse IP gardée une minute en mémoire, jamais enregistrée). Lecture : `GET /stats/data?key=…&days=N`, avec la clé `STATS_KEY` (secret Cloudflare, posé par le déploiement depuis le secret GitHub du même nom).
+- **Page privée** `france-bagarre.fr/stats.html` (non référencée) : matchs, durée moyenne, campagnes ; par candidat : choisi, victoires, coup de prédilection, dégâts ; part de chaque coup ; modes ; campagne (le rival le plus dur à battre) ; lieux ; niveaux de l'IA ; matchs par jour. Périodes : aujourd'hui, 7 jours, 30 jours, 1 an, depuis le début.
+- Tests : fiches et compteurs (serveur), mêmes listes que le jeu, calculs de la page, dégâts par coup dans la simulation ; test navigateur de bout en bout avec le vrai serveur local (fiches acceptées et refusées, clé, page).
+- À mentionner dans la page d'information sur la vie privée (phase 7f).

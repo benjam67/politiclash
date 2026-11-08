@@ -1,3 +1,4 @@
+import { sendCampaignStats } from '../net/stats';
 import Phaser from 'phaser';
 import { menuBackdrop } from '../ui/backdrop';
 import { levelLabel } from '../ai/ai';
@@ -177,6 +178,8 @@ export class CampaignScene extends Phaser.Scene {
       this.build();
       return;
     }
+    const quit = loadSave().campaign;
+    if (quit) sendCampaignStats('quit', quit.fighter);
     updateSave((sv) => ({ ...sv, campaign: null }));
     this.scene.start('Title');
   }

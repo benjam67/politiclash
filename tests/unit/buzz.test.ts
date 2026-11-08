@@ -264,6 +264,8 @@ describe('cinématique du coup spécial', () => {
       expect(types, id).toContain('specialHit');
       expect(types.indexOf('signal')).toBeLessThan(types.indexOf('specialHit'));
       if (specialOf(id).range === 'far') expect(types, id).toContain('launch');
+      // Statistiques : les dégâts du spécial vont dans la dernière colonne du lanceur.
+      expect(r.s.dealt[0][5], id).toBe(SPECIAL.damage * HP);
     }
   });
 

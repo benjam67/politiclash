@@ -46,6 +46,7 @@ import { TouchControls } from '../ui/TouchControls';
 import type { ResultData } from './ResultScene';
 import { queueFighterImages } from './BootScene';
 import { showLoadingBar } from '../ui/loading';
+import { sendMatchStats } from '../net/stats';
 import { createTuto, TUTO_STEPS, tutoAfterStep, tutoDone, tutoPartner, tutoProgress, tutoStep, type Tuto } from '../logic/tutorial';
 import { loadSave, updateSave } from '../logic/save';
 import { campaignFoe } from '../logic/campaign';
@@ -732,6 +733,10 @@ export class FightScene extends Phaser.Scene {
         break;
       }
       case 'matchEnd': {
+        // Statistiques anonymes : seulement un vrai match contre l'IA (ni démo, ni tutoriel, ni adversaire d'essai).
+        if (!this.online && !this.autoplay && !this.tuto && this.p2Kind === 'ai') {
+          sendMatchStats(this.state, { mode: this.campaign ? 'campagne' : this.quickWait ? 'ia' : 'libre', human: [true, false], level: this.level, forfeit: false });
+        }
         const data: ResultData = { ids: this.ids, stage: this.stageId, winner: e.winner, wins: [s.wins[0], s.wins[1]], p2: this.p2Kind, level: this.level, autoplay: this.autoplay, campaign: !!this.campaign, quickWait: this.quickWait };
         this.scene.start('Result', data);
         break;
@@ -1003,6 +1008,8 @@ export class FightScene extends Phaser.Scene {
       online: { me: this.me, hash: 0, steps: this.net!.frame, stats: { ...this.net!.stats }, forfeit: true },
     };
     if (this.room?.matchId && this.online) void reportResult(this.room.matchId, this.online.n, true);
+    // Statistiques : l'autre est parti, c'est donc ce téléphone qui envoie la fiche.
+    sendMatchStats({ ...s, winner: this.me }, { mode: this.room?.quick ? 'primaire' : 'amis', human: [true, true], level: null, forfeit: true });
     this.scene.start('Result', data);
   }
 
@@ -1026,6 +1033,8 @@ export class FightScene extends Phaser.Scene {
     };
     // Primaire ouverte : résultat déclaré au classement (compté si l'adversaire déclare l'inverse).
     if (this.room?.quick && this.room.matchId && this.online) void reportResult(this.room.matchId, this.online.n, s.winner === this.me);
+    // Statistiques : les deux téléphones ont le même match ; seul celui de gauche envoie la fiche.
+    if (this.me === 0) sendMatchStats(s, { mode: this.room?.quick ? 'primaire' : 'amis', human: [true, true], level: null, forfeit: false });
     // Laisse voir le K.O. un instant, comme hors ligne.
     this.time.delayedCall(300, () => this.scene.start('Result', data));
   }

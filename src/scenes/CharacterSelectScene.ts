@@ -1,3 +1,4 @@
+import { sendCampaignStats } from '../net/stats';
 import Phaser from 'phaser';
 import { menuBackdrop } from '../ui/backdrop';
 import { AI_LEVELS, levelLabel, type AiLevel } from '../ai/ai';
@@ -235,6 +236,7 @@ export class CharacterSelectScene extends Phaser.Scene {
   /** Nouvelle campagne : adversaires mélangés, sauvegardée tout de suite (on peut fermer le jeu et reprendre). */
   private startCampaign(fighter: FighterId) {
     updateSave((sv) => ({ ...sv, lastFighter: fighter, campaign: startCampaign(fighter) }));
+    sendCampaignStats('start', fighter);
     this.scene.start('Campaign');
   }
 

@@ -4,6 +4,7 @@ name: Serveur (Cloudflare Worker)
 # Il faut ces secrets du dépôt (Settings → Secrets and variables → Actions) :
 #   CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN (modèle « Edit Cloudflare Workers »),
 #   TURN_KEY_ID, TURN_KEY_API_TOKEN (Realtime → TURN Server dans le tableau de bord Cloudflare).
+#   STATS_KEY (facultatif) : clé de la page privée des statistiques (france-bagarre.fr/stats.html).
 # Tant qu'ils manquent, le déploiement est sauté sans erreur.
 on:
   push:
@@ -20,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       HAS_SECRETS: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+      HAS_STATS_KEY: ${{ secrets.STATS_KEY != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -28,7 +30,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Tests du serveur
-        run: npx vitest run tests/unit/server.test.ts tests/unit/queue.test.ts
+        run: npx vitest run tests/unit/server.test.ts tests/unit/queue.test.ts tests/unit/stats.test.ts
       - name: Secrets absents
         if: env.HAS_SECRETS != 'true'
         run: echo "::warning::Secrets Cloudflare absents dans GitHub, déploiement sauté."
@@ -47,6 +49,14 @@ jobs:
         env:
           TURN_KEY_ID: ${{ secrets.TURN_KEY_ID }}
           TURN_KEY_API_TOKEN: ${{ secrets.TURN_KEY_API_TOKEN }}
+      - name: Clé de la page des statistiques
+        if: env.HAS_SECRETS == 'true' && env.HAS_STATS_KEY == 'true'
+        working-directory: server
+        run: echo "$STATS_KEY" | npx wrangler secret put STATS_KEY
+        env:
+          STATS_KEY: ${{ secrets.STATS_KEY }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       - name: Vérifier que le serveur répond et fournit le relais
         if: env.HAS_SECRETS == 'true'
         run: |
@@ -67,4 +77,14 @@ jobs:
           test "$CODE" = 403 && echo "Autre site : refusé (403)." 
           node scripts/check-queue.mjs "$URL"
           curl -fsS "$URL/rank/board?period=day" | grep -q '"period":"day"' && echo "Classement : en ligne."
+          # Statistiques : fiche d'un autre site refusée, lecture refusée sans la bonne clé, acceptée avec.
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H "Origin: https://ailleurs.example" -H "content-type: application/json" -d '{}' "$URL/stats/match")
+          test "$CODE" = 403 && echo "Statistiques : fiche d'un autre site refusée."
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' "$URL/stats/data?key=mauvaise")
+          test "$CODE" = 403 && echo "Statistiques : mauvaise clé refusée."
+          if [ -n "$STATS_KEY" ]; then
+            curl -fsS "$URL/stats/data?days=1&key=$STATS_KEY" | grep -q '"rows"' && echo "Statistiques : lecture avec la clé."
+          fi
           echo "### Serveur en ligne : $URL" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          STATS_KEY: ${{ secrets.STATS_KEY }}

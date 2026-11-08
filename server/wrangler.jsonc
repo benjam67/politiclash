@@ -8,16 +8,18 @@
   "workers_dev": true,
   "observability": { "enabled": true },
   // File d'attente de la Partie rapide : un Durable Object (stockage SQLite, seul disponible en offre gratuite).
-  // Classement : un second Durable Object, avec sa base SQLite.
+  // Classement : un second Durable Object, avec sa base SQLite. Statistiques de jeu : un troisième (totaux par jour).
   "durable_objects": {
     "bindings": [
       { "name": "QUEUE", "class_name": "QueueDO" },
-      { "name": "RANK", "class_name": "RankDO" }
+      { "name": "RANK", "class_name": "RankDO" },
+      { "name": "STATS", "class_name": "StatsDO" }
     ]
   },
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["QueueDO"] },
-    { "tag": "v2", "new_sqlite_classes": ["RankDO"] }
+    { "tag": "v2", "new_sqlite_classes": ["RankDO"] },
+    { "tag": "v3", "new_sqlite_classes": ["StatsDO"] }
   ],
   "vars": {
     // Pages autorisées à demander des accès au relais (le jeu publié sur son domaine et sur workers.dev, l'ancienne adresse GitHub Pages, et les essais en local).

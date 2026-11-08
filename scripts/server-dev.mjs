@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 
 const ice = [{ urls: ['turn:127.0.0.1:3478?transport=udp'], username: 'essai', credential: 'motdepasse' }];
-writeFileSync(new URL('../server/.dev.vars', import.meta.url), `TEST_ICE='${JSON.stringify(ice)}'\n`);
+writeFileSync(new URL('../server/.dev.vars', import.meta.url), `TEST_ICE='${JSON.stringify(ice)}'\nSTATS_KEY='essai-stats'\n`);
 const p = spawn('npx', ['wrangler', 'dev', '--port', '8787', '--ip', '127.0.0.1', '--show-interactive-dev-session=false', '--log-level', 'warn'], {
   cwd: new URL('../server/', import.meta.url),
   stdio: 'inherit',

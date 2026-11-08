@@ -152,9 +152,18 @@ export interface FightState {
   /** Cinématique d'un coup spécial en cours : le chrono et les combattants sont arrêtés. */
   cine: Cine | null;
   f: [FighterState, FighterState];
+  /**
+   * Dégâts infligés depuis le début du match, par combattant et par coup (ordre de `DEALT_MOVES`), en dixièmes de PV,
+   * coups bloqués compris. Sert aux statistiques (coup de prédilection) ; ne décide de rien dans le combat.
+   */
+  dealt: [number[], number[]];
   /** Ce qui s'est passé pendant ce pas (pour les effets et les sons). */
   ev: FightEvent[];
 }
+
+/** Coups comptés dans `dealt`, dans cet ordre. */
+export const DEALT_MOVES = ['quick', 'air', 'kick', 'sweep', 'big', 'special'] as const;
+export type DealtMove = (typeof DEALT_MOVES)[number];
 
 interface Physics {
   walk: number;
@@ -266,6 +275,7 @@ export function createFight(left: FighterId, right: FighterId, stage: StageId = 
     hitstop: 0,
     cine: null,
     f: startPositions(left, right, stage),
+    dealt: [DEALT_MOVES.map(() => 0), DEALT_MOVES.map(() => 0)],
     ev: [{ t: 'round', n: 1 }],
   };
 }
@@ -832,6 +842,19 @@ function endRound(n: FightState, winner: 0 | 1 | 2) {
 
 /** Avance le combat d'un pas. Ne modifie pas l'état reçu. */
 export function step(s: FightState, in0: InputFrame, in1: InputFrame): FightState {
+  const n = stepFight(s, in0, in1);
+  // Dégâts infligés, d'après les événements du pas. Copie neuve : l'état précédent reste intact (retour en arrière).
+  for (const e of n.ev) {
+    if (e.t !== 'hit' && e.t !== 'specialHit') continue;
+    const i = e.t === 'specialHit' ? DEALT_MOVES.length - 1 : DEALT_MOVES.indexOf(e.move as DealtMove);
+    if (i < 0) continue;
+    if (n.dealt === s.dealt) n.dealt = [[...s.dealt[0]], [...s.dealt[1]]];
+    n.dealt[e.by][i] += e.dmg;
+  }
+  return n;
+}
+
+function stepFight(s: FightState, in0: InputFrame, in1: InputFrame): FightState {
   const n: FightState = { ...s, step: s.step + 1, wins: [s.wins[0], s.wins[1]], ev: [] };
 
   if (s.phase === 'matchEnd') return n;

@@ -8,6 +8,8 @@ export default defineConfig({
     target: 'es2020',
     chunkSizeWarningLimit: 1600,
     rollupOptions: {
+      // Deux pages : le jeu, et la page privée des statistiques (stats.html).
+      input: { main: 'index.html', stats: 'stats.html' },
       output: {
         // Phaser dans un fichier à part : mis en cache d'une version à l'autre.
         manualChunks: (id: string) => (id.includes('node_modules/phaser') ? 'phaser' : undefined),

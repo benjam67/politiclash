@@ -16,6 +16,9 @@ export interface Env {
   /** File d'attente (Durable Object). Type minimal, pour que ce fichier se compile aussi avec le jeu (tests). */
   QUEUE?: { idFromName(name: string): unknown; get(id: unknown): { fetch(r: Request): Promise<Response> } };
   RANK?: { idFromName(name: string): unknown; get(id: unknown): { fetch(r: Request): Promise<Response> } };
+  STATS?: { idFromName(name: string): unknown; get(id: unknown): { fetch(r: Request): Promise<Response> } };
+  /** Clé de la page privée des statistiques (secret Cloudflare). */
+  STATS_KEY?: string;
 }
 
 /** Durée de validité des accès au relais : largement de quoi finir une soirée de revanches. */

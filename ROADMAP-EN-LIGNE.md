@@ -106,7 +106,7 @@ Claude prépare une comparaison chiffrée à jour au début de cette phase. **Le
 - **Triche** : comme chacun ne transmet que ses entrées et que les deux simulations se surveillent, un tricheur ne peut pas s'inventer des PV ou une barre Buzz pleine sans provoquer une désynchronisation. En Partie rapide, une désynchronisation répétée met fin au match sans vainqueur.
 - **Versions différentes** : un joueur dont le jeu n'est pas à jour ne peut pas être apparié ; il voit « Mets le jeu à jour » (rechargement de la page). Indispensable, car un seul réglage différent dans `balance.ts` désynchronise tout.
 - **Limite d'usage** du serveur : pas plus de quelques demandes par minute et par appareil, pour éviter qu'un robot ne sature la file.
-- **Suivi minimal** : nombre de matchs joués, taux de désynchronisation et de coupures, temps d'attente moyen. Aucune donnée personnelle.
+- **Suivi minimal** : nombre de matchs joués, taux de désynchronisation et de coupures, temps d'attente moyen. Aucune donnée personnelle. *En partie fait le 8 novembre : statistiques de jeu anonymes (matchs par mode, persos, coups, campagne) et page privée `stats.html` ; restent les désynchronisations, les coupures et le temps d'attente.*
 - *Validé quand* : un faux client tricheur est détecté ; un client d'une ancienne version est refusé ; le suivi affiche des chiffres cohérents après 50 matchs de test.
 
 ### Phase 7f · Ouverture au public ⚠ choix du propriétaire

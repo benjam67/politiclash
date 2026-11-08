@@ -523,3 +523,22 @@ describe('garde haute et garde basse', () => {
     expect(actionOf(s.f[1])).toBe('guardLow');
   });
 });
+
+describe('dégâts infligés par coup (statistiques)', () => {
+  it('compte la gifle rapide qui touche, sans toucher à l’état précédent', () => {
+    const before = close();
+    const { s, ev } = run(before, 20, press('gifle'));
+    const dmg = hitsOf(ev).reduce((t, e) => t + e.dmg, 0);
+    expect(dmg).toBeGreaterThan(0);
+    expect(s.dealt[0]).toEqual([dmg, 0, 0, 0, 0, 0]);
+    expect(s.dealt[1]).toEqual([0, 0, 0, 0, 0, 0]);
+    expect(before.dealt[0]).toEqual([0, 0, 0, 0, 0, 0]);
+  });
+
+  it('compte les coups bloqués (dégâts réduits) dans leur colonne', () => {
+    const { s, ev } = run(close(), 20, press('gifle'), press('garde'));
+    const h = hitsOf(ev);
+    expect(h[0]?.blocked).toBe(true);
+    expect(s.dealt[0][0]).toBe(h[0]?.dmg);
+  });
+});

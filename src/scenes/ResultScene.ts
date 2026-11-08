@@ -1,3 +1,4 @@
+import { sendCampaignStats } from '../net/stats';
 import Phaser from 'phaser';
 import { spriteOf, type FighterId } from '../config/roster';
 import { STAGE_IDS, STAGES, type StageId } from '../config/stages';
@@ -10,7 +11,7 @@ import { safeInsets } from '../ui/safe';
 import { COLORS, CSS, FONT_TITLE, FLAG, FLAG_CSS, flagBand } from '../ui/theme';
 import type { FightData, FoeKind } from './FightScene';
 import type { AiLevel } from '../ai/ai';
-import { updateSave, withResult } from '../logic/save';
+import { loadSave, updateSave, withResult } from '../logic/save';
 import { CAMPAIGN_TEXTS, ONLINE } from '../config/texts';
 import { campaignDone, campaignFoe, campaignLoss, campaignWin, withVictory, type Campaign } from '../logic/campaign';
 import { currentRoom, type FriendRoom } from '../net/friends';
@@ -112,6 +113,8 @@ export class ResultScene extends Phaser.Scene {
       return { ...sv, campaign: null, palmares: withVictory(sv.palmares, next) };
     });
     if (done) {
+      const d: Campaign = done;
+      sendCampaignStats('done', d.fighter, d.retries);
       this.scene.start('President', { campaign: done });
       return true;
     }
@@ -238,6 +241,8 @@ export class ResultScene extends Phaser.Scene {
       this.build();
       return;
     }
+    const quit = loadSave().campaign;
+    if (quit) sendCampaignStats('quit', quit.fighter);
     updateSave((sv) => ({ ...sv, campaign: null }));
     this.scene.start('Title');
   }
