@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { STAGE_IDS } from '../../src/config/stages';
 import { FriendRoom } from '../../src/net/friends';
 import type { PeerLink } from '../../src/net/peer';
 import { CODE_ALPHABET, cleanPseudo, inviteLink, makeCode, normalizeCode, peerIdFor, RULES_VERSION, type CtlMsg, type MatchStart, type Role } from '../../src/net/room';
@@ -32,7 +33,7 @@ describe('code de salon, lien, pseudo', () => {
 });
 
 /** Deux salons reliés par une fausse liaison (messages remis tout de suite, dans l'ordre). */
-function pair() {
+function pair(quick = false) {
   const mk = (role: Role) => {
     const l = {
       role,
@@ -55,8 +56,8 @@ function pair() {
   const gl = mk('guest');
   hl.other = gl;
   gl.other = hl;
-  const host = new FriendRoom(hl as unknown as PeerLink, 'Hôte', 'doyen', 'elysee');
-  const guest = new FriendRoom(gl as unknown as PeerLink, 'Invité', 'cadet', null);
+  const host = new FriendRoom(hl as unknown as PeerLink, 'Hôte', 'doyen', 'elysee', quick ? { quick: true, foePseudo: 'Électeur indécis' } : {});
+  const guest = new FriendRoom(gl as unknown as PeerLink, quick ? 'Électeur indécis' : 'Invité', 'cadet', null, quick ? { quick: true, foePseudo: 'Député du 7e rang' } : {});
   // L'invité se présente (à l'ouverture de la liaison, c'est l'événement `connected` qui le fait).
   (guest as unknown as { hello(): void }).hello();
   return { host, guest, hl, gl };
@@ -156,5 +157,20 @@ describe('salon Entre amis', () => {
     expect(p2.guest.closed).toBe('version');
     p2.host.close('self');
     void gl;
+  });
+
+  it('Primaire ouverte : pseudos de la liste (le texte envoyé est ignoré), lieu tiré par la graine, le même des deux côtés', () => {
+    const { host, guest } = pair(true);
+    expect(guest.them?.pseudo).toBe('Député du 7e rang');
+    expect(host.them?.pseudo).toBe('Électeur indécis');
+    const starts: MatchStart[] = [];
+    guest.listen({ start: (st) => starts.push(st) });
+    host.setReady(true);
+    guest.setReady(true);
+    expect(starts).toHaveLength(1);
+    expect(starts[0].stage).toBe(STAGE_IDS[starts[0].seed % STAGE_IDS.length]);
+    expect(guest.stage).toBe(starts[0].stage);
+    host.close('self');
+    guest.close('self');
   });
 });

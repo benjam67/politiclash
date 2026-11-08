@@ -17,7 +17,8 @@ const swallow = (e: Event) => e.stopPropagation();
 /** Pseudo par défaut, s'il n'en a jamais choisi : « Joueur » suivi de deux chiffres. */
 const defaultPseudo = () => `Joueur ${10 + Math.floor(Math.random() * 90)}`;
 
-export function openLobby(opts: { join?: string } = {}): Promise<FriendRoom | null> {
+/** Rend le salon Entre amis une fois relié, `'quick'` pour la Primaire ouverte, ou null (retour). */
+export function openLobby(opts: { join?: string } = {}): Promise<FriendRoom | 'quick' | null> {
   const root = document.getElementById('lobby') as HTMLElement;
   const q = <T extends HTMLElement>(sel: string) => root.querySelector(sel) as T;
   const codeIn = q<HTMLInputElement>('#lobby-code');
@@ -59,7 +60,7 @@ export function openLobby(opts: { join?: string } = {}): Promise<FriendRoom | nu
   };
 
   return new Promise((resolve) => {
-    const finish = (room: FriendRoom | null) => {
+    const finish = (room: FriendRoom | 'quick' | null) => {
       if (done) return;
       done = true;
       root.hidden = true;
@@ -68,7 +69,7 @@ export function openLobby(opts: { join?: string } = {}): Promise<FriendRoom | nu
       codeIn.removeEventListener('keydown', onKey);
       codeIn.removeEventListener('input', onInput);
       if (window.__slap) delete (window.__slap as Record<string, unknown>).lobby;
-      if (room) setCurrentRoom(room);
+      if (room && room !== 'quick') setCurrentRoom(room);
       resolve(room);
     };
     const makeRoom = (l: PeerLink, name: string) => {
@@ -137,7 +138,8 @@ export function openLobby(opts: { join?: string } = {}): Promise<FriendRoom | nu
     const onClick = (e: Event) => {
       const act = (e.target as HTMLElement).closest('[data-act]')?.getAttribute('data-act');
       if (!act) return;
-      if (act === 'create') void host();
+      if (act === 'quick') finish('quick');
+      else if (act === 'create') void host();
       else if (act === 'join') {
         pseudo();
         show('join', '');

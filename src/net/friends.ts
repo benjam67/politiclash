@@ -1,5 +1,7 @@
-// Mode Entre amis : l'état du salon, partagé par les écrans (salon, combat, résultat) tant que les deux
-// téléphones sont reliés. L'hôte fait foi pour le lieu, le départ du match et le retard d'entrée.
+// Salon en ligne : l'état partagé par les écrans (salon, combat, résultat) tant que les deux téléphones sont
+// reliés. L'hôte fait foi pour le lieu, le départ du match et le retard d'entrée.
+// Deux modes : Entre amis (pseudo libre, lieu choisi par l'hôte) et Primaire ouverte (`quick` : entre inconnus,
+// pseudos tirés dans la liste du jeu, lieu tiré au hasard par la graine du match).
 import { PLAYABLE_IDS, type FighterId } from '../config/roster';
 import { STAGE_IDS, type StageId } from '../config/stages';
 import { PeerLink, type LinkStatus, type Route } from './peer';
@@ -50,14 +52,22 @@ export class FriendRoom {
   private pingId = 0;
   private timer: ReturnType<typeof setInterval>;
   private matchNo = 0;
+  /** Primaire ouverte (entre inconnus). */
+  readonly quick: boolean;
+  /** Primaire ouverte : pseudo de l'adversaire, donné par le serveur (on ignore le texte qu'il envoie). */
+  private readonly foePseudo: string | null;
 
   constructor(
     readonly link: PeerLink,
     pseudo: string,
     fighter: FighterId | null,
     stage: StageId | null,
+    opts: { quick?: boolean; foePseudo?: string } = {},
   ) {
-    this.me = { pseudo: cleanPseudo(pseudo) || 'Joueur', fighter, ready: false };
+    this.quick = !!opts.quick;
+    this.foePseudo = opts.foePseudo ?? null;
+    // Primaire ouverte : pseudo tiré dans la liste du jeu, gardé tel quel (la limite de 14 caractères vaut pour les pseudos libres).
+    this.me = { pseudo: this.quick ? pseudo : cleanPseudo(pseudo) || 'Joueur', fighter, ready: false };
     this.stage = stage ?? STAGE_IDS[0];
     link.onCtl = (m) => this.onCtl(m);
     link.onGame = (m) => this.emit((l) => l.game?.(m));
@@ -168,7 +178,7 @@ export class FriendRoom {
           this.close('version');
           return;
         }
-        this.them = { pseudo: cleanPseudo(m.pseudo) || 'Joueur', fighter: this.them?.fighter ?? null, ready: this.them?.ready ?? false };
+        this.them = { pseudo: this.foePseudo ?? (cleanPseudo(m.pseudo) || 'Joueur'), fighter: this.them?.fighter ?? null, ready: this.them?.ready ?? false };
         // On répond par notre propre présentation : chacun a ainsi l'état de l'autre, quel que soit l'ordre d'arrivée.
         if (!m.re) this.hello(true);
         break;
@@ -240,9 +250,12 @@ export class FriendRoom {
     const rematch = this.match && this.again.me && this.again.them;
     if (!fromRoom && !rematch) return;
     this.matchNo += 1;
+    const seed = Math.floor(Math.random() * 2 ** 31);
+    // Primaire ouverte : lieu tiré au hasard par la graine du match, la même pour les deux téléphones.
+    if (this.quick) this.stage = STAGE_IDS[seed % STAGE_IDS.length];
     const start: MatchStart = {
       n: this.matchNo,
-      seed: Math.floor(Math.random() * 2 ** 31),
+      seed,
       stage: this.stage,
       fighters: [this.me.fighter as FighterId, this.them.fighter as FighterId],
       delay: delayForPing(this.ping ?? 0),
@@ -253,6 +266,7 @@ export class FriendRoom {
 
   private begin(start: MatchStart) {
     this.match = start;
+    this.stage = start.stage;
     this.matchNo = start.n;
     this.me.ready = false;
     if (this.them) this.them.ready = false;

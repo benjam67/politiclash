@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { serverUrl } from '../../src/config/server';
 import { getIceServers, hasRelay, resetIceCache } from '../../src/net/ice';
 import { linkOptionsFromUrl } from '../../src/net/peer';
-import { handle, ICE_TTL_S, withoutPort53, type Env } from '../../server/src/index';
+import { handle, ICE_TTL_S, withoutPort53, type Env } from '../../server/src/http';
 
 const ENV: Env = { ALLOWED_ORIGINS: 'https://benjam67.github.io,http://localhost:4173', TURN_KEY_ID: 'kid', TURN_KEY_API_TOKEN: 'secret' };
 const GAME = 'https://benjam67.github.io';

@@ -241,6 +241,8 @@ export const ONLINE = {
   friendsHelp: 'Chacun sur son téléphone, avec un code de salon.',
   quick: 'PRIMAIRE OUVERTE',
   quickSoon: 'Bientôt : contre n’importe qui.',
+  quickHelp: 'Contre n’importe qui, tout de suite.',
+  quickGo: 'TROUVER UN ADVERSAIRE',
   pseudoLabel: 'Ton pseudo',
   create: 'CRÉER UN SALON',
   join: 'REJOINDRE',
@@ -297,3 +299,63 @@ export const ONLINE = {
 
 /** Réactions toutes prêtes (pas de chat libre), choisies par le propriétaire. Au-delà de 8, le menu passe sur deux lignes. */
 export const REACTIONS = ['Votez pour moi !', 'Pas de commentaire', 'Bien joué', 'Même pas mal', 'Recomptage !', 'Fake news !', '49.3 !', 'Eh gros sayez !', 'T’as trop la raaage', 'Bismillah c’est les ténèbres', 'Ici sa bz'];
+
+/**
+ * Primaire ouverte (Partie rapide, entre inconnus) : pseudos tirés au hasard, pour éviter les pseudos insultants
+ * sans avoir à les filtrer. PROVISOIRES, à remplacer par le propriétaire. Ne changer que le texte : chacun est
+ * désigné par sa place dans la liste (les deux téléphones doivent avoir la même liste).
+ */
+export const QUICK_PSEUDOS = [
+  'Député du 7e rang',
+  'Stagiaire de cabinet',
+  'Conseiller municipal',
+  'Électeur indécis',
+  'Assesseur du bureau 12',
+  'Militant du dimanche',
+  'Colleur d’affiches',
+  'Sondeur anonyme',
+  'Suppléant pressé',
+  'Huissier de séance',
+  'Attaché parlementaire',
+  'Rapporteur adjoint',
+  'Maire d’un village',
+  'Porte-parole bis',
+  'Distributeur de tracts',
+  'Abstentionniste repenti',
+  'Candidat surprise',
+  'Délégué de classe',
+  'Questeur suppléant',
+  'Chargé de com’',
+];
+
+/** Primaire ouverte : textes des écrans. */
+export const QUICK = {
+  title: 'PRIMAIRE OUVERTE',
+  searching: 'Recherche d’un adversaire…',
+  online: (n: number) => (n <= 1 ? 'Toi seul en ligne pour l’instant' : `${n} joueurs en ligne`),
+  waited: (s: number) => `${s} s`,
+  cancel: 'ANNULER',
+  found: (foe: string) => `Adversaire trouvé : ${foe} !`,
+  linking: 'Connexion à l’adversaire…',
+  nobody: 'Personne en vue pour l’instant.',
+  playAi: 'JOUER CONTRE L’IA EN ATTENDANT',
+  /** Pendant un match contre l'IA. */
+  aiBanner: 'Contre l’IA en attendant un adversaire',
+  foundDuringAi: (foe: string) => `${foe} veut t’affronter !`,
+  join: 'REJOINDRE',
+  resumeSearch: 'REPRENDRE LA RECHERCHE',
+  /** Choix du perso en 15 s. */
+  pickTimer: (s: number) => `Choisis ton candidat : ${s} s`,
+  randomStage: 'Lieu tiré au hasard',
+  you: 'Toi',
+  /** Fin de match. */
+  againTimer: (s: number) => `Revanche ? ${s} s`,
+  nextFoe: 'NOUVEL ADVERSAIRE',
+  foeLeftWin: 'Ton adversaire a abandonné : victoire !',
+  errors: {
+    server: 'Serveur injoignable. Réessaie plus tard.',
+    'no-relay': 'La Primaire ouverte est indisponible pour le moment.',
+    'link-failed': 'Connexion à l’adversaire impossible. On en cherche un autre…',
+    unavailable: 'La Primaire ouverte n’est pas disponible.',
+  } as Record<string, string>,
+};

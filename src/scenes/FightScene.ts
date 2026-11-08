@@ -3,9 +3,10 @@ import { BUZZ, GUARD, MATCH, SIM, STAGE, STYLE } from '../config/balance';
 import { PLAYABLE_IDS, ROSTER, spriteOf, type FighterId } from '../config/roster';
 import { CHEEK } from '../config/sprites';
 import { queueStageImages, STAGES, type StageId } from '../config/stages';
-import { CAMPAIGN_TEXTS, FIGHTER_TEXTS, ONLINE, TUTORIAL } from '../config/texts';
+import { CAMPAIGN_TEXTS, FIGHTER_TEXTS, ONLINE, QUICK, TUTORIAL } from '../config/texts';
 import { currentRoom, type FriendRoom } from '../net/friends';
 import { NetSession, type NetStatus } from '../net/rollback';
+import { currentQuick } from '../net/quick';
 import type { MatchStart } from '../net/room';
 import { fighterKey, frameOf, poseFor } from '../config/poses';
 import { computeLayout, HABITUES, type StageLayout } from '../logic/layout';
@@ -39,7 +40,7 @@ import { ChargeGauge } from '../ui/ChargeGauge';
 import { HealthBar } from '../ui/HealthBar';
 import { RoundPips, TimerDiamond } from '../ui/hud';
 import { safeInsets } from '../ui/safe';
-import { COLORS, CSS, FONT_TITLE } from '../ui/theme';
+import { COLORS, CSS, FLAG, FLAG_CSS, FONT_TITLE } from '../ui/theme';
 import { TouchControls } from '../ui/TouchControls';
 import type { ResultData } from './ResultScene';
 import { queueFighterImages } from './BootScene';
@@ -82,6 +83,8 @@ export interface FightData {
   rollback?: number;
   /** Match en ligne (mode Entre amis) : réglages envoyés par l'hôte. */
   online?: MatchStart;
+  /** Primaire ouverte : match contre l'IA en attendant un adversaire (on reste dans la file). */
+  quickWait?: boolean;
 }
 
 interface FighterView {
@@ -170,6 +173,9 @@ export class FightScene extends Phaser.Scene {
   private ended = false;
   private offRoom: (() => void) | null = null;
   private reactBtn: Phaser.GameObjects.Text | null = null;
+  /** Primaire ouverte : match contre l'IA en attendant un adversaire. */
+  private quickWait = false;
+  private quickUi: Phaser.GameObjects.GameObject[] = [];
 
   private state!: FightState;
   private acc = 0;
@@ -207,6 +213,8 @@ export class FightScene extends Phaser.Scene {
     this.campaign = c && campaignFoe(c) === this.ids[1] && c.fighter === this.ids[0] ? { i: c.beaten + 1, n: c.order.length } : null;
     this.rollbackLoad = data.rollback ?? 0;
     this.online = data.online ?? null;
+    this.quickWait = !!data.quickWait;
+    this.quickUi = [];
     this.room = this.online ? currentRoom() : null;
     this.net = null;
     this.me = 0;
@@ -301,7 +309,7 @@ export class FightScene extends Phaser.Scene {
     });
     // Niveau de l'IA, discret, sous le chrono.
     this.levelTag = this.add
-      .text(0, 0, this.online ? ONLINE.vs(this.room?.them?.pseudo ?? '') : this.tuto ? '' : this.p2Kind === 'ai' ? (this.autoplay ? `DÉMO · ${levelLabel(this.level).toUpperCase()}` : this.campaign ? CAMPAIGN_TEXTS.fightTag(this.campaign.i, this.campaign.n, levelLabel(this.level).toUpperCase()) : `IA ${levelLabel(this.level).toUpperCase()}`) : '', { fontFamily: FONT_TITLE, fontSize: '15px', color: CSS.cream, stroke: CSS.ink, strokeThickness: 5 })
+      .text(0, 0, this.quickWait ? QUICK.aiBanner.toUpperCase() : this.online ? ONLINE.vs(this.room?.them?.pseudo ?? '') : this.tuto ? '' : this.p2Kind === 'ai' ? (this.autoplay ? `DÉMO · ${levelLabel(this.level).toUpperCase()}` : this.campaign ? CAMPAIGN_TEXTS.fightTag(this.campaign.i, this.campaign.n, levelLabel(this.level).toUpperCase()) : `IA ${levelLabel(this.level).toUpperCase()}`) : '', { fontFamily: FONT_TITLE, fontSize: '15px', color: CSS.cream, stroke: CSS.ink, strokeThickness: 5 })
       .setOrigin(0.5, 0)
       .setDepth(100);
 
@@ -329,6 +337,7 @@ export class FightScene extends Phaser.Scene {
     }
 
     if (this.online) this.startOnline();
+    if (this.quickWait) this.startQuickWait();
 
     this.applyLayout();
     this.scale.on(Phaser.Scale.Events.RESIZE, this.applyLayout, this);
@@ -720,7 +729,7 @@ export class FightScene extends Phaser.Scene {
         break;
       }
       case 'matchEnd': {
-        const data: ResultData = { ids: this.ids, stage: this.stageId, winner: e.winner, wins: [s.wins[0], s.wins[1]], p2: this.p2Kind, level: this.level, autoplay: this.autoplay, campaign: !!this.campaign };
+        const data: ResultData = { ids: this.ids, stage: this.stageId, winner: e.winner, wins: [s.wins[0], s.wins[1]], p2: this.p2Kind, level: this.level, autoplay: this.autoplay, campaign: !!this.campaign, quickWait: this.quickWait };
         this.scene.start('Result', data);
         break;
       }
@@ -850,6 +859,8 @@ export class FightScene extends Phaser.Scene {
       react: (i) => this.showReaction(1 - this.me as 0 | 1, i),
       leave: (why) => {
         if (why === 'self' || this.ended) return;
+        // Primaire ouverte : l'adversaire est parti, celui qui reste gagne.
+        if (room.quick && why !== 'version') return this.forfeitWin();
         this.ended = true;
         this.netOverlay(why === 'version' ? ONLINE.version : ONLINE.left(room.them?.pseudo ?? ''), ONLINE.cancelled, true);
       },
@@ -891,15 +902,101 @@ export class FightScene extends Phaser.Scene {
         else if (st === 'unstable') this.netOverlay(ONLINE.unstable);
         else if (st === 'paused') this.netOverlay(ONLINE.paused, ONLINE.pausedHelp);
         else {
-          // Entre amis : au-delà de 15 s, le match est annulé.
-          this.ended = true;
-          this.netOverlay(ONLINE.lostTitle, ONLINE.cancelled, true);
-          this.room?.close('lost');
+          // Au-delà de 15 s : Entre amis, le match est annulé ; Primaire ouverte, celui qui reste gagne.
+          if (this.room?.quick) {
+            this.room.close('lost');
+            this.forfeitWin();
+          } else {
+            this.ended = true;
+            this.netOverlay(ONLINE.lostTitle, ONLINE.cancelled, true);
+            this.room?.close('lost');
+          }
         }
       }
       if (net.finished) this.endOnline();
     }
     this.publish();
+  }
+
+  /**
+   * Primaire ouverte, match contre l'IA en attendant : on reste dans la file. Si un adversaire est trouvé, un
+   * bandeau propose de le rejoindre (10 s) ; sinon il est refusé, et la recherche reprendra à la fin du match.
+   */
+  private startQuickWait() {
+    const q = currentQuick();
+    if (!q) return;
+    q.autoAccept = false;
+    const off = q.listen({
+      found: (match, foe, ttl) => this.showQuickFound(match, foe, ttl),
+      change: () => {
+        if (!q.pendingMatch && q.state !== 'linking') this.clearQuickUi();
+      },
+      ready: () => this.scene.start('Room'),
+    });
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      off();
+      q.autoAccept = true;
+    });
+  }
+
+  private clearQuickUi() {
+    for (const o of this.quickUi) o.destroy();
+    this.quickUi = [];
+  }
+
+  private showQuickFound(match: string, foe: string, ttl: number) {
+    this.clearQuickUi();
+    const { width } = this.scale;
+    const add = <T extends Phaser.GameObjects.GameObject>(o: T) => (this.quickUi.push(o), o);
+    const y = 168;
+    add(this.add.rectangle(width / 2, y, Math.min(width * 0.8, 640), 104, COLORS.ink, 0.9).setStrokeStyle(5, FLAG.red).setAngle(-2).setDepth(170));
+    const label = add(
+      this.add
+        .text(width / 2, y - 22, `${QUICK.foundDuringAi(foe)} (${ttl})`, { fontFamily: FONT_UI, fontStyle: '800', fontSize: '20px', color: FLAG_CSS.white, stroke: CSS.ink, strokeThickness: 5 })
+        .setOrigin(0.5)
+        .setAngle(-2)
+        .setDepth(171)
+        .setName('quick-found'),
+    );
+    add(
+      makeButton(this, width / 2, y + 22, QUICK.join, FLAG.blue, () => {
+        currentQuick()?.accept(match);
+        this.clearQuickUi();
+        add(this.add.text(width / 2, y, QUICK.linking, { fontFamily: FONT_UI, fontStyle: '800', fontSize: '22px', color: FLAG_CSS.white, stroke: CSS.ink, strokeThickness: 6 }).setOrigin(0.5).setDepth(171));
+      }, { w: 220, h: 50, font: 20 })
+        .setDepth(172)
+        .setName('btn-quick-join'),
+    );
+    // Décompte : au bout du délai, le serveur considère que le joueur a refusé.
+    let left = ttl;
+    const timer = this.time.addEvent({
+      delay: 1000,
+      repeat: ttl - 1,
+      callback: () => {
+        left -= 1;
+        if (label.active) label.setText(`${QUICK.foundDuringAi(foe)} (${left})`);
+        if (left <= 0) this.clearQuickUi();
+      },
+    });
+    this.quickUi.push({ destroy: () => timer.remove() } as unknown as Phaser.GameObjects.GameObject);
+  }
+
+  /** Primaire ouverte : l'adversaire a quitté le match ou ne répond plus. Victoire, et fin de match. */
+  private forfeitWin() {
+    if (this.ended && this.net?.finished) return;
+    this.ended = true;
+    const s = this.net!.state;
+    const data: ResultData = {
+      ids: this.ids,
+      stage: this.stageId,
+      winner: this.me,
+      wins: [s.wins[0], s.wins[1]],
+      p2: 'ai',
+      level: this.level,
+      autoplay: false,
+      online: { me: this.me, hash: 0, steps: this.net!.frame, stats: { ...this.net!.stats }, forfeit: true },
+    };
+    this.scene.start('Result', data);
   }
 
   private endOnline() {

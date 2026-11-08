@@ -49,7 +49,8 @@ export class TitleScene extends Phaser.Scene {
     this.input.enabled = false;
     void openLobby({ join }).then((room) => {
       this.lobbyOpen = false;
-      if (room) this.scene.start('Room');
+      if (room === 'quick') this.scene.start('Quick');
+      else if (room) this.scene.start('Room');
       else if (this.scene.isActive()) this.input.enabled = true;
     });
   }

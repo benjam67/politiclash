@@ -3,10 +3,11 @@ import { menuBackdrop } from '../ui/backdrop';
 import { fighterKey } from '../config/poses';
 import { PLAYABLE_IDS, ROSTER_SLOTS, spriteOf, type FighterId } from '../config/roster';
 import { STAGE_IDS } from '../config/stages';
-import { FIGHTER_TEXTS, ONLINE, SCREENS, STAGE_TEXTS } from '../config/texts';
+import { FIGHTER_TEXTS, ONLINE, SCREENS, STAGE_TEXTS, QUICK } from '../config/texts';
 import { computeLayout } from '../logic/layout';
 import { updateSave } from '../logic/save';
 import { sfx } from '../audio/sfx';
+import { currentQuick, quickSearch } from '../net/quick';
 import { currentRoom, type FriendRoom, type LeaveReason } from '../net/friends';
 import type { MatchStart } from '../net/room';
 import { makeButton } from '../ui/button';
@@ -21,6 +22,9 @@ import type { FightData } from './FightScene';
  * Salon du mode Entre amis : chacun choisit son combattant, l'hôte choisit le lieu, les deux appuient sur
  * PRÊT. Ensuite l'hôte lance le match sur les deux téléphones en même temps.
  */
+/** Primaire ouverte : temps pour choisir son candidat (s). */
+const PICK_S = 15;
+
 export class RoomScene extends Phaser.Scene {
   private items: Phaser.GameObjects.GameObject[] = [];
   private room!: FriendRoom;
@@ -46,6 +50,8 @@ export class RoomScene extends Phaser.Scene {
       return;
     }
     this.room = room;
+    this.pickUntil = room.quick ? performance.now() + PICK_S * 1000 : 0;
+    this.shownLeft = -1;
     this.reactMenu = new ReactionMenu(this, (i) => this.sendReaction(i), 196, 40);
     const menu = this.reactMenu;
     this.reactBtn = reactButton(this, () => menu.toggle()).setDepth(30);
@@ -99,7 +105,7 @@ export class RoomScene extends Phaser.Scene {
     add(menuBackdrop(this, 0x6d6478));
     add(this.add.rectangle(0, 0, width, height, COLORS.ink, 0.45).setOrigin(0));
     flagBand(this, width / 2, 50, width * 1.3, 72, -2).forEach(add);
-    text(width / 2, 48, ONLINE.room(r.code), 40, FLAG_CSS.white, true).setAngle(-2).setName('room-title');
+    text(width / 2, 48, r.quick ? QUICK.title : ONLINE.room(r.code), 40, FLAG_CSS.white, true).setAngle(-2).setName('room-title');
 
     // Les deux joueurs sur les côtés : moi à ma place (gauche si hôte), l'adversaire en face.
     const s = L.fighterScale * 0.95;
@@ -148,7 +154,10 @@ export class RoomScene extends Phaser.Scene {
     // Lieu : l'hôte le fait défiler, l'invité le voit.
     const ly = top + ch * 1.5 + gap + 30;
     const stageName = `${ONLINE.stage} : ${STAGE_TEXTS[r.stage].name.toUpperCase()}`;
-    if (r.isHost) {
+    if (r.quick) {
+      // Primaire ouverte : lieu tiré au hasard au départ du match.
+      text(cx, ly, QUICK.randomStage.toUpperCase(), 20, FLAG_CSS.white, true).setName('room-stage');
+    } else if (r.isHost) {
       add(makeButton(this, cx, ly, `◀  ${stageName}  ▶`, FLAG.red, () => this.nextStage(), { w: 400, h: 50, font: 20 }).setName('btn-stage').setDepth(4));
     } else {
       text(cx, ly - 10, stageName, 20, FLAG_CSS.white, true).setName('room-stage');
@@ -164,6 +173,8 @@ export class RoomScene extends Phaser.Scene {
         .setDepth(4),
     );
     let help = this.notice;
+    // Primaire ouverte : 15 s pour choisir, ensuite perso au hasard et « Prêt » d'office.
+    if (!help && r.quick && !r.me.ready) help = QUICK.pickTimer(this.pickLeft());
     if (!help) {
       if (!r.link.connected) help = ONLINE.unstable;
       else if (!r.me.fighter) help = ONLINE.pickFirst;
@@ -229,11 +240,38 @@ export class RoomScene extends Phaser.Scene {
 
   private quit() {
     this.room.leave();
+    if (this.room.quick) currentQuick()?.close();
     this.scene.start('Title');
+  }
+
+  // ── Primaire ouverte : 15 s pour choisir son candidat ─────────────────
+
+  private pickUntil = 0;
+  private shownLeft = -1;
+
+  private pickLeft() {
+    return Math.max(0, Math.ceil((this.pickUntil - performance.now()) / 1000));
+  }
+
+  update() {
+    if (!this.room?.quick || this.room.me.ready || !this.pickUntil) return;
+    const left = this.pickLeft();
+    if (left === this.shownLeft) return;
+    this.shownLeft = left;
+    if (left > 0) return this.build();
+    // Temps écoulé : perso au hasard s'il n'a rien choisi, et prêt.
+    if (!this.room.me.fighter) this.room.pick(PLAYABLE_IDS[Math.floor(Math.random() * PLAYABLE_IDS.length)]);
+    this.room.setReady(true);
   }
 
   private left(why: LeaveReason) {
     if (why === 'self') return;
+    // Primaire ouverte : l'adversaire est parti avant le match ; on en cherche un autre.
+    if (this.room.quick && why !== 'version') {
+      quickSearch().search();
+      this.scene.start('Quick');
+      return;
+    }
     this.scene.start('Title', { notice: why === 'version' ? ONLINE.version : ONLINE.left(this.room.them?.pseudo ?? 'Ton adversaire') });
   }
 }

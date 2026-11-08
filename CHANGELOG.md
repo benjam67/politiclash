@@ -753,3 +753,30 @@ Sur iPhone, l'écran « tourne ton téléphone » pouvait rester affiché une fo
 - Corrections : dès que l'hôte revient sur le jeu, sa liaison avec le service est rétablie tout de suite. L'invité ne renonce plus au premier « introuvable » : il réessaie toutes les 1,5 s pendant 15 s. Message : « Salon introuvable. Vérifie le code, et que ton ami a bien le jeu ouvert. »
 - Diagnostic : sous un message d'erreur de connexion, le menu affiche en petit les étapes franchies avec leur durée (relais, mise en relation, appel, rappel, erreurs), pour savoir où ça bloque sur un vrai téléphone.
 - Tests ajoutés : relais forcé avec un relais local ; l'hôte sort du jeu pendant que son ami rejoint, puis revient au bout de 4 s, et les deux arrivent dans le salon.
+
+## 8 novembre 2026 · Phase 7d : Primaire ouverte (Partie rapide)
+
+**Parcours**
+- Menu EN LIGNE → **PRIMAIRE OUVERTE** → **TROUVER UN ADVERSAIRE** (le bloc « Bientôt » est remplacé).
+- **Recherche** : « Recherche d'un adversaire… », temps d'attente, nombre de joueurs en ligne, ANNULER.
+- **Personne en vue au bout de 45 s** : bouton JOUER CONTRE L'IA EN ATTENDANT. Le match est annoncé « Contre l'IA en attendant un adversaire » (l'IA n'est jamais présentée comme un joueur). On reste dans la file : si un adversaire arrive, un bandeau « … veut t'affronter ! REJOINDRE (10) » apparaît pendant le match. Sans réponse, la proposition est refusée et l'adversaire retourne dans la file. À la fin du match contre l'IA : REPRENDRE LA RECHERCHE.
+  - Écart avec la roadmap, qui proposait de rejoindre « à la fin » du match contre l'IA : l'adversaire aurait attendu jusqu'à deux minutes. Le bandeau laisse 10 s pour choisir.
+- **Salon** : titre « PRIMAIRE OUVERTE », pas de code. Les pseudos sont tirés au hasard dans une liste du jeu (`texts.ts` → `QUICK_PSEUDOS`, **provisoires**, 20 pseudos), et le texte envoyé par l'autre téléphone est ignoré : pas de texte libre entre inconnus. **15 s pour choisir son candidat** : ensuite, perso au hasard et prêt d'office. Lieu tiré au hasard par la graine du match, le même sur les deux téléphones.
+- **Toujours par le relais** : l'adresse IP de l'un n'est jamais transmise à l'autre. Sans relais disponible, la Primaire ouverte est indisponible.
+- **Fin de match** : REVANCHE si les deux la demandent dans les **10 s** (décompte affiché), sinon retour à la file ; NOUVEL ADVERSAIRE ; MENU.
+- **Abandon** : quitter en plein match compte comme une défaite. L'autre voit « Ton adversaire a abandonné : victoire ! ». Pareil quand la connexion est coupée plus de 15 s : celui qui reste gagne. L'adversaire qui part avant le match (salon) : on en cherche un autre.
+
+**Serveur** (`server/`)
+- Nouvelle adresse `/queue` : WebSocket de la file d'attente, réservé aux pages du jeu, tenu par **un seul Durable Object** (`QueueDO`, stockage SQLite, seul possible en offre gratuite).
+- Logique de la file à part (`server/src/queue.ts`, sans réseau) : on associe les deux joueurs qui attendent depuis le plus longtemps, de la même région (continent, d'après Cloudflare) ; au-delà de 20 s d'attente, n'importe quelle région. Deux versions différentes du jeu ne sont jamais associées. Chaque association est d'abord proposée : si l'un ne l'accepte pas dans les 10 s, il sort de la file et l'autre y retourne à sa place. Le plus ancien est l'hôte ; le serveur donne la graine du match.
+- Le jeu n'envoie au serveur que la version des règles et le numéro de son pseudo dans la liste.
+- Vérification après déploiement : la file répond en WebSocket (`scripts/check-queue.mjs`).
+
+**Vérifications**
+- 259 tests unitaires (8 de plus). File d'attente : association et rôles, plus anciens d'abord, région puis 20 s, versions séparées, refus et délai de 10 s, départ pendant une proposition, et le test de la roadmap : **20 faux joueurs entrent et sortent au hasard (30 séries)**, chacun finit associé ou sorti proprement, personne n'est associé deux fois. Salon : pseudos de la liste, lieu tiré par la graine.
+- Le vrai serveur (Worker et Durable Object dans le moteur de Cloudflare, lancé en local par Wrangler) et un relais local démarrent avec les tests navigateur (`scripts/server-dev.mjs`).
+- 3 tests à deux navigateurs (`quick.spec.ts`) :
+  - deux navigateurs **qui ne partagent aucun code** se trouvent, l'un choisit et l'autre est servi au bout de 15 s, puis ils jouent un **match complet par le relais**, avec le même état final des deux côtés. **Aucune adresse de l'autre** : tous les candidats de connexion, locaux comme distants, sont ceux du relais. Sans revanche, chacun retourne dans la file au bout de 10 s ;
+  - personne en vue, match contre l'IA, un adversaire arrive, REJOINDRE, les deux arrivent dans le salon ;
+  - l'adversaire quitte en plein match : victoire pour celui qui reste.
+- Reste à valider sur de vrais téléphones, avec le vrai serveur : deux joueurs qui ne se connaissent pas.

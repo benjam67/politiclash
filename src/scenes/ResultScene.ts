@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { spriteOf, type FighterId } from '../config/roster';
 import { STAGE_IDS, STAGES, type StageId } from '../config/stages';
-import { FIGHTER_TEXTS, SCREENS } from '../config/texts';
+import { FIGHTER_TEXTS, SCREENS, QUICK } from '../config/texts';
 import { fighterKey } from '../config/poses';
 import { computeLayout } from '../logic/layout';
 import { sfx } from '../audio/sfx';
@@ -14,6 +14,7 @@ import { updateSave, withResult } from '../logic/save';
 import { CAMPAIGN_TEXTS, ONLINE } from '../config/texts';
 import { campaignDone, campaignFoe, campaignLoss, campaignWin, withVictory, type Campaign } from '../logic/campaign';
 import { currentRoom, type FriendRoom } from '../net/friends';
+import { currentQuick, quickSearch } from '../net/quick';
 import type { SessionStats } from '../net/rollback';
 import { FONT_UI } from '../ui/theme';
 
@@ -26,7 +27,9 @@ export interface ResultData {
   level: AiLevel;
   autoplay: boolean;
   /** Match en ligne : le joueur de ce téléphone, et de quoi vérifier que les deux téléphones ont le même match. */
-  online?: { me: 0 | 1; hash: number; steps: number; stats: SessionStats };
+  online?: { me: 0 | 1; hash: number; steps: number; stats: SessionStats; forfeit?: boolean };
+  /** Primaire ouverte : c'était un match contre l'IA en attendant un adversaire. */
+  quickWait?: boolean;
   /** Match de la campagne présidentielle. */
   campaign?: boolean;
 }
@@ -50,6 +53,9 @@ export class ResultScene extends Phaser.Scene {
     this.result = data;
     this.items = [];
     this.room = data.online ? currentRoom() : null;
+    this.againUntil = 0;
+    this.againTimer = null;
+    this.againText = null;
     this.off = null;
     this.camp = null;
     this.sure = false;
@@ -74,6 +80,8 @@ export class ResultScene extends Phaser.Scene {
         start: (st) => this.scene.start('Fight', { online: st }),
         room: () => this.scene.start('Room'),
         leave: (why) => {
+          // Primaire ouverte : l'adversaire est parti ; on reste sur l'écran (il propose un nouvel adversaire).
+          if (this.room?.quick && why !== 'version') return this.build();
           if (why !== 'self') this.scene.start('Title', { notice: why === 'version' ? ONLINE.version : ONLINE.left(this.room?.them?.pseudo ?? '') });
         },
       });
@@ -168,8 +176,20 @@ export class ResultScene extends Phaser.Scene {
 
     const by = Math.min(height * 0.62, height - safe.bottom - 150);
     if (r.online) {
-      this.buildOnline(by);
+      if (this.room?.quick || r.online.forfeit) this.buildQuick(by);
+      else this.buildOnline(by);
       return;
+    }
+    // Primaire ouverte : c'était un match contre l'IA en attendant ; on peut reprendre la recherche.
+    if (r.quickWait) {
+      this.items.push(
+        makeButton(this, this.scale.width / 2, by - 92, QUICK.resumeSearch, FLAG.red, () => {
+          quickSearch().search();
+          this.scene.start('Quick');
+        }, { w: 380, h: 60, font: 22 })
+          .setDepth(4)
+          .setName('btn-quick-resume'),
+      );
     }
     if (this.camp) {
       this.buildCampaign(by);
@@ -249,6 +269,59 @@ export class ResultScene extends Phaser.Scene {
     add(
       makeButton(this, width / 2 + 135, by + 92, ONLINE.menu, FLAG.white, () => {
         room.leave();
+        this.scene.start('Title');
+      }, { w: 250, h: 58, font: 22 }).setDepth(4),
+    );
+  }
+
+  // ── Primaire ouverte ──────────────────────────────────────────────────
+
+  private againUntil = 0;
+  private againTimer: Phaser.Time.TimerEvent | null = null;
+  private againText: Phaser.GameObjects.Text | null = null;
+
+  /** Revanche si les deux la demandent dans les 10 s ; sinon, un nouvel adversaire. */
+  private buildQuick(by: number) {
+    const { width } = this.scale;
+    const room = this.room;
+    const add = <T extends Phaser.GameObjects.GameObject>(o: T) => (this.items.push(o), o);
+    const label = (y: number, t: string, name: string, size = 22) =>
+      add(this.add.text(width / 2, y, t, { fontFamily: FONT_UI, fontStyle: '800', fontSize: `${size}px`, color: FLAG_CSS.white, stroke: CSS.ink, strokeThickness: 6, align: 'center' }).setOrigin(0.5).setDepth(4).setName(name));
+    const next = () => {
+      this.againTimer?.remove();
+      room?.leave();
+      quickSearch().search();
+      this.scene.start('Quick');
+    };
+    if (this.result.online?.forfeit) label(by - 70, QUICK.foeLeftWin, 'result-forfeit', 20);
+    const canAgain = room && !room.closed;
+    if (canAgain) {
+      if (!this.againUntil) {
+        this.againUntil = performance.now() + 10_000;
+        // Décompte affiché au-dessus des boutons ; à zéro, un nouvel adversaire.
+        this.againTimer = this.time.addEvent({
+          delay: 250,
+          loop: true,
+          callback: () => {
+            if (performance.now() >= this.againUntil) return next();
+            this.againText?.setText(QUICK.againTimer(Math.max(0, Math.ceil((this.againUntil - performance.now()) / 1000))));
+          },
+        });
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.againTimer?.remove());
+      }
+      const left = Math.max(0, Math.ceil((this.againUntil - performance.now()) / 1000));
+      const who = room.them?.pseudo ?? '';
+      this.againText = label(by + 150, QUICK.againTimer(left), 'result-again-timer', 18) as Phaser.GameObjects.Text;
+      if (room.again.me) label(by, ONLINE.againWait(who), 'result-wait');
+      else add(makeButton(this, width / 2, by, ONLINE.again, FLAG.blue, () => room.askAgain(), { w: 320, h: 76, font: 30 }).setDepth(4).setName('btn-again'));
+      if (room.again.them && !room.again.me) label(by - 58, ONLINE.againThem(who), 'result-them-again', 20);
+    }
+    add(makeButton(this, width / 2 - 135, by + 92, QUICK.nextFoe, FLAG.red, next, { w: 250, h: 58, font: 18 }).setDepth(4).setName('btn-next-foe'));
+    add(
+      makeButton(this, width / 2 + 135, by + 92, ONLINE.menu, FLAG.white, () => {
+        this.againTimer?.remove();
+        room?.leave();
+        currentQuick()?.close();
         this.scene.start('Title');
       }, { w: 250, h: 58, font: 22 }).setDepth(4),
     );

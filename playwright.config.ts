@@ -29,6 +29,8 @@ export default defineConfig({
   webServer: [
     // Mise en relation locale pour les tests du jeu en ligne.
     { command: 'node scripts/peer-server.mjs', url: 'http://127.0.0.1:9000/politiclash', reuseExistingServer: false, timeout: 30_000 },
+    // Serveur du jeu en local (file d'attente de la Primaire ouverte), avec le relais local.
+    { command: 'node scripts/server-dev.mjs', url: 'http://127.0.0.1:8787/health', reuseExistingServer: false, timeout: 90_000 },
     ...(process.env.BASE_URL ? [] : [{ command: 'npm run build && npm run preview', url: BASE_URL, reuseExistingServer: false, timeout: 180_000 }]),
   ],
 });

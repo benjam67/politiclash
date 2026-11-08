@@ -87,7 +87,10 @@ Claude prépare une comparaison chiffrée à jour au début de cette phase. **Le
 
 - *Validé quand* : le serveur répond en ligne, le relais fonctionne depuis un téléphone en 4G, et le mode Entre amis l'utilise en secours.
 
-### Phase 7d · Mode Partie rapide
+### Phase 7d · Mode Partie rapide (« Primaire ouverte ») ✔
+
+**Faite le 8 novembre 2026** (détail dans `CHANGELOG.md`). Deux navigateurs sans code commun se trouvent et jouent un match complet par le relais, sans voir l'adresse de l'autre ; les tests de la file (20 faux joueurs) passent. Écart : pendant un match contre l'IA, l'adversaire trouvé est proposé tout de suite (10 s pour le rejoindre), plutôt qu'à la fin du match. En attente : pseudos définitifs (liste provisoire dans `texts.ts`), et un essai entre deux vrais téléphones.
+
 
 - Écran « Partie rapide » : « Recherche d'un adversaire… », avec le **nombre de joueurs en ligne** et un bouton « Annuler ».
 - **File d'attente** : le serveur associe les deux joueurs qui attendent depuis le plus longtemps, en préférant une latence faible entre eux. Après 20 secondes, il accepte une latence plus forte.

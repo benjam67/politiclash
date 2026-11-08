@@ -5,3 +5,7 @@ playwright-report/
 screenshots/
 *.log
 .DS_Store
+
+# Serveur local (tests)
+server/.dev.vars
+server/.wrangler/
