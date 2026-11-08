@@ -94,7 +94,7 @@ Claude prépare une comparaison chiffrée à jour au début de cette phase. **Le
 
 - Écran « Partie rapide » : « Recherche d'un adversaire… », avec le **nombre de joueurs en ligne** et un bouton « Annuler ».
 - **File d'attente** : le serveur associe les deux joueurs qui attendent depuis le plus longtemps, en préférant une latence faible entre eux. Après 20 secondes, il accepte une latence plus forte.
-- **Personne en vue après 45 secondes** : proposition « Jouer contre l'IA en attendant ? ». Si un adversaire arrive pendant ce match, une notification propose de le rejoindre à la fin. L'IA est **toujours annoncée comme IA** : on ne fait pas passer un robot pour un joueur.
+- **Personne en vue après 30 secondes** (45 à l’origine, réduit le 8 novembre à la demande du propriétaire) : proposition « Jouer contre l'IA en attendant ? ». Si un adversaire arrive pendant ce match, une notification propose de le rejoindre à la fin. L'IA est **toujours annoncée comme IA** : on ne fait pas passer un robot pour un joueur.
 - Choix du perso en 15 secondes (perso au hasard si le temps est écoulé), niveau tiré au hasard **par la simulation** (graine partagée), pour que les deux téléphones aient le même.
 - Revanche si les deux acceptent dans les 10 secondes ; sinon, retour à la file.
 - **Abandons** : quitter en cours de match compte comme une défaite. Pas de sanction en plus (pas de comptes, donc rien à sanctionner durablement).

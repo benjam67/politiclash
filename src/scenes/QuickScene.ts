@@ -12,11 +12,11 @@ import { COLORS, CSS, FLAG, FLAG_CSS, flagBand, FONT_TITLE, FONT_UI } from '../u
 import type { FightData } from './FightScene';
 
 /** Personne en vue au bout de ce délai : on propose un match contre l'IA en attendant. */
-export const AI_OFFER_S = 45;
+export const AI_OFFER_S = 30;
 
 /**
  * Primaire ouverte : recherche d'un adversaire. Nombre de joueurs en ligne, temps d'attente, Annuler.
- * Au bout de 45 s, proposition de jouer contre l'IA en attendant (toujours annoncée comme IA).
+ * Au bout de 30 s, proposition de jouer contre l'IA en attendant (toujours annoncée comme IA).
  */
 export class QuickScene extends Phaser.Scene {
   private items: Phaser.GameObjects.GameObject[] = [];
@@ -34,7 +34,7 @@ export class QuickScene extends Phaser.Scene {
     this.items = [];
     this.message = data?.message ?? '';
     this.lastKey = '';
-    // Essais : `?quickwait=3` propose l'IA au bout de 3 s au lieu de 45.
+    // Essais : `?quickwait=3` propose l'IA au bout de 3 s au lieu de 30.
     const w = Number(new URLSearchParams(location.search).get('quickwait'));
     this.aiOfferS = w > 0 ? w : AI_OFFER_S;
   }

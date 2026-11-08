@@ -836,3 +836,5 @@ Choix du propriétaire : le jeu quitte GitHub Pages pour Cloudflare (déjà hôt
 - gh-pages remplacé par une page qui renvoie vers `france-bagarre.fr` (en gardant le code de salon des liens d'invitation).
 
 **À savoir** : les sauvegardes du navigateur sont liées à l'adresse du site ; sur le nouveau domaine, chaque joueur repart de zéro (tutoriel, campagne, palmarès). Le classement est sur le serveur, mais l'identifiant qui y relie le joueur est dans le navigateur : sur le nouveau domaine, le joueur repart avec un nouvel identifiant, et son ancien pseudo reste pris par l'ancien. Peu de joueurs à ce jour ; un transfert pourra être ajouté si besoin.
+
+**Primaire ouverte — 8 novembre 2026** (choix du propriétaire) : le jeu propose de jouer contre l'IA au bout de **30 s** d'attente sans adversaire, au lieu de 45 s (`AI_OFFER_S` dans `QuickScene.ts`).
