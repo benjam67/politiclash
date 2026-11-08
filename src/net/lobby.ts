@@ -2,7 +2,9 @@
 // ou le rejoindre. En HTML par-dessus le jeu, pour profiter du clavier du téléphone.
 // Renvoie le salon une fois les deux téléphones reliés, ou null si le joueur revient en arrière.
 import { PLAYABLE_IDS } from '../config/roster';
-import { ONLINE, GAME } from '../config/texts';
+import { ONLINE, GAME, RANKING } from '../config/texts';
+import { rankNameOk, setRankName } from './rank';
+import { openRanking } from './ranking';
 import { loadSave, updateSave } from '../logic/save';
 import { FriendRoom, setCurrentRoom } from './friends';
 import { linkOptionsFromUrl, PeerLink } from './peer';
@@ -28,6 +30,7 @@ export function openLobby(opts: { join?: string } = {}): Promise<FriendRoom | 'q
   let link: PeerLink | null = null;
   let done = false;
 
+  for (const el of root.querySelectorAll<HTMLElement>('[data-rank-text]')) el.textContent = (RANKING as Record<string, unknown>)[el.dataset.rankText as string] as string;
   for (const el of root.querySelectorAll<HTMLElement>('[data-text]')) {
     const v = (ONLINE as Record<string, unknown>)[el.dataset.text as string];
     if (typeof v === 'string') el.textContent = v;
@@ -52,10 +55,20 @@ export function openLobby(opts: { join?: string } = {}): Promise<FriendRoom | 'q
     if (window.__slap) (window.__slap as Record<string, unknown>).lobby = { view, status, code: codeShow.textContent };
   };
 
-  const pseudo = () => {
+  /**
+   * Pseudo saisi : nettoyé, filtré (c'est aussi le nom du classement, public), gardé sur le téléphone et
+   * envoyé au classement. Rend null s'il est refusé (le message s'affiche dans le menu).
+   */
+  const pseudo = (): string | null => {
     const p = cleanPseudo(pseudoIn.value) || defaultPseudo();
     pseudoIn.value = p;
+    if (!rankNameOk(p)) {
+      show('choice', RANKING.nameRefused, true);
+      pseudoIn.focus();
+      return null;
+    }
     updateSave((s) => ({ ...s, pseudo: p }));
+    void setRankName(p);
     return p;
   };
 
@@ -81,6 +94,7 @@ export function openLobby(opts: { join?: string } = {}): Promise<FriendRoom | 'q
 
     const host = async () => {
       const name = pseudo();
+      if (!name) return;
       show('busy', ONLINE.creating);
       for (let attempt = 0; attempt < 6 && !done; attempt++) {
         const code = makeCode();
@@ -109,6 +123,7 @@ export function openLobby(opts: { join?: string } = {}): Promise<FriendRoom | 'q
       const code = normalizeCode(raw);
       if (!code) return show('join', ONLINE.errors.badCode, true);
       const name = pseudo();
+      if (!name) return show('choice', RANKING.nameRefused, true);
       show('busy', ONLINE.joining(code));
       try {
         link = await PeerLink.open('guest', code, linkOpts);
@@ -138,10 +153,12 @@ export function openLobby(opts: { join?: string } = {}): Promise<FriendRoom | 'q
     const onClick = (e: Event) => {
       const act = (e.target as HTMLElement).closest('[data-act]')?.getAttribute('data-act');
       if (!act) return;
-      if (act === 'quick') finish('quick');
+      if (act === 'quick') {
+        if (pseudo()) finish('quick');
+      } else if (act === 'ranking') void openRanking();
       else if (act === 'create') void host();
       else if (act === 'join') {
-        pseudo();
+        if (!pseudo()) return;
         show('join', '');
         codeIn.value = '';
         codeIn.focus();

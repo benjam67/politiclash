@@ -15,6 +15,12 @@ interface Conn {
   v: string | null;
   pseudo: number;
   region: string;
+  /** Identifiant du classement (facultatif). */
+  rid: string | null;
+}
+
+interface QueueEnv {
+  RANK?: { idFromName(name: string): unknown; get(id: unknown): { fetch(r: Request | string, init?: RequestInit): Promise<Response> } };
 }
 
 export class QueueDO {
@@ -27,7 +33,7 @@ export class QueueDO {
 
   constructor(
     private readonly state: DurableObjectState,
-    private readonly env: unknown,
+    private readonly env: QueueEnv,
   ) {}
 
   async fetch(request: Request): Promise<Response> {
@@ -36,7 +42,7 @@ export class QueueDO {
     const [client, server] = [pair[0], pair[1]];
     server.accept();
     const id = crypto.randomUUID();
-    const conn: Conn = { ws: server, v: null, pseudo: 0, region: request.headers.get('x-region') ?? 'XX' };
+    const conn: Conn = { ws: server, v: null, pseudo: 0, region: request.headers.get('x-region') ?? 'XX', rid: null };
     this.conns.set(id, conn);
     server.addEventListener('message', (e) => this.onMessage(id, e.data));
     const gone = () => this.onClose(id);
@@ -50,7 +56,7 @@ export class QueueDO {
   private onMessage(id: string, raw: unknown) {
     const conn = this.conns.get(id);
     if (!conn || typeof raw !== 'string' || raw.length > 512) return;
-    let m: { t?: string; v?: unknown; pseudo?: unknown; match?: unknown };
+    let m: { t?: string; v?: unknown; pseudo?: unknown; match?: unknown; rid?: unknown };
     try {
       m = JSON.parse(raw);
     } catch {
@@ -60,10 +66,11 @@ export class QueueDO {
     switch (m.t) {
       case 'hello':
         conn.v = typeof m.v === 'string' ? m.v.slice(0, 32) : null;
+        conn.rid = typeof m.rid === 'string' && /^[a-f0-9]{16,64}$/.test(m.rid) ? m.rid : null;
         conn.pseudo = Number.isInteger(m.pseudo) && (m.pseudo as number) >= 0 && (m.pseudo as number) <= MAX_PSEUDO ? (m.pseudo as number) : 0;
         break;
       case 'search':
-        if (conn.v) this.send(this.queue.join({ id, v: conn.v, region: conn.region, pseudo: conn.pseudo }, now));
+        if (conn.v) this.send(this.queue.join({ id, v: conn.v, region: conn.region, pseudo: conn.pseudo, rid: conn.rid ?? undefined }, now));
         break;
       case 'cancel':
         this.send(this.queue.leave(id, now));
@@ -105,9 +112,16 @@ export class QueueDO {
 
   private send(events: QueueEvent[]) {
     for (const e of events) {
+      // Match organisé : le classement apprend qui joue contre qui (seuls ces matchs-là pourront compter).
+      if (e.t === 'match' && e.role === 'host' && e.rid && e.foeRid && this.env.RANK) {
+        const stub = this.env.RANK.get(this.env.RANK.idFromName('global'));
+        void stub.fetch('https://rank/pair', { method: 'POST', body: JSON.stringify({ match: e.match, a: e.rid, b: e.foeRid }) }).catch(() => {});
+      }
       const conn = this.conns.get(e.to);
       if (!conn) continue;
-      const { to: _to, ...msg } = e;
+      // On n'envoie pas aux joueurs l'identifiant de classement de l'autre.
+      const { to: _to, ...rest } = e;
+      const msg = 'foeRid' in rest ? { ...rest, foeRid: undefined, rid: undefined } : rest;
       this.post(conn, msg);
     }
   }

@@ -26,6 +26,8 @@ export interface SaveData {
   pseudo: string;
   /** Réactions de l'adversaire coupées. */
   muteReactions: boolean;
+  /** Classement : identifiant de ce téléphone et son secret (tirés au hasard la première fois). */
+  rank: { id: string; secret: string } | null;
   /** Campagne présidentielle en cours (null : aucune). */
   campaign: Campaign | null;
   /** Campagnes gagnées, par candidat. */
@@ -35,7 +37,7 @@ export interface SaveData {
 export const STORAGE_KEY = 'politiclash.save';
 
 export function defaultSave(): SaveData {
-  return { v: 1, tutorialDone: false, level: 'normal', lastFighter: null, lastStage: null, record: { easy: { w: 0, l: 0 }, normal: { w: 0, l: 0 }, hard: { w: 0, l: 0 } }, pseudo: '', muteReactions: false, campaign: null, palmares: {} };
+  return { v: 1, tutorialDone: false, level: 'normal', lastFighter: null, lastStage: null, record: { easy: { w: 0, l: 0 }, normal: { w: 0, l: 0 }, hard: { w: 0, l: 0 } }, pseudo: '', muteReactions: false, rank: null, campaign: null, palmares: {} };
 }
 
 const count = (n: unknown) => (typeof n === 'number' && Number.isFinite(n) && n >= 0 ? Math.min(1e6, Math.floor(n)) : 0);
@@ -51,6 +53,8 @@ export function sanitize(raw: unknown): SaveData {
   if ((STAGE_IDS as string[]).includes(r.lastStage as string)) out.lastStage = r.lastStage as StageId;
   if (typeof r.pseudo === 'string') out.pseudo = cleanPseudo(r.pseudo);
   out.muteReactions = r.muteReactions === true;
+  const rk = r.rank as { id?: unknown; secret?: unknown } | null | undefined;
+  if (rk && typeof rk.id === 'string' && /^[a-f0-9]{32}$/.test(rk.id) && typeof rk.secret === 'string' && /^[a-f0-9]{64}$/.test(rk.secret)) out.rank = { id: rk.id, secret: rk.secret };
   out.campaign = sanitizeCampaign(r.campaign);
   out.palmares = sanitizePalmares(r.palmares);
   const rec = r.record && typeof r.record === 'object' ? (r.record as Record<string, unknown>) : {};

@@ -56,7 +56,7 @@ export const PSEUDO_MAX = 14;
 
 /** Pseudo libre (mode Entre amis) : sans caractères de contrôle ni espaces en trop, 14 caractères au plus. */
 export function cleanPseudo(input: string): string {
-  return [...input.replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮]/g, '').replace(/\s+/g, ' ').trim()]
+  return [...input.replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e]/g, '').replace(/\s+/g, ' ').trim()]
     .slice(0, PSEUDO_MAX)
     .join('')
     .trim();

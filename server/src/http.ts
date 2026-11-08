@@ -15,6 +15,7 @@ export interface Env {
   TEST_ICE?: string;
   /** File d'attente (Durable Object). Type minimal, pour que ce fichier se compile aussi avec le jeu (tests). */
   QUEUE?: { idFromName(name: string): unknown; get(id: unknown): { fetch(r: Request): Promise<Response> } };
+  RANK?: { idFromName(name: string): unknown; get(id: unknown): { fetch(r: Request): Promise<Response> } };
 }
 
 /** Durée de validité des accès au relais : largement de quoi finir une soirée de revanches. */

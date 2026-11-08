@@ -10,6 +10,7 @@ import { QUICK_PSEUDOS } from '../config/texts';
 import { loadSave } from '../logic/save';
 import { currentRoom, FriendRoom, setCurrentRoom } from './friends';
 import { linkOptionsFromUrl, PeerLink } from './peer';
+import { rankIdentity } from './rank';
 import { RULES_VERSION } from './room';
 
 export type QuickState = 'connecting' | 'searching' | 'found' | 'linking' | 'idle' | 'error';
@@ -106,7 +107,7 @@ export class QuickSearch {
     this.ws = ws;
     ws.onopen = () => {
       this.retry = 0;
-      this.send({ t: 'hello', v: RULES_VERSION, pseudo: this.pseudo });
+      this.send({ t: 'hello', v: RULES_VERSION, pseudo: this.pseudo, rid: rankIdentity().id });
       if (this.wantSearch) this.send({ t: 'search' });
     };
     ws.onmessage = (e) => {
@@ -159,7 +160,7 @@ export class QuickSearch {
         throw new Error('no-relay');
       }
       const save = loadSave();
-      const room = new FriendRoom(link, pseudoText(this.pseudo), save.lastFighter ?? PLAYABLE_IDS[0], null, { quick: true, foePseudo: pseudoText(foe) });
+      const room = new FriendRoom(link, pseudoText(this.pseudo), save.lastFighter ?? PLAYABLE_IDS[0], null, { quick: true, foePseudo: pseudoText(foe), matchId: match });
       setCurrentRoom(room);
       // Hôte : il attend la connexion de l'invité.
       if (!link.connected) {

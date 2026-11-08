@@ -7,6 +7,7 @@ import { CAMPAIGN_TEXTS, FIGHTER_TEXTS, ONLINE, QUICK, TUTORIAL } from '../confi
 import { currentRoom, type FriendRoom } from '../net/friends';
 import { NetSession, type NetStatus } from '../net/rollback';
 import { currentQuick } from '../net/quick';
+import { reportResult } from '../net/rank';
 import type { MatchStart } from '../net/room';
 import { fighterKey, frameOf, poseFor } from '../config/poses';
 import { computeLayout, HABITUES, type StageLayout } from '../logic/layout';
@@ -29,7 +30,7 @@ import {
   type FightState,
 } from '../logic/fight';
 import { computeCamera, minZoom, type Camera } from '../logic/camera';
-import { mergeInputs, type InputFrame } from '../logic/input';
+import { mergeInputs, noInput, type InputFrame } from '../logic/input';
 import { DummySource, IdleSource, KeyboardSource, WanderSource, type InputSource } from '../input/sources';
 import { AiSource, levelLabel, type AiLevel } from '../ai/ai';
 import { sfx } from '../audio/sfx';
@@ -304,6 +305,8 @@ export class FightScene extends Phaser.Scene {
     });
     this.homeBtn = this.add.image(0, 0, 'ico_home').setDepth(130).setInteractive({ useHandCursor: true }).setName('btn-home');
     this.homeBtn.on('pointerup', () => {
+      // Primaire ouverte : quitter en plein match, c'est perdre (déclaré au classement).
+      if (this.room?.quick && this.room.matchId && this.online && !this.ended) void reportResult(this.room.matchId, this.online.n, false);
       this.room?.leave();
       this.scene.start('Title');
     });
@@ -984,6 +987,9 @@ export class FightScene extends Phaser.Scene {
   /** Primaire ouverte : l'adversaire a quitté le match ou ne répond plus. Victoire, et fin de match. */
   private forfeitWin() {
     if (this.ended && this.net?.finished) return;
+    // Le match était déjà joué (fin affichée, pas encore confirmée) : c'est son vrai résultat qui compte,
+    // pas un abandon (l'autre est parti après avoir vu la fin).
+    if (this.net && this.net.state.phase === 'matchEnd') return this.endOnline(this.net.state);
     this.ended = true;
     const s = this.net!.state;
     const data: ResultData = {
@@ -996,12 +1002,18 @@ export class FightScene extends Phaser.Scene {
       autoplay: false,
       online: { me: this.me, hash: 0, steps: this.net!.frame, stats: { ...this.net!.stats }, forfeit: true },
     };
+    if (this.room?.matchId && this.online) void reportResult(this.room.matchId, this.online.n, true);
     this.scene.start('Result', data);
   }
 
-  private endOnline() {
+  private endOnline(final?: FightState) {
     this.ended = true;
-    const s = this.net!.confirmedState;
+    const s = final ?? this.net!.confirmedState;
+    // L'adversaire a peut-être encore besoin de nos dernières entrées pour confirmer la fin : on continue
+    // d'envoyer pendant 5 s après avoir quitté l'écran du combat.
+    const net = this.net!;
+    const linger = window.setInterval(() => net.tick(performance.now(), noInput()), STEP_MS);
+    window.setTimeout(() => window.clearInterval(linger), 5000);
     const data: ResultData = {
       ids: this.ids,
       stage: this.stageId,
@@ -1012,6 +1024,8 @@ export class FightScene extends Phaser.Scene {
       autoplay: false,
       online: { me: this.me, hash: hashState(s), steps: this.net!.confirmedFrame, stats: { ...this.net!.stats } },
     };
+    // Primaire ouverte : résultat déclaré au classement (compté si l'adversaire déclare l'inverse).
+    if (this.room?.quick && this.room.matchId && this.online) void reportResult(this.room.matchId, this.online.n, s.winner === this.me);
     // Laisse voir le K.O. un instant, comme hors ligne.
     this.time.delayedCall(300, () => this.scene.start('Result', data));
   }

@@ -250,6 +250,126 @@
         -webkit-user-select: text;
         user-select: text;
       }
+      /* ── Classement (HTML : la liste de 100 défile bien sur téléphone) ── */
+      #ranking {
+        position: fixed;
+        inset: 0;
+        z-index: 9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(26, 16, 32, 0.88);
+        font-family: 'M PLUS 1p', system-ui, sans-serif;
+        color: var(--cream);
+      }
+      #ranking[hidden] {
+        display: none;
+      }
+      #ranking .panel {
+        position: relative;
+        width: min(94vw, 620px);
+        height: min(94vh, 560px);
+        box-sizing: border-box;
+        padding: 10px 16px 12px;
+        display: flex;
+        flex-direction: column;
+        background: #002654;
+        border: 5px solid #ffffff;
+        box-shadow: 8px 8px 0 #ce1126;
+      }
+      #ranking .ttl {
+        font-family: 'Dela Gothic One', system-ui, sans-serif;
+        font-size: 24px;
+        text-align: center;
+        color: #ffffff;
+        text-shadow: 3px 3px 0 #ce1126;
+      }
+      #ranking .help,
+      #ranking .me {
+        margin: 2px 0;
+        text-align: center;
+        font-weight: 800;
+        font-size: 13px;
+      }
+      #ranking .me {
+        color: var(--yellow);
+      }
+      #ranking .tabs {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin: 4px 0;
+      }
+      #ranking button {
+        font-family: 'Dela Gothic One', system-ui, sans-serif;
+        font-size: 14px;
+        color: #002654;
+        background: #ffffff;
+        border: 3px solid #1a1020;
+        padding: 4px 12px;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      #ranking .tabs button[aria-selected='true'] {
+        background: #ce1126;
+        color: #ffffff;
+      }
+      #ranking button.back {
+        position: absolute;
+        left: 10px;
+        top: 8px;
+        font-size: 12px;
+        padding: 3px 8px;
+      }
+      #ranking ol {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 4px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+      #ranking li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 4px 6px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        font-weight: 800;
+        font-size: 15px;
+      }
+      #ranking li.mine {
+        background: rgba(255, 201, 60, 0.18);
+      }
+      #ranking li .r {
+        width: 2.4em;
+        text-align: right;
+        color: var(--yellow);
+      }
+      #ranking li .n {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      #ranking li .w {
+        font-weight: 600;
+        font-size: 13px;
+      }
+      #ranking li .flag {
+        font-family: 'M PLUS 1p', system-ui, sans-serif;
+        font-size: 11px;
+        padding: 1px 6px;
+        border-width: 2px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.6);
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+      #ranking li.empty {
+        justify-content: center;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.7);
+      }
       @keyframes tilt {
         0%, 20% { transform: rotate(0deg); }
         55%, 80% { transform: rotate(-90deg); }
@@ -298,7 +418,7 @@
           <div class="mode">
             <h3 data-text="quick"></h3>
             <p data-text="quickHelp"></p>
-            <div class="row"><button data-act="quick" data-text="quickGo"></button></div>
+            <div class="row"><button data-act="quick" data-text="quickGo"></button><button data-act="ranking" class="alt" data-rank-text="open"></button></div>
           </div>
         </div>
         <div data-view="host">
@@ -316,6 +436,20 @@
         <div data-view="busy">
           <p class="status" data-status></p>
         </div>
+      </div>
+    </div>
+    <div id="ranking" hidden>
+      <div class="panel">
+        <button data-act="close" class="back" data-rank-text="close"></button>
+        <div class="ttl" data-rank-text="title"></div>
+        <p class="help" data-rank-text="help"></p>
+        <div class="tabs">
+          <button data-period="day"></button>
+          <button data-period="week"></button>
+          <button data-period="all"></button>
+        </div>
+        <p class="me" id="ranking-me"></p>
+        <ol id="ranking-list"></ol>
       </div>
     </div>
     <div id="rotate" role="alert">

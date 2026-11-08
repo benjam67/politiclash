@@ -26,7 +26,7 @@ describe('code de salon, lien, pseudo', () => {
 
   it('pseudo : espaces et caractères invisibles retirés, 14 caractères au plus', () => {
     expect(cleanPseudo('  Le   Député  ')).toBe('Le Député');
-    expect(cleanPseudo('a\u0000b‮c​')).toBe('abc');
+    expect(cleanPseudo('a\u0000b\u202ec\u200b')).toBe('abc');
     expect(cleanPseudo('x'.repeat(40))).toHaveLength(14);
     expect(cleanPseudo('   ')).toBe('');
   });

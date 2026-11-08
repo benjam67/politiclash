@@ -28,10 +28,11 @@ const state = <T = Record<string, unknown>>(p: Page) => p.evaluate(() => window.
 const realErrors = (e: string[]) => e.filter((x) => !/peer|Could not connect|ERR_CONNECTION|Failed to load resource/i.test(x));
 
 /** Ouvre la Primaire ouverte depuis l'accueil. */
-async function search(page: Page, extra = '') {
+async function search(page: Page, extra = '', name = '') {
   await page.goto(`./?${P}${extra ? `&${extra}` : ''}`);
   await waitScene(page, 'Title');
   await tapNamed(page, 'Title', 'btn-online');
+  if (name) await page.fill('#lobby-pseudo', name);
   await page.locator('#lobby [data-act="quick"]').click();
   await waitScene(page, 'Quick');
 }
@@ -59,14 +60,16 @@ async function bothInRoom(a: Page, b: Page) {
 test.describe('phase 7d : Primaire ouverte', () => {
   test.describe.configure({ timeout: 420_000 });
 
-  test('deux inconnus se trouvent, choisissent en 15 s et jouent un match complet par le relais, sans voir l’IP de l’autre', async ({ browser }) => {
+  test('deux inconnus se trouvent, choisissent en 15 s et jouent un match complet par le relais, sans voir l’IP de l’autre ; le classement compte la victoire', async ({ browser, request }) => {
     const a = await phone(browser);
     const b = await phone(browser);
     const errors = [...collectErrors(a), ...collectErrors(b)];
-    await search(a, 'netbot=hard');
+    const tag = Math.random().toString(36).slice(2, 6);
+    const names = [`Alpha ${tag}`, `Bravo ${tag}`];
+    await search(a, 'netbot=hard', names[0]);
     await expect.poll(async () => (await state<{ online: number }>(a)).online).toBeGreaterThanOrEqual(1);
     await a.screenshot({ path: `${SHOTS}/7d-recherche.png` });
-    await search(b, 'netbot=hard');
+    await search(b, 'netbot=hard', names[1]);
     await bothInRoom(a, b);
     // Salon de la Primaire : titre, pas de code, pseudos de la liste du jeu, lieu tiré au hasard.
     const ra = await state<{ role: string; them: { pseudo: string }; route: string | null }>(a);
@@ -99,9 +102,42 @@ test.describe('phase 7d : Primaire ouverte', () => {
     expect(xb.online.hash).toBe(xa.online.hash);
     expect(xa.online.stats.desyncs + xb.online.stats.desyncs).toBe(0);
     await a.screenshot({ path: `${SHOTS}/7d-resultat.png` });
+    // Classement : les deux téléphones ont déclaré le même résultat, la victoire est comptée au gagnant, sous son nom.
+    const winnerName = names[xa.winner === (await state<{ online: { me: number } }>(a)).online.me ? 0 : 1];
+    await expect
+      .poll(async () => {
+        const board = (await (await request.get('http://127.0.0.1:8787/rank/board?period=day')).json()) as { top: { name: string; wins: number }[] };
+        return board.top.find((r) => r.name === winnerName)?.wins ?? 0;
+      }, { timeout: 15_000 })
+      .toBe(1);
     // Personne ne demande la revanche : au bout de 10 s, chacun repart chercher un adversaire.
     await waitScene(a, 'Quick', 20_000);
     await waitScene(b, 'Quick', 20_000);
+    await expectNoErrors(realErrors(errors));
+  });
+
+  test('écran du classement : onglets Jour, Semaine, Toujours ; nom grossier refusé dans le menu', async ({ browser }) => {
+    const page = await phone(browser);
+    const errors = collectErrors(page);
+    await page.goto(`./?${P}`);
+    await waitScene(page, 'Title');
+    await tapNamed(page, 'Title', 'btn-online');
+    // Nom grossier : refusé tout de suite, on reste dans le menu.
+    await page.fill('#lobby-pseudo', 'Gros c0nnard');
+    await page.locator('#lobby [data-act="quick"]').click();
+    await expect(page.locator('[data-view="choice"] .err')).toContainText('n’est pas accepté');
+    expect(await page.evaluate(() => window.__slap!.scene)).toBe('Title');
+    await page.locator('#lobby [data-act="ranking"]').click();
+    await expect(page.locator('#ranking')).toBeVisible();
+    for (const p of ['day', 'week', 'all']) {
+      await page.locator(`#ranking [data-period="${p}"]`).click();
+      await page.waitForFunction((pp) => (window.__slap as unknown as { ranking?: { period: string } }).ranking?.period === pp, p, { timeout: 10_000 });
+    }
+    await expect(page.locator('#ranking-me')).not.toBeEmpty();
+    await page.screenshot({ path: `${SHOTS}/7d-classement.png` });
+    await page.locator('#ranking [data-act="close"]').click();
+    await expect(page.locator('#ranking')).toBeHidden();
+    await expect(page.locator('#lobby')).toBeVisible();
     await expectNoErrors(realErrors(errors));
   });
 

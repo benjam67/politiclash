@@ -54,6 +54,8 @@ export class FriendRoom {
   private matchNo = 0;
   /** Primaire ouverte (entre inconnus). */
   readonly quick: boolean;
+  /** Primaire ouverte : identifiant du match donné par la file d'attente (pour déclarer les résultats au classement). */
+  readonly matchId: string | null;
   /** Primaire ouverte : pseudo de l'adversaire, donné par le serveur (on ignore le texte qu'il envoie). */
   private readonly foePseudo: string | null;
 
@@ -62,9 +64,10 @@ export class FriendRoom {
     pseudo: string,
     fighter: FighterId | null,
     stage: StageId | null,
-    opts: { quick?: boolean; foePseudo?: string } = {},
+    opts: { quick?: boolean; foePseudo?: string; matchId?: string } = {},
   ) {
     this.quick = !!opts.quick;
+    this.matchId = opts.matchId ?? null;
     this.foePseudo = opts.foePseudo ?? null;
     // Primaire ouverte : pseudo tiré dans la liste du jeu, gardé tel quel (la limite de 14 caractères vaut pour les pseudos libres).
     this.me = { pseudo: this.quick ? pseudo : cleanPseudo(pseudo) || 'Joueur', fighter, ready: false };

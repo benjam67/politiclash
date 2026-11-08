@@ -116,7 +116,11 @@ Claude prépare une comparaison chiffrée à jour au début de cette phase. **Le
 - Ouverture progressive : d'abord un lien partagé à un petit cercle, puis public.
 - *Validé quand* : le propriétaire a donné son accord pour l'ouverture.
 
-## 4. Classement (plus tard, en option)
+## 4. Classement ✔
+
+**Fait le 8 novembre 2026, à la demande du propriétaire** (détail dans `CHANGELOG.md`) : classements du jour, de la semaine et de tous les temps, top 100, victoires en Primaire ouverte comptées quand les deux téléphones sont d'accord (3 au plus par jour contre le même adversaire), nom libre filtré avec signalement. Sans comptes : l'identité tient au téléphone. À mentionner dans la page d'information sur la vie privée (phase 7f) : identifiant tiré au hasard et nom affiché publiquement.
+
+*Texte d'origine :*
 
 Sans comptes utilisateurs (hors périmètre), pas de vrai classement. On peut garder sur le téléphone : victoires en ligne, série en cours, perso favori. Un classement public demanderait des comptes : à décider plus tard.
 

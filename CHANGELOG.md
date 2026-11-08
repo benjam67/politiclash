@@ -780,3 +780,36 @@ Sur iPhone, l'écran « tourne ton téléphone » pouvait rester affiché une fo
   - personne en vue, match contre l'IA, un adversaire arrive, REJOINDRE, les deux arrivent dans le salon ;
   - l'adversaire quitte en plein match : victoire pour celui qui reste.
 - Reste à valider sur de vrais téléphones, avec le vrai serveur : deux joueurs qui ne se connaissent pas.
+
+## 8 novembre 2026 · Classement de la Primaire ouverte (jour, semaine, toujours)
+
+Demandé par le propriétaire : classements des scores du jour, de la semaine et de tous les temps. Ses choix : seuls comptent les matchs contre de vrais joueurs, nom affiché libre mais filtré, top 100.
+
+**Ce qui compte**
+- Une **victoire en Primaire ouverte**, quand les **deux téléphones déclarent le même résultat** (l'un « gagné », l'autre « perdu »), pour un match que la file d'attente a vraiment organisé entre ces deux joueurs. Une revanche compte comme un nouveau match.
+- Quitter en plein match : le téléphone qui quitte déclare sa défaite, la victoire est comptée à l'autre. Une coupure de réseau ne compte pas (une seule déclaration).
+- Contre un même adversaire, **au plus 3 victoires comptées par jour**, pour qu'on ne puisse pas monter en jouant contre soi-même avec deux téléphones ou en s'arrangeant avec un ami. Un téléphone n'est jamais associé à lui-même dans la file.
+- Entre amis ne compte pas : deux amis pourraient s'échanger des victoires à volonté.
+- Jour et semaine à l'**heure de Paris** ; la semaine va du lundi au dimanche.
+
+**Identité, sans comptes**
+- La première fois, le téléphone tire au hasard un identifiant et un secret, gardés dans sa sauvegarde. Le serveur ne garde que l'empreinte du secret ; il faut le secret pour déclarer un résultat ou changer de nom. Aucune adresse IP ni information sur l'appareil n'est stockée.
+- Limite : changer de téléphone ou effacer les données du site, c'est repartir de zéro dans le classement.
+
+**Nom affiché**
+- C'est le **pseudo du menu en ligne** (le même qu'en Entre amis). En Primaire, l'adversaire voit toujours un pseudo tiré de la liste du jeu ; le pseudo libre n'apparaît que dans le classement.
+- Filtre (`server/src/names.ts`, partagé par le jeu et le serveur) : gros mots et insultes en français et en anglais, y compris déguisés (chiffres à la place des lettres, lettres répétées, lettres séparées par des points ou des espaces), sans gêner les mots qui en contiennent un court (« Constant », « Député »). Un nom refusé est signalé tout de suite dans le menu.
+- Bouton **Signaler** sur chaque ligne du classement (deux appuis, pour éviter les erreurs) : à 3 signalements de joueurs différents, le nom est remplacé par « Joueur #1234 ». Changer de nom efface les signalements. Au plus 5 changements de nom et 20 signalements par jour et par téléphone.
+
+**Écran** : menu EN LIGNE → CLASSEMENT. Onglets JOUR, SEMAINE, TOUJOURS, les 100 premiers (nombre de victoires), et la place du joueur, même hors du top 100.
+
+**Serveur** : second Durable Object, `RankDO`, avec sa base SQLite (tables joueurs, matchs organisés, déclarations, victoires, signalements). La file d'attente lui transmet chaque match organisé ; elle ne transmet pas aux joueurs l'identifiant de classement de l'autre. Adresses `/rank/result`, `/rank/name`, `/rank/flag` réservées aux pages du jeu ; `/rank/board` se lit librement.
+
+**Corrigé en route**
+- Fin de match en ligne : le premier téléphone arrivé au bout cessait d'envoyer ; si son dernier paquet s'était perdu, l'autre ne pouvait pas confirmer la fin, puis prenait le départ du premier (pas de revanche au bout de 10 s) pour un abandon, et se déclarait vainqueur. Désormais le téléphone continue d'envoyer 5 s après la fin, et un départ reçu quand la fin est déjà à l'écran n'est plus un abandon.
+- Caractères invisibles écrits tels quels dans le code (filtre des pseudos) : remplacés par leur code `\u…`.
+
+**Vérifications**
+- 267 tests unitaires (8 de plus : filtre des noms, dont les déguisements et les faux positifs ; jour et semaine à l'heure de Paris, été comme hiver ; accord des deux déclarations).
+- Essai sur le vrai serveur lancé en local : la victoire n'est comptée qu'après les deux déclarations, la 4e du jour contre le même adversaire est ignorée, mauvais secret, match inventé, nom grossier et autre site refusés.
+- Tests navigateur : après un match complet de Primaire entre deux navigateurs, le classement du jour compte 1 victoire au gagnant, sous son nom ; écran du classement (trois onglets, place du joueur) ; nom grossier refusé dans le menu.

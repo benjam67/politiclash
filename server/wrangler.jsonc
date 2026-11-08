@@ -8,8 +8,17 @@
   "workers_dev": true,
   "observability": { "enabled": true },
   // File d'attente de la Partie rapide : un Durable Object (stockage SQLite, seul disponible en offre gratuite).
-  "durable_objects": { "bindings": [{ "name": "QUEUE", "class_name": "QueueDO" }] },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["QueueDO"] }],
+  // Classement : un second Durable Object, avec sa base SQLite.
+  "durable_objects": {
+    "bindings": [
+      { "name": "QUEUE", "class_name": "QueueDO" },
+      { "name": "RANK", "class_name": "RankDO" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["QueueDO"] },
+    { "tag": "v2", "new_sqlite_classes": ["RankDO"] }
+  ],
   "vars": {
     // Pages autorisées à demander des accès au relais (le jeu publié, et les essais en local).
     "ALLOWED_ORIGINS": "https://benjam67.github.io,http://localhost:4173,http://127.0.0.1:4173,http://localhost:5173,http://127.0.0.1:5173"

@@ -359,3 +359,24 @@ export const QUICK = {
     unavailable: 'La Primaire ouverte n’est pas disponible.',
   } as Record<string, string>,
 };
+
+/** Classement de la Primaire ouverte. */
+export const RANKING = {
+  open: 'CLASSEMENT',
+  title: 'CLASSEMENT',
+  tabs: { day: 'JOUR', week: 'SEMAINE', all: 'TOUJOURS' } as Record<string, string>,
+  help: 'Victoires en Primaire ouverte contre de vrais joueurs.',
+  wins: (n: number) => (n === 1 ? '1 victoire' : `${n} victoires`),
+  me: (rank: number | null, wins: number) => (rank === null ? 'Tu n’es pas encore classé : gagne une Primaire !' : `Ta place : ${rank}ᵉ · ${wins === 1 ? '1 victoire' : `${wins} victoires`}`),
+  empty: 'Personne n’a encore gagné sur cette période.',
+  loading: 'Chargement…',
+  offline: 'Classement indisponible pour le moment.',
+  flag: 'Signaler',
+  flagConfirm: 'Signaler ce nom ?',
+  flagged: 'Signalé',
+  close: '← RETOUR',
+  you: '(toi)',
+  /** Pseudo refusé par le filtre (menu en ligne). */
+  nameRefused: 'Ce pseudo n’est pas accepté. Choisis-en un autre.',
+  nameTooMany: 'Trop de changements de pseudo aujourd’hui.',
+};

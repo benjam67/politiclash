@@ -19,6 +19,8 @@ export interface Player {
   region: string;
   /** Pseudo tiré au hasard : un numéro dans la liste du jeu (jamais de texte libre). */
   pseudo: number;
+  /** Identifiant du téléphone pour le classement (deux onglets d'un même téléphone ne s'affrontent pas). */
+  rid?: string;
 }
 
 interface Waiting extends Player {
@@ -36,7 +38,7 @@ export interface Proposal {
 /** Ce que la file demande d'envoyer aux joueurs. */
 export type QueueEvent =
   | { to: string; t: 'found'; match: string; foe: number; ttl: number }
-  | { to: string; t: 'match'; match: string; role: 'host' | 'guest'; seed: number; foe: number }
+  | { to: string; t: 'match'; match: string; role: 'host' | 'guest'; seed: number; foe: number; rid?: string; foeRid?: string }
   /** L'autre a refusé ou n'a pas répondu : on est remis dans la file, à sa place. */
   | { to: string; t: 'requeued' }
   /** On n'a pas accepté à temps (ou on a refusé) : on sort de la file. */
@@ -91,8 +93,8 @@ export class MatchQueue {
     const seed = Math.floor(this.rand() * 2 ** 31);
     const [host, guest] = pr.a.since <= pr.b.since ? [pr.a, pr.b] : [pr.b, pr.a];
     return [
-      { to: host.id, t: 'match', match: pr.id, role: 'host', seed, foe: guest.pseudo },
-      { to: guest.id, t: 'match', match: pr.id, role: 'guest', seed, foe: host.pseudo },
+      { to: host.id, t: 'match', match: pr.id, role: 'host', seed, foe: guest.pseudo, rid: host.rid, foeRid: guest.rid },
+      { to: guest.id, t: 'match', match: pr.id, role: 'guest', seed, foe: host.pseudo, rid: guest.rid, foeRid: host.rid },
       ...this.tick(now),
     ];
   }
@@ -114,7 +116,7 @@ export class MatchQueue {
     const taken = new Set<string>();
     for (const a of list) {
       if (taken.has(a.id)) continue;
-      const others = list.filter((b) => b.id !== a.id && !taken.has(b.id) && b.v === a.v);
+      const others = list.filter((b) => b.id !== a.id && !taken.has(b.id) && b.v === a.v && (!a.rid || a.rid !== b.rid));
       if (!others.length) continue;
       const near = others.find((b) => b.region === a.region);
       const b = near ?? (now - a.since >= REGION_WAIT_MS ? others.find((x) => now - x.since >= REGION_WAIT_MS) ?? others[0] : others.find((x) => now - x.since >= REGION_WAIT_MS));
