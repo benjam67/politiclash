@@ -4,6 +4,12 @@
   "name": "france-bagarre-site",
   "compatibility_date": "2026-10-01",
   "workers_dev": true,
+  // Le domaine du jeu (zone france-bagarre.fr sur le compte Cloudflare) : Cloudflare crée lui-même
+  // les enregistrements DNS et le certificat HTTPS. www renvoie vers le domaine nu (script dans index.html).
+  "routes": [
+    { "pattern": "france-bagarre.fr", "custom_domain": true },
+    { "pattern": "www.france-bagarre.fr", "custom_domain": true }
+  ],
   "assets": {
     "directory": "../dist",
     "not_found_handling": "none"

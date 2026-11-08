@@ -2,7 +2,7 @@ name: Déploiement du jeu
 
 # Build + tests, puis publication de dist/ :
 #   - sur Cloudflare (Worker « france-bagarre-site », dossier site/), adresse principale du jeu ;
-#   - sur la branche gh-pages (ancienne adresse GitHub Pages), le temps de la migration.
+#   - sur la branche gh-pages (ancienne adresse GitHub Pages) : une simple page de renvoi vers france-bagarre.fr.
 # Secrets Cloudflare : les mêmes que pour le serveur (CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN).
 on:
   push:
@@ -53,13 +53,34 @@ jobs:
           grep -q "${GITHUB_SHA}" v.txt
           curl -fsS "$URL/" | grep -q "<title>France Bagarre</title>"
           echo "### Jeu en ligne : $URL" >> "$GITHUB_STEP_SUMMARY"
-      - name: Publier sur gh-pages
+          # Le domaine : vérifié aussi (certificat créé par Cloudflare au premier déploiement, d'où l'attente).
+          for i in $(seq 1 30); do
+            curl -fsS "https://france-bagarre.fr/version.txt" -o d.txt && grep -q "${GITHUB_SHA}" d.txt && break
+            echo "Domaine pas encore prêt ($i/30), nouvel essai dans 10 s…"
+            sleep 10
+          done
+          grep -q "${GITHUB_SHA}" d.txt
+          echo "### Domaine : https://france-bagarre.fr" >> "$GITHUB_STEP_SUMMARY"
+      - name: Publier sur gh-pages la page de renvoi vers france-bagarre.fr
+        # L'ancienne adresse (benjam67.github.io/politiclash/) renvoie vers le domaine, en gardant
+        # le code de salon des liens d'invitation déjà partagés.
         run: |
-          cd dist
+          mkdir -p redirect && cd redirect
+          cat > index.html <<'HTML'
+          <!doctype html>
+          <html lang="fr"><head><meta charset="utf-8"><title>France Bagarre</title>
+          <meta name="robots" content="noindex">
+          <link rel="canonical" href="https://france-bagarre.fr/">
+          <script>location.replace('https://france-bagarre.fr/' + location.search + location.hash);</script>
+          <meta http-equiv="refresh" content="0; url=https://france-bagarre.fr/">
+          </head><body><p>France Bagarre a déménagé : <a href="https://france-bagarre.fr/">france-bagarre.fr</a></p></body></html>
+          HTML
+          cp index.html 404.html
           touch .nojekyll
+          echo "${GITHUB_SHA}" > version.txt
           git init -q -b gh-pages
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -q -m "Déploiement de ${GITHUB_SHA}"
+          git commit -q -m "Renvoi vers france-bagarre.fr (${GITHUB_SHA})"
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
