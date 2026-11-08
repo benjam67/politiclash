@@ -39,3 +39,36 @@ await make('apple-touch-icon.png', 180, false, false);
 // Le logo du jeu, agrandi ×2 pour les écrans à haute densité.
 await sharp(SRC).resize(meta.width * 2, meta.height * 2, { kernel: 'lanczos3' }).webp({ quality: 90 }).toFile(path.join(UI, 'logo.webp'));
 console.log('icônes et logo générés');
+
+// Icônes d'onglet : favicon.ico (16, 32 et 48 px, images PNG dans le fichier .ico) et favicon-32.png,
+// à la racine du site (certains navigateurs et services demandent /favicon.ico d'office).
+const PUB = path.join(ROOT, 'public');
+const sizes = [16, 32, 48];
+const pngs = [];
+// Le logo est un bandeau : à 16 ou 32 px il devient illisible. On garde un carré centré sur le boxeur,
+// bord à bord, coins arrondis.
+const side = meta.height;
+// Cadré sur la tête et le gant, un peu à droite du centre, pour garder du bleu et du rouge.
+const square = await sharp(SRC).extract({ left: Math.round(meta.width * 0.36), top: 0, width: side, height: side }).png().toBuffer();
+for (const s of sizes) {
+  const mask = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><rect width="${s}" height="${s}" rx="${s * 0.2}"/></svg>`);
+  const png = await sharp(square).resize(s, s, { kernel: 'lanczos3' }).composite([{ input: mask, blend: 'dest-in' }]).png({ compressionLevel: 9 }).toBuffer();
+  pngs.push(png);
+  if (s === 32) fs.writeFileSync(path.join(OUT, 'favicon-32.png'), png);
+}
+const head = Buffer.alloc(6 + 16 * sizes.length);
+head.writeUInt16LE(0, 0);
+head.writeUInt16LE(1, 2);
+head.writeUInt16LE(sizes.length, 4);
+let offset = head.length;
+sizes.forEach((s, i) => {
+  const e = 6 + 16 * i;
+  head.writeUInt8(s, e);
+  head.writeUInt8(s, e + 1);
+  head.writeUInt16LE(1, e + 4);
+  head.writeUInt16LE(32, e + 6);
+  head.writeUInt32LE(pngs[i].length, e + 8);
+  head.writeUInt32LE(offset, e + 12);
+  offset += pngs[i].length;
+});
+fs.writeFileSync(path.join(PUB, 'favicon.ico'), Buffer.concat([head, ...pngs]));

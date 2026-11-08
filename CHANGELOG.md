@@ -838,3 +838,7 @@ Choix du propriétaire : le jeu quitte GitHub Pages pour Cloudflare (déjà hôt
 **À savoir** : les sauvegardes du navigateur sont liées à l'adresse du site ; sur le nouveau domaine, chaque joueur repart de zéro (tutoriel, campagne, palmarès). Le classement est sur le serveur, mais l'identifiant qui y relie le joueur est dans le navigateur : sur le nouveau domaine, le joueur repart avec un nouvel identifiant, et son ancien pseudo reste pris par l'ancien. Peu de joueurs à ce jour ; un transfert pourra être ajouté si besoin.
 
 **Primaire ouverte — 8 novembre 2026** (choix du propriétaire) : le jeu propose de jouer contre l'IA au bout de **30 s** d'attente sans adversaire, au lieu de 45 s (`AI_OFFER_S` dans `QuickScene.ts`).
+
+**Icône d'onglet et aperçu des liens — 8 novembre 2026**
+- `favicon.ico` (16, 32, 48 px) et `icons/favicon-32.png`, cadrés sur la tête et le gant du boxeur (le bandeau entier devenait illisible à cette taille). Produits par `npm run icons`.
+- Aperçu des liens partagés (WhatsApp, Messages, réseaux) : balises Open Graph dans `index.html` et image `public/share.jpg` (1200 × 630 : hémicycle, les six candidats en garde, logo et nom du jeu), produite par `npm run share`. Le déploiement vérifie que l'image et l'icône sont servies.

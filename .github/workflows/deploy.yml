@@ -60,6 +60,10 @@ jobs:
             sleep 10
           done
           grep -q "${GITHUB_SHA}" d.txt
+          # Aperçu des liens partagés et icône d'onglet.
+          curl -fsSI "https://france-bagarre.fr/share.jpg" | grep -qi "content-type: image/jpeg"
+          curl -fsS "https://france-bagarre.fr/" | grep -q 'og:image" content="https://france-bagarre.fr/share.jpg"'
+          curl -fsSI "https://france-bagarre.fr/favicon.ico" | grep -qi "^HTTP/.* 200"
           echo "### Domaine : https://france-bagarre.fr" >> "$GITHUB_STEP_SUMMARY"
       - name: Publier sur gh-pages la page de renvoi vers france-bagarre.fr
         # L'ancienne adresse (benjam67.github.io/politiclash/) renvoie vers le domaine, en gardant
