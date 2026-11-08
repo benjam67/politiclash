@@ -3,7 +3,7 @@ import { createFight, createFightStarted, hashState, STEP_MS } from '../../src/l
 import { noInput } from '../../src/logic/input';
 import { playNetMatch } from '../../src/net/bench';
 import { FakePipe } from '../../src/net/fakePipe';
-import { delayForPing, NET_TIMING, NetSession, type NetMsg } from '../../src/net/rollback';
+import { delayForPing, DESYNC_LIMIT, NET_TIMING, NetSession, type NetMsg } from '../../src/net/rollback';
 
 const MID = { latency: 100, jitter: 15 };
 const BAD = { latency: 200, jitter: 25, loss: 0.05 };
@@ -125,5 +125,26 @@ describe('session en ligne', () => {
     expect(delayForPing(320)).toBe(4);
     expect(delayForPing(400)).toBe(6);
     expect(delayForPing(2000)).toBe(6);
+  });
+});
+
+describe('triche (phase 7e)', () => {
+  it('un faux client tricheur (invité ou hôte) est détecté des deux côtés : match arrêté', () => {
+    for (const who of [0, 1] as const) {
+      const r = playNetMatch({ pipe: MID, seed: 11 + who, cheat: { who, every: 60 }, stopOnDesyncs: true });
+      expect(r.finished, `tricheur ${who}`).toBe(false);
+      expect(r.aborted.some(Boolean), `tricheur ${who}`).toBe(true);
+      expect(Math.max(r.stats[0].desyncs, r.stats[1].desyncs)).toBeGreaterThanOrEqual(DESYNC_LIMIT);
+      // Détecté vite : en une dizaine de secondes de jeu au plus.
+      expect(r.ms).toBeLessThan(15_000);
+    }
+  });
+
+  it('sans triche, 30 matchs avec 200 ms et 5 % de pertes vont au bout sans un seul arrêt', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const r = playNetMatch({ pipe: BAD, seed: 100 + seed, stopOnDesyncs: true });
+      expect(r.aborted, `match ${seed}`).toEqual([false, false]);
+      expect(r.finished, `match ${seed}`).toBe(true);
+    }
   });
 });

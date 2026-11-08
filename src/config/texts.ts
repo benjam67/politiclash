@@ -284,6 +284,9 @@ export const ONLINE = {
   pausedHelp: 'On attend ton adversaire, le match reprend tout seul.',
   lostTitle: 'Connexion perdue',
   cancelled: 'Élection annulée.',
+  /** Primaire ouverte : les deux téléphones ne voient plus le même match, plusieurs fois (triche probable). */
+  desyncTitle: 'Élection invalidée',
+  desyncHelp: 'Les deux téléphones ne voient plus le même match. Pas de vainqueur, rien n’est compté au classement.',
   menu: 'MENU',
   // Fin de match
   again: 'NOUVEAU DÉBAT',
@@ -352,11 +355,13 @@ export const QUICK = {
   againTimer: (s: number) => `Revanche ? ${s} s`,
   nextFoe: 'NOUVEL ADVERSAIRE',
   foeLeftWin: 'Ton adversaire a abandonné : victoire !',
+  update: 'METTRE À JOUR',
   errors: {
     server: 'Serveur injoignable. Réessaie plus tard.',
     'no-relay': 'La Primaire ouverte est indisponible pour le moment.',
     'link-failed': 'Connexion à l’adversaire impossible. On en cherche un autre…',
     unavailable: 'La Primaire ouverte n’est pas disponible.',
+    outdated: 'Une nouvelle version du jeu est sortie. Mets le jeu à jour pour jouer en ligne.',
   } as Record<string, string>,
 };
 

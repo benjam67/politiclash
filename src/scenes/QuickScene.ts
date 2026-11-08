@@ -118,6 +118,10 @@ export class QuickScene extends Phaser.Scene {
       text(height * 0.64, QUICK.nobody, 18, CSS.cream);
       add(makeButton(this, width / 2, height * 0.75, QUICK.playAi, FLAG.blue, () => this.playAi(), { w: 460, h: 64, font: 22 }).setDepth(4).setName('btn-quick-ai'));
     }
+    // Ancienne version : bouton pour recharger la page (la nouvelle version se charge).
+    if (this.message === QUICK.errors.outdated) {
+      add(makeButton(this, width / 2, height * 0.66, QUICK.update, FLAG.blue, () => location.reload(), { w: 320, h: 64, font: 24 }).setDepth(4).setName('btn-quick-update'));
+    }
     const back = this.message && q.state === 'error' ? 'RETOUR' : QUICK.cancel;
     add(makeButton(this, width / 2, Math.min(height * 0.9, height - safe.bottom - 40), back, COLORS.cream, () => this.leave(), { w: 220, h: 54, font: 22 }).setDepth(4).setName('btn-quick-cancel'));
     void side;
@@ -126,6 +130,7 @@ export class QuickScene extends Phaser.Scene {
 
   /** Match contre l'IA en attendant : on reste dans la file ; si un adversaire arrive, le joueur choisit de le rejoindre. */
   private playAi() {
+    this.q.reportWait('ai');
     const save = loadSave();
     const left = save.lastFighter ?? PLAYABLE_IDS[Math.floor(Math.random() * PLAYABLE_IDS.length)];
     const others = PLAYABLE_IDS.filter((id) => id !== left);

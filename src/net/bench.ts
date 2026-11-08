@@ -22,6 +22,10 @@ export interface NetMatchOptions {
   clockDrift?: number;
   /** Fausse un état chez l'invité à ce pas (essai du recalage). */
   corruptAt?: number;
+  /** Faux client tricheur : ce côté fausse son état tous les `every` pas (ses PV remontent). */
+  cheat?: { who: 0 | 1; every: number };
+  /** Arrêter le match dès qu'un côté compte trop de désynchronisations (règle de la Primaire ouverte). */
+  stopOnDesyncs?: boolean;
   /** Durée maximale (ms de jeu). */
   maxMs?: number;
   stage?: StageId;
@@ -42,6 +46,8 @@ export interface NetMatchReport {
   statusMs: Record<NetStatus, number>;
   /** Un côté a déclaré le match perdu (coupure trop longue). */
   lost: boolean;
+  /** Match arrêté pour désynchronisations répétées (`stopOnDesyncs`), et par qui. */
+  aborted: [boolean, boolean];
   bytesPerSecond: number;
   /** Événements annoncés à chaque téléphone, par type (après retours en arrière : chacun une seule fois). */
   events: [Record<string, number>, Record<string, number>];
@@ -77,6 +83,8 @@ export function playNetMatch(o: NetMatchOptions): NetMatchReport {
   let nextB = 0;
   let lost = false;
   let corrupted = false;
+  const lastCheat = [0, 0];
+  let aborted: [boolean, boolean] = [false, false];
   const events: [Record<string, number>, Record<string, number>] = [{}, {}];
   const dt = 1;
   for (; now < maxMs; now += dt) {
@@ -85,6 +93,10 @@ export function playNetMatch(o: NetMatchOptions): NetMatchReport {
     if (now >= nextA) {
       nextA += STEP_MS;
       sa.tick(now, sa.frame >= 0 ? ai[0].read(sa.state, 0) : noInput());
+      if (o.cheat?.who === 0 && sa.confirmedFrame - lastCheat[0] >= o.cheat.every) {
+        lastCheat[0] = sa.confirmedFrame;
+        corrupt(sa, 0);
+      }
       count(events[0], sa.drainEvents());
       const st = sa.status(now);
       statusMs[st] += STEP_MS;
@@ -97,6 +109,14 @@ export function playNetMatch(o: NetMatchOptions): NetMatchReport {
         corrupted = true;
         corrupt(sb);
       }
+      if (o.cheat?.who === 1 && sb.confirmedFrame - lastCheat[1] >= o.cheat.every) {
+        lastCheat[1] = sb.confirmedFrame;
+        corrupt(sb, 1);
+      }
+    }
+    if (o.stopOnDesyncs && (sa.tooManyDesyncs || sb.tooManyDesyncs)) {
+      aborted = [sa.tooManyDesyncs, sb.tooManyDesyncs];
+      break;
     }
     if (sa.status(now) === 'lost' || sb.status(now) === 'lost') {
       lost = true;
@@ -129,6 +149,7 @@ export function playNetMatch(o: NetMatchOptions): NetMatchReport {
     stats: [sa.stats, sb.stats],
     statusMs,
     lost,
+    aborted,
     bytesPerSecond: ((ab.bytes + ba.bytes) / 2 / Math.max(1, now)) * 1000,
     events,
     replayEvents,
@@ -139,11 +160,13 @@ export function playNetMatch(o: NetMatchOptions): NetMatchReport {
  * Fausse l'état de l'invité (comme un bug de calcul ou une triche) : ses PV remontent. On fausse le dernier
  * état confirmé, qu'aucun retour en arrière ne recalcule, puis on rejoue jusqu'au pas actuel.
  */
-function corrupt(s: NetSession) {
+function corrupt(s: NetSession, who: 0 | 1 = 1) {
   const any = s as unknown as { states: Map<number, FightState>; frame: number; simulate(f: number): void };
   const c = s.confirmedFrame;
   const st = any.states.get(c) as FightState;
-  any.states.set(c, { ...st, f: [st.f[0], { ...st.f[1], hp: st.f[1].hp + 37 }] });
+  const f: [FightState['f'][0], FightState['f'][1]] = [st.f[0], st.f[1]];
+  f[who] = { ...f[who], hp: f[who].hp + 37 };
+  any.states.set(c, { ...st, f });
   for (let f = c; f < any.frame; f++) any.simulate(f);
 }
 

@@ -35,6 +35,17 @@ export interface MatchCard {
   dealt: [number[], number[]];
   /** Match gagné par abandon de l'adversaire (en ligne). */
   forfeit: boolean;
+  /** Match en ligne arrêté : désynchronisations répétées (Primaire ouverte), ou connexion perdue (Entre amis). */
+  aborted: 'desync' | 'lost' | null;
+  /** Match en ligne : désynchronisations, recalages et attentes de la connexion. */
+  net: { desyncs: number; resyncs: number; stalls: number } | null;
+}
+
+export const WAIT_OUTCOMES = ['match', 'ai', 'cancel'] as const;
+/** Primaire ouverte : une recherche d'adversaire qui se termine (adversaire trouvé, IA en attendant, annulée). */
+export interface WaitCard {
+  outcome: (typeof WAIT_OUTCOMES)[number];
+  secs: number;
 }
 
 export interface CampaignCard {
@@ -70,6 +81,17 @@ export function parseMatch(raw: unknown): MatchCard | null {
     if (row.some((v) => v === null)) return null;
     dealt.push(row as number[]);
   }
+  const aborted = r.aborted === undefined || r.aborted === null ? null : r.aborted === 'desync' || r.aborted === 'lost' ? r.aborted : undefined;
+  if (aborted === undefined) return null;
+  let net: MatchCard['net'] = null;
+  if (r.net !== undefined && r.net !== null) {
+    const n = r.net as Record<string, unknown>;
+    const desyncs = int(n.desyncs, 10000);
+    const resyncs = int(n.resyncs, 10000);
+    const stalls = int(n.stalls, 100000);
+    if (typeof r.net !== 'object' || desyncs === null || resyncs === null || stalls === null) return null;
+    net = { desyncs, resyncs, stalls };
+  }
   return {
     mode: r.mode,
     f: [r.f[0], r.f[1]],
@@ -81,7 +103,24 @@ export function parseMatch(raw: unknown): MatchCard | null {
     rounds,
     dealt: [dealt[0], dealt[1]],
     forfeit: r.forfeit === true,
+    aborted,
+    net,
   };
+}
+
+export function parseWait(raw: unknown): WaitCard | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const r = raw as Record<string, unknown>;
+  const secs = int(r.secs, 3600);
+  if (!oneOf(WAIT_OUTCOMES, r.outcome) || secs === null) return null;
+  return { outcome: r.outcome, secs };
+}
+
+export function waitCounters(c: WaitCard): [string, number][] {
+  return [
+    [`wait|n|${c.outcome}`, 1],
+    [`wait|secs|${c.outcome}`, c.secs],
+  ];
 }
 
 export function parseCampaign(raw: unknown): CampaignCard | null {
@@ -99,9 +138,21 @@ export function parseCampaign(raw: unknown): CampaignCard | null {
  *   pick|mode|perso            choisi par une personne     hwin|mode|perso          victoires de ce choix
  *   play|mode|perso            présent (personne ou IA)    win|mode|perso           victoires
  *   dmg|perso|coup             dégâts infligés (dixièmes)  stage|lieu, level|niveau, forfeit|mode
+ *   abort|mode|raison          match arrêté (desync, lost) : il ne compte ni victoire ni dégâts
+ *   net|mode|n, net|mode|desyncs, resyncs, stalls   santé de la connexion (matchs en ligne)
  */
 export function matchCounters(c: MatchCard): [string, number][] {
-  const out: [string, number][] = [
+  const net: [string, number][] = c.net
+    ? [
+        [`net|${c.mode}|n`, 1],
+        [`net|${c.mode}|desyncs`, c.net.desyncs],
+        [`net|${c.mode}|resyncs`, c.net.resyncs],
+        [`net|${c.mode}|stalls`, c.net.stalls],
+      ]
+    : [];
+  // Match arrêté : seulement l'arrêt et la connexion (le match n'est pas allé au bout).
+  if (c.aborted) return [[`abort|${c.mode}|${c.aborted}`, 1], ...net];
+  const out: [string, number][] = [...net,
     [`match|${c.mode}`, 1],
     [`secs|${c.mode}`, c.secs],
     [`rounds|${c.mode}`, c.rounds],

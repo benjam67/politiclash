@@ -12,6 +12,8 @@ import { currentRoom, FriendRoom, setCurrentRoom } from './friends';
 import { linkOptionsFromUrl, PeerLink } from './peer';
 import { rankIdentity } from './rank';
 import { RULES_VERSION } from './room';
+import { sendWaitStats } from './stats';
+import { isOutdated } from './version';
 
 export type QuickState = 'connecting' | 'searching' | 'found' | 'linking' | 'idle' | 'error';
 
@@ -42,6 +44,10 @@ export class QuickSearch {
   private closed = false;
   private wantSearch = false;
   private retry = 0;
+  /** Fin de la recherche en cours déjà comptée dans les statistiques. */
+  private waitReported = true;
+  /** Contrôle de version régulier pendant la recherche. */
+  private versionTimer: ReturnType<typeof setInterval> | null = null;
   /** Accepter tout seul les adversaires proposés (faux pendant un match contre l'IA : le joueur choisit). */
   autoAccept = true;
   pendingMatch: string | null = null;
@@ -61,14 +67,36 @@ export class QuickSearch {
   search() {
     this.wantSearch = true;
     this.since = performance.now();
+    this.waitReported = false;
     this.state = 'searching';
     if (!this.ws || this.ws.readyState > 1) this.connect();
     else if (this.ws.readyState === 1) this.send({ t: 'search' });
     this.emit((l) => l.change?.());
+    // Une ancienne version (page en cache) ne doit pas jouer : on vérifie maintenant, puis toutes les minutes.
+    void this.checkVersion();
+    if (!this.versionTimer) this.versionTimer = setInterval(() => this.wantSearch && void this.checkVersion(), 60_000);
+  }
+
+  private async checkVersion() {
+    if (!(await isOutdated()) || this.closed) return;
+    this.wantSearch = false;
+    this.pendingMatch = null;
+    this.send({ t: 'cancel' });
+    this.state = 'error';
+    this.emit((l) => l.error?.('outdated'));
+    this.emit((l) => l.change?.());
+  }
+
+  /** Statistiques : comment s'est terminée la recherche en cours (une seule fois par recherche). */
+  reportWait(outcome: 'match' | 'ai' | 'cancel') {
+    if (this.waitReported) return;
+    this.waitReported = true;
+    sendWaitStats(outcome, (performance.now() - this.since) / 1000);
   }
 
   /** Sort de la file, en restant connecté (pour le compteur). */
   cancel() {
+    if (this.wantSearch) this.reportWait('cancel');
     this.wantSearch = false;
     this.pendingMatch = null;
     this.send({ t: 'cancel' });
@@ -86,6 +114,9 @@ export class QuickSearch {
   }
 
   close() {
+    if (this.wantSearch) this.reportWait('cancel');
+    if (this.versionTimer) clearInterval(this.versionTimer);
+    this.versionTimer = null;
     this.closed = true;
     this.wantSearch = false;
     this.ws?.close();
@@ -176,6 +207,7 @@ export class QuickSearch {
           });
         });
       }
+      this.reportWait('match');
       this.wantSearch = false;
       this.state = 'idle';
       this.emit((l) => l.ready?.(room));

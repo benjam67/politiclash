@@ -916,12 +916,15 @@ export class FightScene extends Phaser.Scene {
             this.forfeitWin();
           } else {
             this.ended = true;
+            if (this.me === 0) sendMatchStats({ ...net.confirmedState, winner: 2 }, { mode: 'amis', human: [true, true], level: null, forfeit: false, aborted: 'lost', net: net.stats });
             this.netOverlay(ONLINE.lostTitle, ONLINE.cancelled, true);
             this.room?.close('lost');
           }
         }
       }
-      if (net.finished) this.endOnline();
+      // Primaire ouverte : désynchronisations répétées (triche probable) : match arrêté, sans vainqueur.
+      if (!this.ended && this.room?.quick && net.tooManyDesyncs) this.abortDesync();
+      if (!this.ended && net.finished) this.endOnline();
     }
     this.publish();
   }
@@ -989,9 +992,25 @@ export class FightScene extends Phaser.Scene {
     this.quickUi.push({ destroy: () => timer.remove() } as unknown as Phaser.GameObjects.GameObject);
   }
 
+  /**
+   * Primaire ouverte : trop de désynchronisations. Ni vainqueur ni classement ; retour au menu.
+   * `report` : c'est ce téléphone qui a constaté la limite, il envoie la fiche (l'autre, qui voit seulement
+   * partir son adversaire, ne l'envoie pas).
+   */
+  private abortDesync(report = true) {
+    this.ended = true;
+    const net = this.net!;
+    if (report) sendMatchStats({ ...net.confirmedState, winner: 2 }, { mode: 'primaire', human: [true, true], level: null, forfeit: false, aborted: 'desync', net: net.stats });
+    this.netOverlay(ONLINE.desyncTitle, ONLINE.desyncHelp, true);
+    this.room?.close('self');
+  }
+
   /** Primaire ouverte : l'adversaire a quitté le match ou ne répond plus. Victoire, et fin de match. */
   private forfeitWin() {
     if (this.ended && this.net?.finished) return;
+    // L'adversaire part après des désynchronisations : il a sans doute invalidé le match de son côté (triche
+    // probable chez l'un des deux). Pas de victoire par abandon dans ce cas.
+    if (this.net && this.net.stats.desyncs > 0 && this.net.state.phase !== 'matchEnd') return this.abortDesync(false);
     // Le match était déjà joué (fin affichée, pas encore confirmée) : c'est son vrai résultat qui compte,
     // pas un abandon (l'autre est parti après avoir vu la fin).
     if (this.net && this.net.state.phase === 'matchEnd') return this.endOnline(this.net.state);
@@ -1009,7 +1028,7 @@ export class FightScene extends Phaser.Scene {
     };
     if (this.room?.matchId && this.online) void reportResult(this.room.matchId, this.online.n, true);
     // Statistiques : l'autre est parti, c'est donc ce téléphone qui envoie la fiche.
-    sendMatchStats({ ...s, winner: this.me }, { mode: this.room?.quick ? 'primaire' : 'amis', human: [true, true], level: null, forfeit: true });
+    sendMatchStats({ ...s, winner: this.me }, { mode: this.room?.quick ? 'primaire' : 'amis', human: [true, true], level: null, forfeit: true, net: this.net!.stats });
     this.scene.start('Result', data);
   }
 
@@ -1034,7 +1053,7 @@ export class FightScene extends Phaser.Scene {
     // Primaire ouverte : résultat déclaré au classement (compté si l'adversaire déclare l'inverse).
     if (this.room?.quick && this.room.matchId && this.online) void reportResult(this.room.matchId, this.online.n, s.winner === this.me);
     // Statistiques : les deux téléphones ont le même match ; seul celui de gauche envoie la fiche.
-    if (this.me === 0) sendMatchStats(s, { mode: this.room?.quick ? 'primaire' : 'amis', human: [true, true], level: null, forfeit: false });
+    if (this.me === 0) sendMatchStats(s, { mode: this.room?.quick ? 'primaire' : 'amis', human: [true, true], level: null, forfeit: false, net: this.net!.stats });
     // Laisse voir le K.O. un instant, comme hors ligne.
     this.time.delayedCall(300, () => this.scene.start('Result', data));
   }
@@ -1232,6 +1251,8 @@ export class FightScene extends Phaser.Scene {
             confirmed: this.net.confirmedFrame,
             status: this.net.status(performance.now()),
             stats: { ...this.net.stats },
+            tooManyDesyncs: this.net.tooManyDesyncs,
+            ended: this.ended,
           }
         : null,
       tuto: this.tuto ? { step: tutoStep(this.tuto), index: this.tuto.i, n: this.tuto.n, pause: this.tuto.pause, done: tutoDone(this.tuto) } : null,

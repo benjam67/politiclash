@@ -54,6 +54,13 @@ const HISTORY = 1200;
 /** Au plus tant d'entrées par paquet. */
 const MAX_PER_PACKET = 64;
 
+/**
+ * Primaire ouverte : désynchronisations à partir desquelles le match s'arrête sans vainqueur (phase 7e).
+ * Sans triche, il n'y en a pas (600 matchs d'essai, aucune) ; un état faussé exprès en provoque une à chaque
+ * contrôle (toutes les secondes), des deux côtés.
+ */
+export const DESYNC_LIMIT = 3;
+
 export interface SessionStats {
   /** Retours en arrière effectués, pas rejoués au total, plus long retour. */
   rollbacks: number;
@@ -130,6 +137,11 @@ export class NetSession {
     // Les premiers pas, avant que le premier appui ne soit appliqué : aucune touche.
     for (let f = 0; f < this.delay; f++) this.local.set(f, 0);
     this.localLast = this.delay - 1;
+  }
+
+  /** Trop de désynchronisations : triche probable (ou bug) ; en Primaire ouverte, le match s'arrête. */
+  get tooManyDesyncs(): boolean {
+    return this.stats.desyncs >= DESYNC_LIMIT;
   }
 
   /** État le plus récent (avec les prédictions) : c'est lui qu'on affiche. */

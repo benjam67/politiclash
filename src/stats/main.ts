@@ -190,6 +190,27 @@ function render(s: Summary) {
       )
       .join('')}</table></section>`;
 
+  const on = (m: 'amis' | 'primaire') => s.online[m];
+  const per = (a: number, b: number) => (b > 0 ? (a / b).toFixed(2).replace('.', ',') : '–');
+  const w = s.waits;
+  const searches = w.match.n + w.ai.n + w.cancel.n;
+  const avgWait = (x: { n: number; secs: number }) => (x.n ? `${Math.round(x.secs / x.n)} s` : '–');
+  const onlineSec =
+    online + on('amis').abortLost + on('primaire').abortDesync + searches > 0
+      ? `<section><h2>Le jeu en ligne</h2>
+    <p class="note">Désynchronisations : les deux téléphones ne voyaient plus le même match (recalé tout seul). Au-delà de 3 dans un match de Primaire ouverte (triche probable), le match est invalidé. « Attentes » : images où le téléphone a attendu l’autre.</p>
+    <table><tr><th>Mode</th><th>Matchs mesurés</th><th>Désynchronisations par match</th><th>Recalages</th><th>Attentes par match</th><th>Invalidés (désynchro.)</th><th>Coupures</th></tr>
+    <tr><td>Entre amis</td><td>${nb(on('amis').measured)}</td><td>${per(on('amis').desyncs, on('amis').measured)}</td><td>${nb(on('amis').resyncs)}</td><td>${per(on('amis').stalls, on('amis').measured)}</td><td>${nb(on('amis').abortDesync)}</td><td>${nb(on('amis').abortLost)} annulés</td></tr>
+    <tr><td>Primaire ouverte</td><td>${nb(on('primaire').measured)}</td><td>${per(on('primaire').desyncs, on('primaire').measured)}</td><td>${nb(on('primaire').resyncs)}</td><td>${per(on('primaire').stalls, on('primaire').measured)}</td><td>${nb(on('primaire').abortDesync)}</td><td>${nb(s.byMode.primaire.forfeits)} abandons</td></tr>
+    </table>
+    <h2 style="margin-top:16px">Attente en Primaire ouverte</h2>
+    <table><tr><th>Issue de la recherche</th><th>Recherches</th><th>Part</th><th>Attente moyenne</th></tr>
+    <tr><td>Adversaire trouvé</td><td>${nb(w.match.n)}</td><td>${pct(w.match.n, searches)}</td><td>${avgWait(w.match)}</td></tr>
+    <tr><td>IA en attendant</td><td>${nb(w.ai.n)}</td><td>${pct(w.ai.n, searches)}</td><td>${avgWait(w.ai)}</td></tr>
+    <tr><td>Annulée</td><td>${nb(w.cancel.n)}</td><td>${pct(w.cancel.n, searches)}</td><td>${avgWait(w.cancel)}</td></tr>
+    </table></section>`
+      : '';
+
   const list = (title: string, items: [string, number][], label: (k: string) => string) => {
     const t = items.reduce((x, [, n]) => x + n, 0);
     return `<section><h2>${title}</h2>${items.length ? `<table>${items.map(([k, n]) => `<tr><td>${esc(label(k))}</td><td>${nb(n)}</td><td>${pct(n, t)}</td></tr>`).join('')}</table>` : '<p class="empty">Rien pour l’instant.</p>'}</section>`;
@@ -197,9 +218,9 @@ function render(s: Summary) {
   const levelName = (k: string) => (k in TEXTS_AI ? TEXTS_AI[k as keyof typeof TEXTS_AI] : k);
 
   frame(`<div class="bar">${periods}</div>${
-    s.matches === 0 && campStart === 0
+    s.matches === 0 && campStart === 0 && searches === 0
       ? '<section><p class="empty">Aucun match sur cette période.</p></section>'
-      : cards + perDay + fighters + moves + modes + camp + list('Les lieux', s.stages, (k) => STAGE_NAMES[k] ?? k) + list('Niveaux de l’IA (solo)', s.levels, levelName)
+      : cards + perDay + fighters + moves + modes + onlineSec + camp + list('Les lieux', s.stages, (k) => STAGE_NAMES[k] ?? k) + list('Niveaux de l’IA (solo)', s.levels, levelName)
   }`);
   for (const b of app.querySelectorAll<HTMLButtonElement>('.bar button')) {
     b.addEventListener('click', () => {

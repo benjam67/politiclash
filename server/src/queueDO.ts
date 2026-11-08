@@ -3,6 +3,7 @@
 //
 // Messages du jeu : hello {v, pseudo}, search, cancel, accept {match}, decline {match}.
 // Messages du serveur : count {online, searching}, found, match, requeued, dropped (voir queue.ts).
+import { DeviceLimits, MessageRate } from './limits';
 import { MatchQueue, type QueueEvent } from './queue';
 
 /** Délai entre deux vérifications (acceptations dépassées, nouvelles associations possibles). */
@@ -17,6 +18,9 @@ interface Conn {
   region: string;
   /** Identifiant du classement (facultatif). */
   rid: string | null;
+  /** Appareil (empreinte de l'adresse IP, pour les limites d'usage) et débit de ses messages. */
+  device: string;
+  rate: MessageRate;
 }
 
 interface QueueEnv {
@@ -30,6 +34,7 @@ export class QueueDO {
     () => crypto.randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase(),
   );
   private timer: ReturnType<typeof setInterval> | null = null;
+  private limits = new DeviceLimits();
 
   constructor(
     private readonly state: DurableObjectState,
@@ -41,8 +46,15 @@ export class QueueDO {
     const pair = new WebSocketPair();
     const [client, server] = [pair[0], pair[1]];
     server.accept();
+    // Appareil inconnu (essai local) : pas de limite par appareil, seulement le débit de messages.
+    const device = request.headers.get('x-device') ?? '';
+    // Limites d'usage : trop de connexions de cet appareil, la nouvelle est fermée tout de suite.
+    if (device && !this.limits.open(device, Date.now())) {
+      server.close(1008, 'too-many');
+      return new Response(null, { status: 101, webSocket: client });
+    }
     const id = crypto.randomUUID();
-    const conn: Conn = { ws: server, v: null, pseudo: 0, region: request.headers.get('x-region') ?? 'XX', rid: null };
+    const conn: Conn = { ws: server, v: null, pseudo: 0, region: request.headers.get('x-region') ?? 'XX', rid: null, device, rate: new MessageRate() };
     this.conns.set(id, conn);
     server.addEventListener('message', (e) => this.onMessage(id, e.data));
     const gone = () => this.onClose(id);
@@ -56,6 +68,16 @@ export class QueueDO {
   private onMessage(id: string, raw: unknown) {
     const conn = this.conns.get(id);
     if (!conn || typeof raw !== 'string' || raw.length > 512) return;
+    // Trop de messages : la connexion est fermée (le jeu n'en envoie que quelques-uns par recherche).
+    if (!conn.rate.hit(Date.now())) {
+      try {
+        conn.ws.close(1008, 'rate');
+      } catch {
+        /* déjà fermée */
+      }
+      this.onClose(id);
+      return;
+    }
     let m: { t?: string; v?: unknown; pseudo?: unknown; match?: unknown; rid?: unknown };
     try {
       m = JSON.parse(raw);
@@ -89,8 +111,10 @@ export class QueueDO {
   }
 
   private onClose(id: string) {
-    if (!this.conns.has(id)) return;
+    const conn = this.conns.get(id);
+    if (!conn) return;
     this.conns.delete(id);
+    if (conn.device) this.limits.close(conn.device);
     this.send(this.queue.leave(id, Date.now()));
     this.broadcastCount();
     if (!this.conns.size && this.timer) {
@@ -102,7 +126,9 @@ export class QueueDO {
   private ensureTimer() {
     if (this.timer) return;
     this.timer = setInterval(() => {
-      const ev = this.queue.tick(Date.now());
+      const now = Date.now();
+      if (now % 60_000 < TICK_MS) this.limits.prune(now);
+      const ev = this.queue.tick(now);
       if (ev.length) {
         this.send(ev);
         this.broadcastCount();

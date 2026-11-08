@@ -56,7 +56,7 @@ Le combat est déjà prêt pour le jeu en ligne : la simulation est déterminist
 
 
 - Écran « Jouer en ligne » → « Entre amis » → « Créer un salon » ou « Rejoindre ».
-- Code de 4 lettres sans lettres ambiguës (pas de O, 0, I, 1), et **lien d'invitation** `…/politiclash/?salon=ABCD` à partager par message (bouton de partage du téléphone).
+- Code de 4 lettres sans lettres ambiguës (pas de O, 0, I, 1), et **lien d'invitation** `france-bagarre.fr/?salon=ABCD` (à l'origine `…/politiclash/?salon=ABCD`) à partager par message (bouton de partage du téléphone).
 - Mise en relation des deux téléphones par un service de mise en relation (PeerJS). Si la connexion directe échoue, passage par un relais (voir phase 7c ; en attendant, message clair « connexion impossible sur ce réseau, essaie en Wi-Fi »).
 - Salon : chacun choisit son perso, l'hôte choisit le niveau, les deux appuient sur « Prêt ».
 - Revanche, changement de perso, retour au menu.
@@ -101,12 +101,15 @@ Claude prépare une comparaison chiffrée à jour au début de cette phase. **Le
 - Tests : 20 faux joueurs qui entrent et sortent de la file au hasard ; chaque joueur finit apparié ou sort proprement, personne n'est apparié deux fois.
 - *Validé quand* : deux navigateurs qui ne partagent aucun code se trouvent et jouent un match complet par le relais ; les tests de la file passent ; aucune adresse IP de l'adversaire n'apparaît dans les échanges du navigateur.
 
-### Phase 7e · Robustesse et triche
+### Phase 7e · Robustesse et triche ✔
 
-- **Triche** : comme chacun ne transmet que ses entrées et que les deux simulations se surveillent, un tricheur ne peut pas s'inventer des PV ou une barre Buzz pleine sans provoquer une désynchronisation. En Partie rapide, une désynchronisation répétée met fin au match sans vainqueur.
-- **Versions différentes** : un joueur dont le jeu n'est pas à jour ne peut pas être apparié ; il voit « Mets le jeu à jour » (rechargement de la page). Indispensable, car un seul réglage différent dans `balance.ts` désynchronise tout.
-- **Limite d'usage** du serveur : pas plus de quelques demandes par minute et par appareil, pour éviter qu'un robot ne sature la file.
-- **Suivi minimal** : nombre de matchs joués, taux de désynchronisation et de coupures, temps d'attente moyen. Aucune donnée personnelle. *En partie fait le 8 novembre : statistiques de jeu anonymes (matchs par mode, persos, coups, campagne) et page privée `stats.html` ; restent les désynchronisations, les coupures et le temps d'attente.*
+**Faite le 8 novembre 2026** (détail dans `CHANGELOG.md`). Faux client tricheur détecté des deux côtés (match invalidé en une dizaine de secondes, rien au classement) ; ancienne version repérée avant la recherche (bouton « Mettre à jour ») ; limites d'usage de la file ; suivi de la connexion et de l'attente sur la page des statistiques, cohérent sur 50 matchs d'essai.
+
+
+- **Triche** : comme chacun ne transmet que ses entrées et que les deux simulations se surveillent, un tricheur ne peut pas s'inventer des PV ou une barre Buzz pleine sans provoquer une désynchronisation. En Partie rapide, une désynchronisation répétée met fin au match sans vainqueur. *Fait : 3 désynchronisations dans un match.*
+- **Versions différentes** : un joueur dont le jeu n'est pas à jour ne peut pas être apparié ; il voit « Mets le jeu à jour » (rechargement de la page). Indispensable, car un seul réglage différent dans `balance.ts` désynchronise tout. *Fait : le jeu compare son empreinte de build à `version.txt` avant la recherche puis toutes les minutes ; la file n'associe jamais deux versions de règles différentes.*
+- **Limite d'usage** du serveur : pas plus de quelques demandes par minute et par appareil, pour éviter qu'un robot ne sature la file. *Fait : 4 connexions simultanées et 20 nouvelles par minute par appareil, 30 messages par 10 s par connexion ; fiches de statistiques, 20 par minute.*
+- **Suivi minimal** : nombre de matchs joués, taux de désynchronisation et de coupures, temps d'attente moyen. Aucune donnée personnelle. *Fait le 8 novembre : statistiques de jeu anonymes et page privée `stats.html`, avec une section « Le jeu en ligne » (désynchronisations, recalages, attentes, matchs invalidés, coupures, temps d'attente en Primaire ouverte).*
 - *Validé quand* : un faux client tricheur est détecté ; un client d'une ancienne version est refusé ; le suivi affiche des chiffres cohérents après 50 matchs de test.
 
 ### Phase 7f · Ouverture au public ⚠ choix du propriétaire

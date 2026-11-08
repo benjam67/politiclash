@@ -3,13 +3,29 @@
 // Adresses (appelées par le Worker) :
 //   POST /stats/match     fiche de fin de match (voir stats.ts)
 //   POST /stats/campaign  étape de la campagne : start, done, quit
+//   POST /stats/wait      Primaire ouverte : fin d'une recherche d'adversaire et sa durée
 //   GET  /stats/data?days=N   totaux des N derniers jours (le Worker vérifie la clé avant)
 // Limite d'usage : `PER_MINUTE` fiches par appareil et par minute. L'appareil est reconnu par une empreinte
 // de son adresse IP calculée par le Worker, gardée en mémoire une minute au plus, jamais enregistrée.
 import { dayKey } from './rank';
-import { campaignCounters, matchCounters, parseCampaign, parseMatch, PER_MINUTE } from './stats';
+import { campaignCounters, matchCounters, parseCampaign, parseMatch, parseWait, PER_MINUTE, waitCounters } from './stats';
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
+
+const PARSERS: Record<string, (body: unknown) => [string, number][] | null> = {
+  '/match': (b) => {
+    const c = parseMatch(b);
+    return c && matchCounters(c);
+  },
+  '/campaign': (b) => {
+    const c = parseCampaign(b);
+    return c && campaignCounters(c);
+  },
+  '/wait': (b) => {
+    const c = parseWait(b);
+    return c && waitCounters(c);
+  },
+};
 
 export class StatsDO {
   private sql: SqlStorage;
@@ -28,7 +44,7 @@ export class StatsDO {
     const url = new URL(request.url);
     const path = url.pathname.replace(/^\/stats/, '');
     if (request.method === 'GET' && path === '/data') return this.data(url.searchParams.get('days'));
-    if (request.method !== 'POST' || (path !== '/match' && path !== '/campaign')) return json({ error: 'not-found' }, 404);
+    if (request.method !== 'POST' || !(path in PARSERS)) return json({ error: 'not-found' }, 404);
 
     // Limite d'usage, par minute.
     const now = Date.now();
@@ -48,7 +64,7 @@ export class StatsDO {
     } catch {
       return json({ error: 'bad-json' }, 400);
     }
-    const counters = path === '/match' ? (() => { const c = parseMatch(body); return c && matchCounters(c); })() : (() => { const c = parseCampaign(body); return c && campaignCounters(c); })();
+    const counters = PARSERS[path](body);
     if (!counters) return json({ error: 'bad-card' }, 400);
     const day = dayKey(now);
     for (const [key, n] of counters) {

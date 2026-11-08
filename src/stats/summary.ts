@@ -42,6 +42,21 @@ export interface Summary {
   levels: [string, number][];
   /** Matchs par jour, dans l'ordre. */
   perDay: [string, number][];
+  /** Jeu en ligne (Entre amis, Primaire ouverte) : santé de la connexion et attente. */
+  online: Record<'amis' | 'primaire', OnlineLine>;
+  /** Primaire ouverte : recherches d'adversaire, par issue, et leur durée totale (s). */
+  waits: Record<'match' | 'ai' | 'cancel', { n: number; secs: number }>;
+}
+
+export interface OnlineLine {
+  /** Matchs avec les mesures de connexion (allés au bout ou arrêtés). */
+  measured: number;
+  desyncs: number;
+  resyncs: number;
+  stalls: number;
+  /** Matchs arrêtés : désynchronisations répétées, connexion perdue. */
+  abortDesync: number;
+  abortLost: number;
 }
 
 const zeroDmg = () => Object.fromEntries(DEALT_MOVES.map((m) => [m, 0])) as Record<DealtMove, number>;
@@ -101,5 +116,25 @@ export function summarize(rows: Row[], fighterIds: readonly FighterId[]): Summar
     stages: prefixed('stage|'),
     levels: prefixed('level|'),
     perDay: [...perDay.entries()].sort((a, b) => a[0].localeCompare(b[0])),
+    online: {
+      amis: onlineLine('amis'),
+      primaire: onlineLine('primaire'),
+    },
+    waits: {
+      match: { n: g('wait|n|match'), secs: g('wait|secs|match') },
+      ai: { n: g('wait|n|ai'), secs: g('wait|secs|ai') },
+      cancel: { n: g('wait|n|cancel'), secs: g('wait|secs|cancel') },
+    },
   };
+
+  function onlineLine(m: Mode): OnlineLine {
+    return {
+      measured: g(`net|${m}|n`),
+      desyncs: g(`net|${m}|desyncs`),
+      resyncs: g(`net|${m}|resyncs`),
+      stalls: g(`net|${m}|stalls`),
+      abortDesync: g(`abort|${m}|desync`),
+      abortLost: g(`abort|${m}|lost`),
+    };
+  }
 }

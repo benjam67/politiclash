@@ -3,7 +3,7 @@
 //   POST /ice         → accès temporaires au relais (phase 7c)
 //   GET  /queue       → WebSocket de la file d'attente de la Partie rapide (phase 7d), tenue par un Durable Object
 //   /rank/…           → classement (résultats, nom, signalement, tableau), tenu par un autre Durable Object
-//   POST /stats/match, /stats/campaign → fiches anonymes de fin de match et de campagne (statistiques de jeu)
+//   POST /stats/match, /stats/campaign, /stats/wait → fiches anonymes (fin de match, campagne, attente en Primaire)
 //   GET  /stats/data?key=…&days=N      → totaux par jour, pour la page privée des statistiques (clé STATS_KEY)
 import { corsFor, handle, type Env } from './http';
 import { sameKey } from './stats';
@@ -13,8 +13,8 @@ export { RankDO } from './rankDO';
 export { StatsDO } from './statsDO';
 
 async function deviceTag(ip: string): Promise<string> {
-  // Empreinte de l'adresse IP, pour la limite d'usage seulement (gardée une minute en mémoire, jamais enregistrée).
-  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`stats:${ip}`));
+  // Empreinte de l'adresse IP, pour les limites d'usage seulement (gardée en mémoire, jamais enregistrée).
+  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`device:${ip}`));
   return [...new Uint8Array(d).slice(0, 8)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
@@ -28,6 +28,10 @@ export default {
       const cf = (request as unknown as { cf?: { continent?: string } }).cf;
       const headers = new Headers(request.headers);
       headers.set('x-region', cf?.continent ?? 'XX');
+      // Limites d'usage par appareil : seulement quand Cloudflare donne l'adresse (pas en essai local).
+      const ip = request.headers.get('cf-connecting-ip');
+      if (ip) headers.set('x-device', await deviceTag(ip));
+      else headers.delete('x-device');
       const stub = env.QUEUE.get(env.QUEUE.idFromName('global'));
       return stub.fetch(new Request(request, { headers }));
     }

@@ -30,7 +30,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Tests du serveur
-        run: npx vitest run tests/unit/server.test.ts tests/unit/queue.test.ts tests/unit/stats.test.ts
+        run: npx vitest run tests/unit/server.test.ts tests/unit/queue.test.ts tests/unit/stats.test.ts tests/unit/phase7e.test.ts
       - name: Secrets absents
         if: env.HAS_SECRETS != 'true'
         run: echo "::warning::Secrets Cloudflare absents dans GitHub, déploiement sauté."

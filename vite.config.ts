@@ -4,6 +4,8 @@ import { defineConfig } from 'vite';
 // comme dans un sous-dossier (ancienne adresse GitHub Pages, …/politiclash/).
 export default defineConfig({
   base: './',
+  // Empreinte du commit publié (GitHub Actions) : comparée à version.txt pour repérer une ancienne version.
+  define: { __BUILD__: JSON.stringify(process.env.GITHUB_SHA ?? 'dev') },
   build: {
     target: 'es2020',
     chunkSizeWarningLimit: 1600,

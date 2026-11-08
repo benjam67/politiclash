@@ -8,6 +8,7 @@ import type { FighterId } from '../config/roster';
 import { SIM } from '../config/balance';
 import type { FightState } from '../logic/fight';
 import { serverUrl } from '../config/server';
+import type { SessionStats } from './rollback';
 
 export type StatsMode = 'libre' | 'campagne' | 'ia' | 'amis' | 'primaire';
 
@@ -18,6 +19,10 @@ export interface MatchCardInfo {
   /** Niveau de l'IA, pour un match contre l'IA. */
   level: AiLevel | null;
   forfeit: boolean;
+  /** Match en ligne arrêté : désynchronisations répétées, ou connexion perdue (Entre amis). */
+  aborted?: 'desync' | 'lost';
+  /** Match en ligne : santé de la connexion (désynchronisations, recalages, attentes). */
+  net?: Pick<SessionStats, 'desyncs' | 'resyncs' | 'stalls'>;
 }
 
 /** Fiche de fin de match, d'après l'état final du combat. */
@@ -33,6 +38,8 @@ export function matchCard(s: FightState, info: MatchCardInfo) {
     rounds: Math.max(1, s.round),
     dealt: [s.dealt[0].map((v) => Math.max(0, Math.round(v))), s.dealt[1].map((v) => Math.max(0, Math.round(v)))],
     forfeit: info.forfeit,
+    ...(info.aborted ? { aborted: info.aborted } : {}),
+    ...(info.net ? { net: { desyncs: info.net.desyncs, resyncs: info.net.resyncs, stalls: info.net.stalls } } : {}),
   };
 }
 
@@ -57,6 +64,15 @@ export function sendMatchStats(s: FightState, info: MatchCardInfo) {
     send('/stats/match', matchCard(s, info));
   } catch {
     // Les statistiques ne doivent jamais gêner le jeu.
+  }
+}
+
+/** Primaire ouverte : fin d'une recherche d'adversaire (trouvé, IA en attendant, ou annulée) et sa durée. */
+export function sendWaitStats(outcome: 'match' | 'ai' | 'cancel', secs: number) {
+  try {
+    send('/stats/wait', { outcome, secs: Math.max(0, Math.min(3600, Math.round(secs))) });
+  } catch {
+    // idem
   }
 }
 

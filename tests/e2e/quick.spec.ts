@@ -190,3 +190,73 @@ test.describe('phase 7d : Primaire ouverte', () => {
     await expectNoErrors(realErrors(errors));
   });
 });
+
+test.describe('phase 7e : robustesse et triche', () => {
+  test.describe.configure({ timeout: 300_000 });
+
+  test('un téléphone qui fausse son état (triche) : match invalidé des deux côtés, rien au classement', async ({ browser, request }) => {
+    const a = await phone(browser);
+    const b = await phone(browser);
+    const errors = [...collectErrors(a), ...collectErrors(b)];
+    const tag = Math.random().toString(36).slice(2, 6);
+    await search(a, 'netbot=normal', `Honnete ${tag}`);
+    await search(b, 'netbot=normal', `Tricheur ${tag}`);
+    await bothInRoom(a, b);
+    await tapNamed(a, 'Room', 'btn-ready');
+    await tapNamed(b, 'Room', 'btn-ready');
+    await waitScene(a, 'Fight', 40_000);
+    await waitScene(b, 'Fight', 40_000);
+    // B triche : toutes les secondes, il remonte ses PV dans son état confirmé (comme un jeu modifié).
+    await b.evaluate(() => {
+      const scene = window.__slap!.game!.scene.getScene('Fight') as unknown as {
+        net: { me: 0 | 1; confirmedFrame: number; frame: number; states: Map<number, { f: { hp: number }[] }>; simulate(f: number): void };
+      };
+      setInterval(() => {
+        const n = scene.net;
+        if (!n) return;
+        const c = n.confirmedFrame;
+        const st = n.states.get(c);
+        if (!st) return;
+        const f = [...st.f];
+        f[n.me] = { ...f[n.me], hp: f[n.me].hp + 37 };
+        n.states.set(c, { ...st, f });
+        for (let k = c; k < n.frame; k++) n.simulate(k);
+      }, 1000);
+    });
+    for (const p of [a, b]) {
+      await expect(p.locator('canvas')).toBeVisible();
+      await p.waitForFunction(() => {
+        const s = window.__slap!.state as { mode?: string; net?: { ended: boolean; tooManyDesyncs: boolean; stats: { desyncs: number } } };
+        return s.mode === 'fight' && !!s.net?.ended && s.net.stats.desyncs > 0;
+      }, null, { timeout: 60_000 });
+    }
+    // Les deux voient « Élection invalidée » (aucun écran de résultat, aucune victoire par abandon).
+    for (const p of [a, b]) {
+      await expect.poll(async () => p.evaluate(() => window.__slap!.game!.scene.getScene('Fight').children.list.some((o) => o.name === 'net-title' && (o as unknown as { text: string }).text.includes('INVALID')))).toBe(true);
+      expect(await p.evaluate(() => window.__slap!.scene)).toBe('Fight');
+    }
+    await a.screenshot({ path: `${SHOTS}/7e-election-invalidee.png` });
+    const board = (await (await request.get('http://127.0.0.1:8787/rank/board?period=day')).json()) as { top: { name: string }[] };
+    expect(board.top.some((r) => r.name.endsWith(tag))).toBe(false);
+    await expectNoErrors(realErrors(errors));
+  });
+
+  test('ancienne version du jeu (page en cache) : pas de recherche, bouton pour mettre à jour', async ({ browser }) => {
+    const a = await phone(browser);
+    const errors = collectErrors(a);
+    await a.route('**/version.txt*', (r) => r.fulfill({ status: 200, body: 'bbbbbbb2222222\n', contentType: 'text/plain' }));
+    await search(a, 'build=aaaaaaa1111111');
+    await a.waitForFunction(() => (window.__slap!.state as { state?: string }).state === 'error', null, { timeout: 15_000 });
+    const st = await state<{ message: string }>(a);
+    expect(st.message).toContain('Mets le jeu à jour');
+    expect(await a.evaluate(() => window.__slap!.game!.scene.getScene('Quick').children.list.some((o) => o.name === 'btn-quick-update'))).toBe(true);
+    await a.screenshot({ path: `${SHOTS}/7e-ancienne-version.png` });
+    // Même version que le site : la recherche se fait normalement.
+    const b = await phone(browser);
+    await b.route('**/version.txt*', (r) => r.fulfill({ status: 200, body: 'aaaaaaa1111111\n', contentType: 'text/plain' }));
+    await search(b, 'build=aaaaaaa1111111');
+    await b.waitForTimeout(3000);
+    expect((await state<{ state: string }>(b)).state).toBe('searching');
+    await expectNoErrors(realErrors(errors));
+  });
+});

@@ -93,7 +93,7 @@ describe('statistiques de jeu (fiche envoyée par le jeu)', () => {
   it('la fiche construite d’après l’état du combat est acceptée par le serveur', () => {
     const s = { ...createFight('tailleur', 'binocle', 'assemblee'), step: 60 * 80, round: 3, winner: 1 as const, dealt: [[1, 2, 3, 4, 5, 6], [6, 5, 4, 3, 2, 1]] as [number[], number[]] };
     const c = matchCard(s, { mode: 'amis', human: [true, true], level: null, forfeit: false });
-    expect(parseMatch(JSON.parse(JSON.stringify(c)))).toEqual({ ...c, secs: 80 });
+    expect(parseMatch(JSON.parse(JSON.stringify(c)))).toEqual({ ...c, secs: 80, aborted: null, net: null });
   });
 });
 
