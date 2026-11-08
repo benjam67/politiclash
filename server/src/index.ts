@@ -4,7 +4,7 @@
 // reste ici, côté serveur : le jeu ne reçoit qu'un identifiant valable quelques heures.
 // Phase 7d : la file d'attente de la Partie rapide viendra s'ajouter ici.
 //
-//   GET  /health  → état du serveur (et si le relais est configuré)
+//   GET  /health  → état du serveur (et si le relais est configuré) ; / répond de même
 //   POST /ice     → { iceServers } à donner à WebRTC (STUN + relais), pour les pages autorisées
 
 export interface Env {
@@ -43,7 +43,8 @@ export async function handle(request: Request, env: Env, fetchImpl: typeof fetch
   const cors = corsFor(request, env);
   if (request.method === 'OPTIONS') return cors ? new Response(null, { status: 204, headers: cors }) : new Response(null, { status: 403 });
 
-  if (url.pathname === '/health' && request.method === 'GET') {
+  // La page d'accueil répond comme /health (quelqu'un qui ouvre l'adresse dans un navigateur voit que tout va bien).
+  if ((url.pathname === '/health' || url.pathname === '/') && request.method === 'GET') {
     return json({ ok: true, service: SERVICE, turn: !!(env.TURN_KEY_ID && env.TURN_KEY_API_TOKEN) }, 200, cors ?? {});
   }
 

@@ -27,6 +27,7 @@ describe('serveur (Worker)', () => {
     const r = await handle(req('/health'), ENV);
     expect(r.status).toBe(200);
     expect(await r.json()).toEqual({ ok: true, service: 'france-bagarre', turn: true });
+    expect(await (await handle(req('/'), ENV)).json()).toMatchObject({ ok: true });
     const r2 = await handle(req('/health'), { ALLOWED_ORIGINS: '' });
     expect(await r2.json()).toMatchObject({ turn: false });
   });
