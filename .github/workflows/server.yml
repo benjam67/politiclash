@@ -66,4 +66,5 @@ jobs:
           CODE=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H "Origin: https://ailleurs.example" "$URL/ice")
           test "$CODE" = 403 && echo "Autre site : refusé (403)." 
           node scripts/check-queue.mjs "$URL"
+          curl -fsS "$URL/rank/board?period=day" | grep -q '"period":"day"' && echo "Classement : en ligne."
           echo "### Serveur en ligne : $URL" >> "$GITHUB_STEP_SUMMARY"
