@@ -66,6 +66,8 @@ Le combat est déjà prêt pour le jeu en ligne : la simulation est déterminist
 
 ### Phase 7c · Serveur et relais ⚠ choix du propriétaire
 
+**En cours (8 novembre 2026).** Choix du propriétaire : **Cloudflare** (Workers + relais TURN), sur son compte existant. Serveur en ligne : `https://france-bagarre.ben-aub.workers.dev` (dossier `server/`, déployé par GitHub Actions). Le mode Entre amis l'utilise déjà : connexion directe si possible, relais sinon ; le salon affiche « directe » ou « par le relais ». Reste à valider : le relais depuis un téléphone en 4G, et fixer avec le propriétaire le seuil d'alerte de facturation. La file d'attente (Durable Object) sera ajoutée au même serveur en phase 7d.
+
 La Partie rapide a besoin de deux choses que GitHub Pages ne fournit pas, car il ne sert que des fichiers :
 
 1. **Un petit serveur toujours allumé** qui tient la file d'attente et met les joueurs en relation.
