@@ -21,6 +21,7 @@
   "devDependencies": {
     "@playwright/test": "1.56",
     "@types/node": "^26.6.3",
+    "node-turn": "^0.0.6",
     "peer": "^1.0.2",
     "sharp": "^0.35.5",
     "typescript": "^7.0.2",

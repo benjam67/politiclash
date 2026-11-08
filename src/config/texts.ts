@@ -254,7 +254,7 @@ export const ONLINE = {
   codeHelp: 'Le code du salon (4 lettres) :',
   errors: {
     badCode: 'Le code fait 4 lettres.',
-    'room-not-found': 'Salon introuvable. Vérifie le code.',
+    'room-not-found': 'Salon introuvable. Vérifie le code, et que ton ami a bien le jeu ouvert.',
     'room-taken': 'Ce code est déjà pris, réessaie.',
     network: 'Pas de connexion au serveur. Vérifie ta connexion et réessaie.',
     'p2p-failed': 'Connexion impossible sur ce réseau. Essayez en Wi-Fi tous les deux.',

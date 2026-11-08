@@ -73,8 +73,25 @@ export class PeerLink {
   private timers: number[] = [];
   private everConnected = false;
   private destroyed = false;
+  /** Le service de mise en relation ne connaît pas (ou plus) le salon : l'hôte est peut-être sorti du jeu un instant. */
+  private hostMissing = false;
+  private onVisible = () => {
+    // Retour sur le jeu (après le partage du lien, par exemple) : le téléphone a pu couper la liaison avec le
+    // service de mise en relation pendant que le jeu était en arrière-plan. On la rétablit tout de suite.
+    if (document.visibilityState !== 'visible' || this.destroyed || !this.peer || this.peer.destroyed) return;
+    if (this.peer.disconnected) {
+      this.step('retour, reconnexion');
+      this.peer.reconnect();
+    }
+  };
   /** Le serveur a fourni un relais. */
   relayAvailable = false;
+  /** Étapes de la connexion, avec le temps écoulé : affichées sous un message d'erreur, pour comprendre où ça bloque. */
+  readonly trace: string[] = [];
+  private t0 = performance.now();
+  private step(what: string) {
+    if (this.trace.length < 24) this.trace.push(`${what} ${((performance.now() - this.t0) / 1000).toFixed(1)} s`);
+  }
 
   private constructor(
     readonly role: Role,
@@ -93,6 +110,7 @@ export class PeerLink {
     const peerOpts: PeerOptions = { ...opts.peer };
     if (ice) peerOpts.config = { iceServers: ice, iceTransportPolicy: opts.relay === 'only' ? 'relay' : 'all' };
     s.relayAvailable = !!ice;
+    s.step(ice ? (opts.relay === 'only' ? 'relais seul' : 'relais ok') : 'sans relais');
     await new Promise<void>((resolve, reject) => {
       let settled = false;
       const ok = () => {
@@ -103,23 +121,27 @@ export class PeerLink {
       const fail = (e: LinkError) => {
         if (settled) return;
         settled = true;
+        s.step(`échec ${e}`);
         s.destroy();
-        reject(new Error(e));
+        reject(Object.assign(new Error(e), { trace: s.trace }));
       };
       const peer = role === 'host' ? new Peer(peerIdFor(code), peerOpts) : new Peer(peerOpts);
       s.peer = peer;
       peer.on('open', () => {
+        s.step('mise en relation');
         if (role === 'host') {
           s.setStatus('waiting');
           ok();
         } else {
           s.dial(ok);
           // Rien d'ouvert au bout de 5 s : on rappelle (la première tentative se perd parfois), deux fois.
-          for (const t of [5000, 10_000]) s.later(() => !s.connected && s.redial(ok), t);
-          // L'hôte existe (sinon `peer-unavailable` arrive vite), mais rien ne s'ouvre : connexion directe impossible.
-          s.later(() => fail('p2p-failed'), P2P_TIMEOUT_MS);
+          for (const t of [5000, 10_000]) s.later(() => !s.connected && !s.hostMissing && s.redial(ok), t);
+          // Au bout du délai : si le salon n'a jamais été trouvé, il est introuvable ; sinon, les deux téléphones se
+          // sont trouvés mais rien ne s'ouvre : connexion directe impossible (et pas de relais).
+          s.later(() => fail(s.hostMissing ? 'room-not-found' : 'p2p-failed'), P2P_TIMEOUT_MS);
         }
       });
+      document.addEventListener('visibilitychange', s.onVisible);
       peer.on('connection', (c) => {
         if (role === 'host') s.attach(c);
       });
@@ -129,11 +151,13 @@ export class PeerLink {
       });
       peer.on('error', (err) => {
         const type = (err as { type?: string }).type;
+        s.step(`erreur ${type}`);
         if (type === 'unavailable-id') fail('room-taken');
         else if (type === 'peer-unavailable') {
-          // Pendant une partie, l'hôte est peut-être en train de revenir : on insiste.
-          if (s.everConnected) s.later(() => s.dial(), RETRY_MS);
-          else fail('room-not-found');
+          // Salon pas (ou plus) enregistré : l'hôte est peut-être sorti du jeu un instant (pour partager le lien).
+          // On insiste toutes les 1,5 s ; au bout du délai, « salon introuvable ».
+          s.hostMissing = true;
+          s.later(() => (s.everConnected ? s.dial() : s.redial(ok)), RETRY_MS);
         } else if (type === 'webrtc' || type === 'negotiation-failed') {
           if (!s.everConnected) fail('p2p-failed');
         } else if (!settled && ['network', 'server-error', 'socket-error', 'socket-closed', 'browser-incompatible'].includes(type ?? '')) {
@@ -193,6 +217,7 @@ export class PeerLink {
   destroy() {
     if (this.destroyed) return;
     this.destroyed = true;
+    document.removeEventListener('visibilitychange', this.onVisible);
     for (const t of this.timers) {
       window.clearTimeout(t);
       window.clearInterval(t);
@@ -207,6 +232,7 @@ export class PeerLink {
 
   /** Ferme les canaux à moitié ouverts et rappelle. */
   private redial(onOpen?: () => void) {
+    this.step('rappel');
     for (const k of ['ctl', 'game'] as const) {
       this[k]?.close();
       this[k] = null;
@@ -218,6 +244,7 @@ export class PeerLink {
     if (this.destroyed || this.peer.destroyed || this.peer.disconnected) return;
     if (this.connected) return;
     const id = peerIdFor(this.code);
+    this.step('appel');
     this.attach(this.peer.connect(id, { label: 'ctl', reliable: true, serialization: 'json' }), onOpen);
     this.attach(this.peer.connect(id, { label: 'game', reliable: false, serialization: 'json' }), onOpen);
   }
@@ -228,7 +255,9 @@ export class PeerLink {
       const old = this[kind];
       if (old && old !== c) old.close();
       this[kind] = c;
+      this.hostMissing = false;
       this.seen[kind] = performance.now();
+      this.step(`${kind} ouvert`);
       if (this.connected) {
         this.everConnected = true;
         onOpen?.();

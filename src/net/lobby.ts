@@ -34,12 +34,19 @@ export function openLobby(opts: { join?: string } = {}): Promise<FriendRoom | nu
   const save = loadSave();
   pseudoIn.value = save.pseudo || defaultPseudo();
 
-  const show = (view: View, status = '', err = false) => {
+  const show = (view: View, status = '', err = false, detail = '') => {
     root.dataset.show = view;
     const el = root.querySelector(`[data-view="${view}"] [data-status]`) as HTMLElement | null;
     if (el && (status || view !== 'choice')) {
       el.textContent = status || (view === 'choice' ? ONLINE.friendsHelp : '');
       el.classList.toggle('err', err);
+      // Étapes de la connexion sous le message d'erreur (en petit) : de quoi comprendre où ça a bloqué.
+      if (detail) {
+        const small = document.createElement('small');
+        small.className = 'trace';
+        small.textContent = detail;
+        el.append(document.createElement('br'), small);
+      }
     }
     if (window.__slap) (window.__slap as Record<string, unknown>).lobby = { view, status, code: codeShow.textContent };
   };
@@ -69,6 +76,7 @@ export function openLobby(opts: { join?: string } = {}): Promise<FriendRoom | nu
       return new FriendRoom(l, name, s.lastFighter ?? PLAYABLE_IDS[0], s.lastStage);
     };
     const err = (e: unknown) => ONLINE.errors[(e as Error).message] ?? ONLINE.errors.network;
+    const trace = (e: unknown) => ((e as { trace?: string[] }).trace ?? []).join(' · ');
 
     const host = async () => {
       const name = pseudo();
@@ -79,10 +87,12 @@ export function openLobby(opts: { join?: string } = {}): Promise<FriendRoom | nu
           link = await PeerLink.open('host', code, linkOpts);
         } catch (e) {
           if ((e as Error).message === 'room-taken') continue;
-          return show('choice', err(e), true);
+          return show('choice', err(e), true, trace(e));
         }
         if (done) return link.destroy();
         codeShow.textContent = code;
+        // Pour les tests : la liaison de l'hôte.
+        if (window.__slap) (window.__slap as Record<string, unknown>).hostLink = link;
         show('host', ONLINE.waiting);
         const l = link;
         l.onStatus = (st) => {
@@ -103,7 +113,7 @@ export function openLobby(opts: { join?: string } = {}): Promise<FriendRoom | nu
         link = await PeerLink.open('guest', code, linkOpts);
       } catch (e) {
         codeIn.value = code;
-        return show('join', err(e), true);
+        return show('join', err(e), true, trace(e));
       }
       if (done) return link.destroy();
       finish(makeRoom(link, name));

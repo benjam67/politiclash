@@ -745,3 +745,11 @@ Sur iPhone, l'écran « tourne ton téléphone » pouvait rester affiché une fo
 - Constaté par le propriétaire (téléphone en 5G) : à l'arrivée de l'ami, l'hôte se retrouvait sur l'écran « Sur la route de l'Élysée », et l'ami restait seul dans le salon.
 - Cause : le menu en ligne est en HTML, posé sur l'accueil du jeu. Un toucher sur l'un de ses boutons (« Partager le lien ») était aussi reçu par le jeu, qui appuyait sur le bouton de l'accueil situé dessous (la campagne). La campagne démarrait cachée sous le menu, et apparaissait quand le menu se fermait.
 - Correction : l'accueil ignore les touchers tant que le menu en ligne est ouvert, et le menu garde ses touchers pour lui. Test ajouté à `online.spec.ts` (il échouait avant la correction).
+
+**Corrigé — 8 novembre 2026 : « Salon introuvable » quand l'hôte partageait le lien**
+- Constaté par le propriétaire (avec `?relay=1`) : l'ami n'arrivait pas à rejoindre, et voyait « Salon introuvable » après une vingtaine de secondes.
+- Vérifié d'abord que le relais n'était pas en cause : nouveau test avec un relais (TURN) local et `relay=1` ; la connexion passe bien par le relais et le salon affiche « par le relais ».
+- Cause la plus probable : pendant le partage du lien, le jeu de l'hôte passe en arrière-plan et le téléphone coupe sa liaison avec le service de mise en relation. Le salon devient introuvable, et l'invité abandonnait à la première réponse « introuvable ». Le service ne répond d'ailleurs qu'au bout d'environ 5 s pour un salon inconnu.
+- Corrections : dès que l'hôte revient sur le jeu, sa liaison avec le service est rétablie tout de suite. L'invité ne renonce plus au premier « introuvable » : il réessaie toutes les 1,5 s pendant 15 s. Message : « Salon introuvable. Vérifie le code, et que ton ami a bien le jeu ouvert. »
+- Diagnostic : sous un message d'erreur de connexion, le menu affiche en petit les étapes franchies avec leur durée (relais, mise en relation, appel, rappel, erreurs), pour savoir où ça bloque sur un vrai téléphone.
+- Tests ajoutés : relais forcé avec un relais local ; l'hôte sort du jeu pendant que son ami rejoint, puis revient au bout de 4 s, et les deux arrivent dans le salon.

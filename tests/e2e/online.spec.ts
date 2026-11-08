@@ -288,6 +288,47 @@ test.describe('phase 7b : Entre amis', () => {
     await waitScene(page, 'CharacterSelect');
   });
 
+  test('relais forcé (`relay=1`) : la connexion passe par le relais, le salon l’affiche', async ({ browser }) => {
+    const { host, guest, errors } = await connect(browser, 'server=http://127.0.0.1:9002&relay=1');
+    await host.waitForFunction(() => (window.__slap!.state as { route?: string }).route === 'relay', null, { timeout: 20_000 });
+    await guest.waitForFunction(() => (window.__slap!.state as { route?: string }).route === 'relay', null, { timeout: 20_000 });
+    await host.screenshot({ path: `${SHOTS}/7c-salon-relais.png` });
+    await expectNoErrors(errors);
+  });
+
+  // Bug du 8 novembre : l'hôte partage le lien, son jeu passe en arrière-plan et le téléphone coupe la liaison
+  // avec le service de mise en relation ; l'ami qui ouvre le lien à ce moment-là doit attendre son retour.
+  test('l’hôte sort du jeu pendant que son ami rejoint : l’ami attend, et entre dès que l’hôte revient', async ({ browser }) => {
+    const host = await phone(browser);
+    const guest = await phone(browser);
+    const errors = [...collectErrors(host), ...collectErrors(guest)];
+    await host.goto(`./?${PEER}`);
+    await waitScene(host, 'Title');
+    await tapNamed(host, 'Title', 'btn-online');
+    await host.locator('#lobby [data-act="create"]').click();
+    await expect(host.locator('#lobby-code-show')).toHaveText(/^[A-Z]{4}$/, { timeout: 20_000 });
+    const code = (await host.locator('#lobby-code-show').textContent()) as string;
+    // Jeu en arrière-plan : liaison coupée, et pas de reconnexion tant qu'il n'est pas revenu.
+    await host.evaluate(() => {
+      const peer = ((window.__slap as unknown as { hostLink: { peer: { reconnect(): void; disconnect(): void; _r?: () => void } } }).hostLink).peer;
+      peer._r = peer.reconnect;
+      peer.reconnect = () => {};
+      peer.disconnect();
+    });
+    await guest.goto(`./?salon=${code}&${PEER}`);
+    await host.waitForTimeout(4000);
+    expect(await guest.evaluate(() => window.__slap!.scene)).toBe('Title');
+    // Retour sur le jeu.
+    await host.evaluate(() => {
+      const peer = ((window.__slap as unknown as { hostLink: { peer: { reconnect(): void; _r: () => void } } }).hostLink).peer;
+      peer.reconnect = peer._r;
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await waitScene(host, 'Room', 20_000);
+    await waitScene(guest, 'Room', 20_000);
+    await expectNoErrors(errors.filter((e) => !/peer|Could not connect|ERR_CONNECTION|Failed to load resource/i.test(e)));
+  });
+
   test('erreurs : code trop court, salon introuvable', async ({ browser }) => {
     const page = await phone(browser);
     const errors = collectErrors(page);
@@ -300,7 +341,7 @@ test.describe('phase 7b : Entre amis', () => {
     await expect(page.locator('[data-view="join"] .status')).toHaveText('Le code fait 4 lettres.');
     await page.fill('#lobby-code', 'zzzz');
     await page.locator('#lobby [data-act="go"]').click();
-    await expect(page.locator('[data-view="join"] .status')).toHaveText('Salon introuvable. Vérifie le code.', { timeout: 30_000 });
+    await expect(page.locator('[data-view="join"] .status')).toHaveText(/^Salon introuvable\. Vérifie le code/, { timeout: 40_000 });
     await page.screenshot({ path: `${SHOTS}/7b-erreur.png` });
     // Les erreurs de connexion attendues de PeerJS ne sont pas des erreurs du jeu.
     await expectNoErrors(errors.filter((e) => !/peer|Could not connect|ERR_CONNECTION|Failed to load resource/i.test(e)));
