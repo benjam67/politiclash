@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { anonymousName, nameAllowed, normalizeName, tidyName } from '../../server/src/names';
+import { anonymousName, nameAllowed, nameKey, normalizeName, tidyName } from '../../server/src/names';
 import { dayKey, settle, weekKey } from '../../server/src/rank';
 
 describe('noms du classement', () => {
   it('accepte les pseudos ordinaires, y compris ceux qui contiennent un mot court refusé', () => {
-    for (const n of ['Le Boss', 'Benjamin', 'Constant', 'Député', 'Joueur 42', 'Cultivé', 'Violette', 'Nazim', 'Bitecoin', 'Marianne_75', 'Ségolène', 'Jean-Luc']) expect(nameAllowed(n), n).toBe(true);
+    for (const n of ['Unique', 'Dominique', 'Véronique', 'Technique', 'Monténégro', 'Pédaler', 'Retardataire', 'Panique', 'Tunique', 'Le Boss', 'Benjamin', 'Constant', 'Député', 'Joueur 42', 'Cultivé', 'Violette', 'Nazim', 'Bitecoin', 'Marianne_75', 'Ségolène', 'Jean-Luc']) expect(nameAllowed(n), n).toBe(true);
   });
 
   it('refuse les insultes, même déguisées', () => {
-    for (const n of ['connard', 'CONNARD', 'c0nnard', 'conn4rd', 'c.o.n.n.a.r.d', 'Sal0pe', 'p.u.t.e', 'Gros con', 'fdp', 'ntm', 'enculé', 'enc*lé ok', 'Batârd', 'tamere', 'ta mère', 'FUCK', 'n1gga', 'Hitler88', 'puuuutain', 'Pédale']) {
+    for (const n of ['connard', 'CONNARD', 'c0nnard', 'conn4rd', 'c.o.n.n.a.r.d', 'Sal0pe', 'p.u.t.e', 'Gros con', 'nique', 'Ta mère la pédale', 'fdp', 'ntm', 'enculé', 'enc*lé ok', 'Batârd', 'tamere', 'ta mère', 'FUCK', 'n1gga', 'Hitler88', 'puuuutain', 'Pédale']) {
       // « enc*lé ok » : l'étoile n'est pas une lettre, il passe le filtre (le signalement est là pour ça).
       if (n === 'enc*lé ok') continue;
       expect(nameAllowed(n), n).toBe(false);
@@ -24,6 +24,12 @@ describe('noms du classement', () => {
     expect(tidyName('  Le\u200b   Boss  ')).toBe('Le Boss');
     expect(tidyName('x'.repeat(30))).toHaveLength(14);
     expect(normalizeName('Éléphaaant')).toBe('elephant');
+  });
+
+  it('noms uniques : majuscules, accents, chiffres déguisés, espaces et tirets ne changent pas la clé', () => {
+    const k = nameKey('Le Boss');
+    for (const v of ['le boss', 'LE BOSS', 'Lé Böss', 'Le B0ss', 'LeBoss', 'le-boss', 'Le  Boss', 'Le Bosss']) expect(nameKey(v), v).toBe(k);
+    for (const v of ['Le Bossu', 'La Boss', 'Boss']) expect(nameKey(v), v).not.toBe(k);
   });
 
   it('nom anonyme stable : « Joueur #1234 »', () => {

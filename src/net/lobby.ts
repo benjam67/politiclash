@@ -17,7 +17,7 @@ const SWALLOW = ['touchstart', 'touchend', 'touchmove', 'mousedown', 'mouseup', 
 const swallow = (e: Event) => e.stopPropagation();
 
 /** Pseudo par défaut, s'il n'en a jamais choisi : « Joueur » suivi de deux chiffres. */
-const defaultPseudo = () => `Joueur ${10 + Math.floor(Math.random() * 90)}`;
+const defaultPseudo = () => `Joueur ${1000 + Math.floor(Math.random() * 9000)}`;
 
 /** Rend le salon Entre amis une fois relié, `'quick'` pour la Primaire ouverte, ou null (retour). */
 export function openLobby(opts: { join?: string } = {}): Promise<FriendRoom | 'quick' | null> {
@@ -37,6 +37,9 @@ export function openLobby(opts: { join?: string } = {}): Promise<FriendRoom | 'q
   }
   const save = loadSave();
   pseudoIn.value = save.pseudo || defaultPseudo();
+  /** Le pseudo affiché est celui tiré d'office (le joueur n'a rien tapé) : s'il est pris, on en tire un autre sans rien dire. */
+  let autoName = !save.pseudo || /^Joueur \d+$/.test(save.pseudo);
+  pseudoIn.addEventListener('input', () => (autoName = false));
 
   const show = (view: View, status = '', err = false, detail = '') => {
     root.dataset.show = view;
@@ -59,17 +62,34 @@ export function openLobby(opts: { join?: string } = {}): Promise<FriendRoom | 'q
    * Pseudo saisi : nettoyé, filtré (c'est aussi le nom du classement, public), gardé sur le téléphone et
    * envoyé au classement. Rend null s'il est refusé (le message s'affiche dans le menu).
    */
-  const pseudo = (): string | null => {
-    const p = cleanPseudo(pseudoIn.value) || defaultPseudo();
-    pseudoIn.value = p;
-    if (!rankNameOk(p)) {
-      show('choice', RANKING.nameRefused, true);
+  const pseudo = async (): Promise<string | null> => {
+    const refuse = (msg: string) => {
+      show('choice', msg, true);
       pseudoIn.focus();
       return null;
+    };
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const p = cleanPseudo(pseudoIn.value) || defaultPseudo();
+      pseudoIn.value = p;
+      if (!rankNameOk(p)) return refuse(RANKING.nameRefused);
+      // Nouveau pseudo : le serveur vérifie qu'il est libre (un seul joueur par pseudo). Sans réseau, on continue.
+      if (p !== loadSave().rankName) {
+        const r = await setRankName(p);
+        if (r === 'taken') {
+          if (autoName) {
+            pseudoIn.value = defaultPseudo();
+            continue;
+          }
+          return refuse(RANKING.nameTaken);
+        }
+        if (r === 'refused') return refuse(RANKING.nameRefused);
+        if (r === 'too-many') return refuse(RANKING.nameTooMany);
+        if (r === 'ok') updateSave((s) => ({ ...s, rankName: p }));
+      }
+      updateSave((s) => ({ ...s, pseudo: p }));
+      return p;
     }
-    updateSave((s) => ({ ...s, pseudo: p }));
-    void setRankName(p);
-    return p;
+    return refuse(RANKING.nameTaken);
   };
 
   return new Promise((resolve) => {
@@ -93,7 +113,7 @@ export function openLobby(opts: { join?: string } = {}): Promise<FriendRoom | 'q
     const trace = (e: unknown) => ((e as { trace?: string[] }).trace ?? []).join(' · ');
 
     const host = async () => {
-      const name = pseudo();
+      const name = await pseudo();
       if (!name) return;
       show('busy', ONLINE.creating);
       for (let attempt = 0; attempt < 6 && !done; attempt++) {
@@ -122,8 +142,8 @@ export function openLobby(opts: { join?: string } = {}): Promise<FriendRoom | 'q
     const join = async (raw: string) => {
       const code = normalizeCode(raw);
       if (!code) return show('join', ONLINE.errors.badCode, true);
-      const name = pseudo();
-      if (!name) return show('choice', RANKING.nameRefused, true);
+      const name = await pseudo();
+      if (!name) return;
       show('busy', ONLINE.joining(code));
       try {
         link = await PeerLink.open('guest', code, linkOpts);
@@ -154,14 +174,16 @@ export function openLobby(opts: { join?: string } = {}): Promise<FriendRoom | 'q
       const act = (e.target as HTMLElement).closest('[data-act]')?.getAttribute('data-act');
       if (!act) return;
       if (act === 'quick') {
-        if (pseudo()) finish('quick');
+        void pseudo().then((p) => p && finish('quick'));
       } else if (act === 'ranking') void openRanking();
       else if (act === 'create') void host();
       else if (act === 'join') {
-        if (!pseudo()) return;
-        show('join', '');
-        codeIn.value = '';
-        codeIn.focus();
+        void pseudo().then((p) => {
+          if (!p) return;
+          show('join', '');
+          codeIn.value = '';
+          codeIn.focus();
+        });
       } else if (act === 'go') void join(codeIn.value);
       else if (act === 'share') void share();
       else if (act === 'back') {

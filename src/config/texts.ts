@@ -379,4 +379,5 @@ export const RANKING = {
   /** Pseudo refusé par le filtre (menu en ligne). */
   nameRefused: 'Ce pseudo n’est pas accepté. Choisis-en un autre.',
   nameTooMany: 'Trop de changements de pseudo aujourd’hui.',
+  nameTaken: 'Ce pseudo est déjà pris. Choisis-en un autre.',
 };

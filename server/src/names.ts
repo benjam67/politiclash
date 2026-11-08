@@ -7,14 +7,19 @@ export const NAME_MAX = 14;
 /** Mots refusés s'ils forment un mot entier (courts : on évite « con » dans « Constant », « pute » dans « député »). */
 const WORDS = [
   'con', 'cons', 'conne', 'connes', 'pd', 'pede', 'fdp', 'ntm', 'tg', 'nique', 'niquer', 'bite', 'bites', 'cul', 'pute', 'putes', 'viol', 'violeur', 'nazi', 'nazis',
+  'raton', 'ratons', 'retard', 'retards', 'negro', 'negros', 'pedale', 'pedales', 'tamere',
   'zob', 'teub', 'chatte', 'sexe', 'sex', 'porn', 'porno', 'fuck', 'shit', 'dick', 'cock', 'cunt', 'tits', 'slut', 'whore', 'rape', 'nig', 'kkk', 'ss', 'hitler', 'isis', 'daech',
 ];
 
-/** Morceaux refusés n'importe où dans le nom, une fois les séparateurs retirés (assez longs pour ne pas gêner les vrais mots). */
+/**
+ * Morceaux refusés n'importe où dans le nom, une fois les séparateurs retirés. Seulement des morceaux qu'aucun
+ * mot ordinaire ne contient : « nique » est dans « Unique » et « Dominique », « negro » dans « Monténégro »,
+ * « pedale » dans « pédaler » ; ceux-là ne sont refusés que comme mots entiers (liste ci-dessus).
+ */
 const PARTS = [
-  'connard', 'connasse', 'salope', 'salaud', 'encule', 'enculer', 'putain', 'batard', 'enfoire', 'couille', 'branleur', 'branlette', 'nichon', 'pedale', 'tapette', 'gouine',
-  'negre', 'negro', 'bougnoul', 'bicot', 'youpin', 'raton', 'nique', 'niquetamere', 'tamere', 'fistule', 'sodomi', 'pornhub', 'xvideo', 'fuck', 'bitch', 'pussy', 'nigger',
-  'nigga', 'faggot', 'retard', 'hitler', 'heilhitler', 'siegheil', 'pedophil', 'pedopor', 'suicide', 'terroris', 'jihad', 'djihad',
+  'connard', 'connasse', 'salope', 'salaud', 'encule', 'enculer', 'putain', 'batard', 'enfoire', 'couille', 'branleur', 'branlette', 'nichon', 'tapette', 'gouine',
+  'negre', 'bougnoul', 'bicot', 'youpin', 'niquetamere', 'tamere', 'sodomi', 'pornhub', 'xvideo', 'fuck', 'bitch', 'pussy', 'nigger',
+  'nigga', 'faggot', 'hitler', 'heilhitler', 'siegheil', 'pedophil', 'pedopor', 'suicide', 'terroris', 'jihad', 'djihad',
 ];
 
 const LEET: Record<string, string> = { '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't', '8': 'b', '@': 'a', $: 's', '€': 'e', '!': 'i' };
@@ -35,6 +40,14 @@ export function tidyName(input: string): string {
     .slice(0, NAME_MAX)
     .join('')
     .trim();
+}
+
+/**
+ * Clé d'unicité d'un nom : deux noms de même clé sont « le même » (« Le Boss », « lé böss », « Le B0ss »,
+ * « LeBoss » ou « le-boss ») : un seul joueur peut le porter, sinon on pourrait se faire passer pour un autre.
+ */
+export function nameKey(name: string): string {
+  return normalizeName(tidyName(name)).replace(/[^a-z0-9]/g, '').replace(/(.)\1+/g, '$1');
 }
 
 /** Vrai si le nom est acceptable pour le classement public. */

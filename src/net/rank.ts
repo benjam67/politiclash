@@ -54,12 +54,16 @@ export async function reportResult(match: string, n: number, won: boolean) {
 /** Le nom est-il acceptable ? (le serveur vérifie aussi). */
 export const rankNameOk = (name: string) => nameAllowed(tidyName(name));
 
-/** Nom affiché dans le classement. Rend 'ok', 'refused' (filtre), 'too-many' (trop de changements aujourd'hui) ou 'offline'. */
-export async function setRankName(name: string): Promise<'ok' | 'refused' | 'too-many' | 'offline'> {
+/**
+ * Nom affiché dans le classement. Rend 'ok', 'refused' (filtre), 'taken' (déjà porté par un autre joueur),
+ * 'too-many' (trop de changements aujourd'hui) ou 'offline'.
+ */
+export async function setRankName(name: string): Promise<'ok' | 'refused' | 'taken' | 'too-many' | 'offline'> {
   if (!rankNameOk(name)) return 'refused';
   const r = await post('name', { name: tidyName(name) });
   if (r.status === 200) return 'ok';
   if (r.status === 422) return 'refused';
+  if (r.status === 409) return 'taken';
   if (r.status === 429) return 'too-many';
   return 'offline';
 }

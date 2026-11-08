@@ -813,3 +813,10 @@ Demandé par le propriétaire : classements des scores du jour, de la semaine et
 - 267 tests unitaires (8 de plus : filtre des noms, dont les déguisements et les faux positifs ; jour et semaine à l'heure de Paris, été comme hiver ; accord des deux déclarations).
 - Essai sur le vrai serveur lancé en local : la victoire n'est comptée qu'après les deux déclarations, la 4e du jour contre le même adversaire est ignorée, mauvais secret, match inventé, nom grossier et autre site refusés.
 - Tests navigateur : après un match complet de Primaire entre deux navigateurs, le classement du jour compte 1 victoire au gagnant, sous son nom ; écran du classement (trois onglets, place du joueur) ; nom grossier refusé dans le menu.
+
+**Pseudos uniques — 8 novembre 2026** (choix du propriétaire)
+- Un pseudo ne peut être porté que par un seul joueur : le premier qui le prend le garde, le suivant voit « Ce pseudo est déjà pris. Choisis-en un autre. ». Comparaison sans majuscules, accents, chiffres déguisés, espaces ni tirets (« Le Boss », « lé B0SS » et « Le-Boss » sont le même pseudo), pour qu'on ne puisse pas se faire passer pour un autre. Un pseudo abandonné redevient libre.
+- Le menu demande au serveur avant d'utiliser un nouveau pseudo. Sans réseau, on continue (le pseudo n'est simplement pas enregistré au classement). Le pseudo tiré d'office (« Joueur 4821 », désormais à 4 chiffres) est remplacé sans rien dire s'il est déjà pris.
+- Base déjà en ligne : la clé d'unicité est ajoutée au premier démarrage ; si deux noms existants se ressemblaient, le plus ancien garde le sien et l'autre redevient « Joueur #… ». Essayé en local : ancienne version avec « Le Boss » et « le boss », puis nouvelle version.
+- Filtre : « Unique », « Dominique », « Véronique », « Technique », « Monténégro », « Pédaler » étaient refusés (ils contiennent un morceau de mot grossier) ; ces mots-là ne sont plus refusés que comme mots entiers. Vérifié sur une centaine de prénoms et de mots courants : aucun refusé.
+- Tests : clé d'unicité (variantes identiques, noms voisins différents) ; navigateur : pseudo déjà pris refusé dans le menu.

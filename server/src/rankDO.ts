@@ -7,10 +7,10 @@
 // Adresses (appelées par le Worker, ou par la file d'attente pour /pair) :
 //   POST /pair   {match, a, b}                 la file vient d'associer a et b (identifiants du classement)
 //   POST /result {rid, secret, match, n, won}  résultat du n-ième match de ce salon, vu par ce joueur
-//   POST /name   {rid, secret, name}           nom affiché dans le classement (filtré)
+//   POST /name   {rid, secret, name}           nom affiché dans le classement (filtré, unique : 409 s'il est pris)
 //   POST /flag   {rid, secret, target}         signaler un nom
 //   GET  /board?period=day|week|all&rid=…     les 100 premiers, et la place de ce joueur
-import { anonymousName, nameAllowed, tidyName } from './names';
+import { anonymousName, nameAllowed, nameKey, tidyName } from './names';
 import { dayKey, isPeriod, MAX_REMATCH, SAME_FOE_PER_DAY, settle, weekKey, type Period } from './rank';
 
 export const TOP = 100;
@@ -46,6 +46,23 @@ export class RankDO {
       CREATE INDEX IF NOT EXISTS wins_winner ON wins (winner);
       CREATE TABLE IF NOT EXISTS flags (target TEXT NOT NULL, reporter TEXT NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (target, reporter));
     `);
+    // Noms uniques (ajouté le 8 novembre) : colonne de clé, remplie pour les noms déjà enregistrés ; en cas de
+    // doublon ancien, le plus ancien garde le nom, les autres redeviennent « Joueur #… ».
+    const cols = this.sql.exec('PRAGMA table_info(players)').toArray() as { name: string }[];
+    if (!cols.some((c) => c.name === 'name_key')) {
+      this.sql.exec('ALTER TABLE players ADD COLUMN name_key TEXT');
+      const rows = this.sql.exec('SELECT rid, name FROM players WHERE name IS NOT NULL ORDER BY created ASC').toArray() as { rid: string; name: string }[];
+      const seen = new Set<string>();
+      for (const r of rows) {
+        const k = nameKey(r.name);
+        if (seen.has(k)) this.sql.exec('UPDATE players SET name = NULL WHERE rid = ?', r.rid);
+        else {
+          seen.add(k);
+          this.sql.exec('UPDATE players SET name_key = ? WHERE rid = ?', k, r.rid);
+        }
+      }
+    }
+    this.sql.exec('CREATE UNIQUE INDEX IF NOT EXISTS players_name_key ON players (name_key) WHERE name_key IS NOT NULL');
   }
 
   async fetch(request: Request): Promise<Response> {
@@ -116,10 +133,14 @@ export class RankDO {
     const day = dayKey(Date.now());
     const p = this.sql.exec('SELECT name, name_day, name_changes FROM players WHERE rid = ?', rid).one() as { name: string | null; name_day: string | null; name_changes: number };
     if (p.name === name) return json({ ok: true, name });
+    // Nom déjà porté par un autre joueur (en ignorant majuscules, accents, chiffres déguisés, espaces) : refusé.
+    const key = nameKey(name);
+    const owner = this.sql.exec('SELECT rid FROM players WHERE name_key = ? AND rid != ?', key, rid).toArray()[0];
+    if (owner) return json({ error: 'name-taken' }, 409);
     const changes = p.name_day === day ? p.name_changes : 0;
     if (changes >= NAME_CHANGES_PER_DAY) return json({ error: 'too-many' }, 429);
     // Nouveau nom : les signalements de l'ancien ne comptent plus.
-    this.sql.exec('UPDATE players SET name = ?, hidden = 0, name_day = ?, name_changes = ? WHERE rid = ?', name, day, changes + 1, rid);
+    this.sql.exec('UPDATE players SET name = ?, name_key = ?, hidden = 0, name_day = ?, name_changes = ? WHERE rid = ?', name, key, day, changes + 1, rid);
     this.sql.exec('DELETE FROM flags WHERE target = ?', rid);
     return json({ ok: true, name });
   }

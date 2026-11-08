@@ -28,6 +28,8 @@ export interface SaveData {
   muteReactions: boolean;
   /** Classement : identifiant de ce téléphone et son secret (tirés au hasard la première fois). */
   rank: { id: string; secret: string } | null;
+  /** Dernier nom accepté par le classement (pour ne redemander que si le pseudo change). */
+  rankName: string;
   /** Campagne présidentielle en cours (null : aucune). */
   campaign: Campaign | null;
   /** Campagnes gagnées, par candidat. */
@@ -37,7 +39,7 @@ export interface SaveData {
 export const STORAGE_KEY = 'politiclash.save';
 
 export function defaultSave(): SaveData {
-  return { v: 1, tutorialDone: false, level: 'normal', lastFighter: null, lastStage: null, record: { easy: { w: 0, l: 0 }, normal: { w: 0, l: 0 }, hard: { w: 0, l: 0 } }, pseudo: '', muteReactions: false, rank: null, campaign: null, palmares: {} };
+  return { v: 1, tutorialDone: false, level: 'normal', lastFighter: null, lastStage: null, record: { easy: { w: 0, l: 0 }, normal: { w: 0, l: 0 }, hard: { w: 0, l: 0 } }, pseudo: '', muteReactions: false, rank: null, rankName: '', campaign: null, palmares: {} };
 }
 
 const count = (n: unknown) => (typeof n === 'number' && Number.isFinite(n) && n >= 0 ? Math.min(1e6, Math.floor(n)) : 0);
@@ -54,6 +56,7 @@ export function sanitize(raw: unknown): SaveData {
   if (typeof r.pseudo === 'string') out.pseudo = cleanPseudo(r.pseudo);
   out.muteReactions = r.muteReactions === true;
   const rk = r.rank as { id?: unknown; secret?: unknown } | null | undefined;
+  if (typeof r.rankName === 'string') out.rankName = r.rankName.slice(0, 32);
   if (rk && typeof rk.id === 'string' && /^[a-f0-9]{32}$/.test(rk.id) && typeof rk.secret === 'string' && /^[a-f0-9]{64}$/.test(rk.secret)) out.rank = { id: rk.id, secret: rk.secret };
   out.campaign = sanitizeCampaign(r.campaign);
   out.palmares = sanitizePalmares(r.palmares);

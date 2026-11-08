@@ -116,7 +116,7 @@ test.describe('phase 7d : Primaire ouverte', () => {
     await expectNoErrors(realErrors(errors));
   });
 
-  test('écran du classement : onglets Jour, Semaine, Toujours ; nom grossier refusé dans le menu', async ({ browser }) => {
+  test('écran du classement : onglets Jour, Semaine, Toujours ; nom grossier ou déjà pris refusé dans le menu', async ({ browser }) => {
     const page = await phone(browser);
     const errors = collectErrors(page);
     await page.goto(`./?${P}`);
@@ -126,6 +126,15 @@ test.describe('phase 7d : Primaire ouverte', () => {
     await page.fill('#lobby-pseudo', 'Gros c0nnard');
     await page.locator('#lobby [data-act="quick"]').click();
     await expect(page.locator('[data-view="choice"] .err')).toContainText('n’est pas accepté');
+    expect(await page.evaluate(() => window.__slap!.scene)).toBe('Title');
+    // Pseudo déjà porté par un autre joueur (même écrit autrement) : refusé aussi.
+    const taken = `Pris ${Math.random().toString(36).slice(2, 6)}`;
+    const other = { rid: 'f'.repeat(31) + Math.floor(Math.random() * 10), secret: 'e'.repeat(64) };
+    const r = await page.request.post('http://127.0.0.1:8787/rank/name', { headers: { Origin: 'http://localhost:4173' }, data: { ...other, name: taken } });
+    expect(r.status()).toBe(200);
+    await page.fill('#lobby-pseudo', taken.toUpperCase());
+    await page.locator('#lobby [data-act="quick"]').click();
+    await expect(page.locator('[data-view="choice"] .err')).toContainText('déjà pris');
     expect(await page.evaluate(() => window.__slap!.scene)).toBe('Title');
     await page.locator('#lobby [data-act="ranking"]').click();
     await expect(page.locator('#ranking')).toBeVisible();
