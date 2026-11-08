@@ -740,3 +740,8 @@ Sur iPhone, l'écran « tourne ton téléphone » pouvait rester affiché une fo
 - Le propriétaire a créé la clé du relais, le jeton de déploiement et le sous-domaine `ben-aub.workers.dev`, et mis les secrets dans GitHub. Serveur en ligne : `https://france-bagarre.ben-aub.workers.dev`. Vérification automatique après déploiement : `/health` répond avec le relais configuré, `/ice` fournit des accès au relais, un autre site est refusé.
 - Le jeu utilise désormais ce serveur. Le lien d'invitation garde aussi les réglages d'essai `relay` et `server`. Les tests à deux navigateurs tournent sans le vrai serveur (`server=` vide).
 - Un nouveau sous-domaine workers.dev met quelques minutes à recevoir son certificat HTTPS : la vérification après déploiement attend jusqu'à 5 minutes.
+
+**Corrigé — 8 novembre 2026 : l'hôte basculait sur la campagne solo quand son ami arrivait**
+- Constaté par le propriétaire (téléphone en 5G) : à l'arrivée de l'ami, l'hôte se retrouvait sur l'écran « Sur la route de l'Élysée », et l'ami restait seul dans le salon.
+- Cause : le menu en ligne est en HTML, posé sur l'accueil du jeu. Un toucher sur l'un de ses boutons (« Partager le lien ») était aussi reçu par le jeu, qui appuyait sur le bouton de l'accueil situé dessous (la campagne). La campagne démarrait cachée sous le menu, et apparaissait quand le menu se fermait.
+- Correction : l'accueil ignore les touchers tant que le menu en ligne est ouvert, et le menu garde ses touchers pour lui. Test ajouté à `online.spec.ts` (il échouait avant la correction).

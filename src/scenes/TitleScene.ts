@@ -44,9 +44,13 @@ export class TitleScene extends Phaser.Scene {
     this.lobbyOpen = true;
     this.notice = '';
     this.build();
+    // Le menu en ligne (HTML) est posé sur l'accueil : tant qu'il est ouvert, l'accueil ignore les touchers,
+    // sinon un toucher sur « Partager le lien » appuyait aussi sur le bouton de l'accueil situé dessous.
+    this.input.enabled = false;
     void openLobby({ join }).then((room) => {
       this.lobbyOpen = false;
       if (room) this.scene.start('Room');
+      else if (this.scene.isActive()) this.input.enabled = true;
     });
   }
 

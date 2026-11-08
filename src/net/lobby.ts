@@ -10,6 +10,10 @@ import { cleanPseudo, inviteLink, makeCode, normalizeCode } from './room';
 
 type View = 'choice' | 'host' | 'join' | 'busy';
 
+/** Événements de toucher et de souris que le menu garde pour lui. */
+const SWALLOW = ['touchstart', 'touchend', 'touchmove', 'mousedown', 'mouseup', 'pointerdown', 'pointerup'] as const;
+const swallow = (e: Event) => e.stopPropagation();
+
 /** Pseudo par défaut, s'il n'en a jamais choisi : « Joueur » suivi de deux chiffres. */
 const defaultPseudo = () => `Joueur ${10 + Math.floor(Math.random() * 90)}`;
 
@@ -53,6 +57,7 @@ export function openLobby(opts: { join?: string } = {}): Promise<FriendRoom | nu
       done = true;
       root.hidden = true;
       root.removeEventListener('click', onClick);
+      for (const t of SWALLOW) root.removeEventListener(t, swallow);
       codeIn.removeEventListener('keydown', onKey);
       codeIn.removeEventListener('input', onInput);
       if (window.__slap) delete (window.__slap as Record<string, unknown>).lobby;
@@ -146,6 +151,8 @@ export function openLobby(opts: { join?: string } = {}): Promise<FriendRoom | nu
     };
 
     root.addEventListener('click', onClick);
+    // Les touchers du menu restent dans le menu : le jeu dessous écoute aussi la page entière.
+    for (const t of SWALLOW) root.addEventListener(t, swallow);
     codeIn.addEventListener('keydown', onKey);
     codeIn.addEventListener('input', onInput);
     root.hidden = false;

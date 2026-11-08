@@ -267,6 +267,27 @@ test.describe('phase 7b : Entre amis', () => {
     await expectNoErrors(errors);
   });
 
+  // Bug du 8 novembre : sur le téléphone de l'hôte, toucher « Partager le lien » appuyait aussi sur le bouton
+  // de l'accueil situé sous le menu, et la campagne solo démarrait cachée sous le menu.
+  test('toucher le menu en ligne n’appuie pas sur l’accueil dessous', async ({ browser }) => {
+    const page = await phone(browser);
+    await page.goto(`./?${PEER}`);
+    await waitScene(page, 'Title');
+    await tapNamed(page, 'Title', 'btn-online');
+    await page.locator('#lobby [data-act="create"]').tap();
+    await expect(page.locator('#lobby-code-show')).toHaveText(/^[A-Z]{4}$/, { timeout: 20_000 });
+    const box = (await page.locator('#lobby [data-act="share"]').boundingBox())!;
+    await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+    await page.waitForTimeout(1000);
+    expect(await page.evaluate(() => window.__slap!.game!.scene.getScenes(true).map((s) => s.scene.key))).toEqual(['Title']);
+    // Menu refermé : les boutons de l'accueil répondent de nouveau.
+    await page.locator('#lobby [data-act="back"]').tap();
+    await page.locator('#lobby [data-act="back"]').tap();
+    await expect(page.locator('#lobby')).toBeHidden();
+    await tapNamed(page, 'Title', 'btn-free');
+    await waitScene(page, 'CharacterSelect');
+  });
+
   test('erreurs : code trop court, salon introuvable', async ({ browser }) => {
     const page = await phone(browser);
     const errors = collectErrors(page);
