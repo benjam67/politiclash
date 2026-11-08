@@ -41,8 +41,15 @@ describe('limites d’usage de la file d’attente', () => {
 describe('contrôle de version', () => {
   const answer = (body: string, ok = true) => (async () => new Response(body, { status: ok ? 200 : 404 })) as unknown as typeof fetch;
   it('hors build publié : jamais « ancienne version »', async () => {
-    expect(buildId('')).toBe('dev');
-    expect(await isOutdated(answer('abcdef1234567'))).toBe(false);
+    // En local, le build n'a pas d'empreinte (« dev ») ; sur GitHub Actions, il a celle du commit.
+    expect(buildId('')).toBe(process.env.GITHUB_SHA ?? 'dev');
+    const real = globalThis.location;
+    Object.defineProperty(globalThis, 'location', { value: { search: '?build=dev' }, configurable: true });
+    try {
+      expect(await isOutdated(answer('abcdef1234567'))).toBe(false);
+    } finally {
+      Object.defineProperty(globalThis, 'location', { value: real, configurable: true });
+    }
   });
 
   it('build publié : ancienne version seulement si le site annonce une autre empreinte valide', async () => {
