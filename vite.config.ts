@@ -1,8 +1,9 @@
 import { defineConfig } from 'vite';
 
-// Le site est servi par GitHub Pages sous https://benjam67.github.io/politiclash/
+// Adresses relatives : le même build marche à la racine (https://france-bagarre.fr/, Cloudflare)
+// comme dans un sous-dossier (ancienne adresse GitHub Pages, …/politiclash/).
 export default defineConfig({
-  base: '/politiclash/',
+  base: './',
   build: {
     target: 'es2020',
     chunkSizeWarningLimit: 1600,

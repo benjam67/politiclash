@@ -9,6 +9,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="France Bagarre" />
     <title>France Bagarre</title>
+    <script>
+      // www.france-bagarre.fr → france-bagarre.fr : une seule adresse, donc une seule sauvegarde par joueur.
+      if (location.hostname.indexOf('www.') === 0) location.replace(location.href.replace('//www.', '//'));
+    </script>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" type="image/png" href="icons/icon-192.png" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />

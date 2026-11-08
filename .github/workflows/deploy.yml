@@ -1,7 +1,9 @@
-name: Déploiement GitHub Pages
+name: Déploiement du jeu
 
-# Build + tests, puis publication de dist/ sur la branche gh-pages
-# (GitHub Pages servi depuis cette branche).
+# Build + tests, puis publication de dist/ :
+#   - sur Cloudflare (Worker « france-bagarre-site », dossier site/), adresse principale du jeu ;
+#   - sur la branche gh-pages (ancienne adresse GitHub Pages), le temps de la migration.
+# Secrets Cloudflare : les mêmes que pour le serveur (CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN).
 on:
   push:
     branches: [main]
@@ -17,6 +19,8 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      HAS_CF: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,11 +30,33 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+      - run: echo "${GITHUB_SHA}" > dist/version.txt
+      - name: Publier sur Cloudflare
+        id: cf
+        if: env.HAS_CF == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: site
+          wranglerVersion: '4'
+      - name: Vérifier la version en ligne sur Cloudflare
+        if: env.HAS_CF == 'true'
+        run: |
+          URL="${{ steps.cf.outputs.deployment-url }}"
+          echo "Adresse : $URL"
+          for i in $(seq 1 30); do
+            curl -fsS "$URL/version.txt" -o v.txt && grep -q "${GITHUB_SHA}" v.txt && break
+            echo "Pas encore à jour ($i/30), nouvel essai dans 10 s…"
+            sleep 10
+          done
+          grep -q "${GITHUB_SHA}" v.txt
+          curl -fsS "$URL/" | grep -q "<title>France Bagarre</title>"
+          echo "### Jeu en ligne : $URL" >> "$GITHUB_STEP_SUMMARY"
       - name: Publier sur gh-pages
         run: |
           cd dist
           touch .nojekyll
-          echo "${GITHUB_SHA}" > version.txt
           git init -q -b gh-pages
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

@@ -820,3 +820,19 @@ Demandé par le propriétaire : classements des scores du jour, de la semaine et
 - Base déjà en ligne : la clé d'unicité est ajoutée au premier démarrage ; si deux noms existants se ressemblaient, le plus ancien garde le sien et l'autre redevient « Joueur #… ». Essayé en local : ancienne version avec « Le Boss » et « le boss », puis nouvelle version.
 - Filtre : « Unique », « Dominique », « Véronique », « Technique », « Monténégro », « Pédaler » étaient refusés (ils contiennent un morceau de mot grossier) ; ces mots-là ne sont plus refusés que comme mots entiers. Vérifié sur une centaine de prénoms et de mots courants : aucun refusé.
 - Tests : clé d'unicité (variantes identiques, noms voisins différents) ; navigateur : pseudo déjà pris refusé dans le menu.
+
+## Migration vers Cloudflare et domaine france-bagarre.fr — 8 novembre 2026
+
+Choix du propriétaire : le jeu quitte GitHub Pages pour Cloudflare (déjà hôte du serveur et du relais), sous le domaine `france-bagarre.fr` (acheté chez OVH, serveurs de noms confiés à Cloudflare). Le code reste sur GitHub.
+
+**Étape 1 (faite)**
+- Build en adresses relatives (`base: './'`) : le même build marche à la racine d'un domaine et dans `…/politiclash/`. Vérifié par les tests navigateur dans les deux cas.
+- Nouveau Worker `france-bagarre-site` (dossier `site/`), fichiers seuls : sert `dist/`. Publié par `deploy.yml` à chaque push, avec vérification de la version en ligne ; gh-pages reste publié en parallèle pendant la migration.
+- `www.france-bagarre.fr` renvoie vers `france-bagarre.fr` (une seule adresse, donc une seule sauvegarde par joueur).
+- Serveur : nouvelles adresses autorisées (`france-bagarre.fr`, `www.`, adresse workers.dev du site). Le serveur garde son adresse `france-bagarre.ben-aub.workers.dev`.
+
+**Étape 2 (quand Cloudflare annonce le domaine actif)**
+- Brancher `france-bagarre.fr` et `www` sur le Worker du site.
+- Remplacer gh-pages par une page qui renvoie vers `france-bagarre.fr` (en gardant le code de salon des liens d'invitation).
+
+**À savoir** : les sauvegardes du navigateur sont liées à l'adresse du site ; sur le nouveau domaine, chaque joueur repart de zéro (tutoriel, campagne, palmarès). Le classement est sur le serveur, mais l'identifiant qui y relie le joueur est dans le navigateur : sur le nouveau domaine, le joueur repart avec un nouvel identifiant, et son ancien pseudo reste pris par l'ancien. Peu de joueurs à ce jour ; un transfert pourra être ajouté si besoin.

@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 // BASE_URL permet de viser la version en ligne (GitHub Pages) au lieu du build local.
-const BASE_URL = process.env.BASE_URL ?? 'http://localhost:4173/politiclash/';
+const BASE_URL = process.env.BASE_URL ?? 'http://localhost:4173/';
 
 export default defineConfig({
   testDir: 'tests/e2e',

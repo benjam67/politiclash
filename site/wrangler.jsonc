@@ -1,0 +1,11 @@
+// Site du jeu sur Cloudflare (fichiers seuls, sans code serveur) : sert le dossier dist/ produit par `npm run build`.
+// Déployé par GitHub Actions (.github/workflows/deploy.yml). Le serveur du mode en ligne est un autre Worker (server/).
+{
+  "name": "france-bagarre-site",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": true,
+  "assets": {
+    "directory": "../dist",
+    "not_found_handling": "none"
+  }
+}

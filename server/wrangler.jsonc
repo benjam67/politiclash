@@ -20,7 +20,7 @@
     { "tag": "v2", "new_sqlite_classes": ["RankDO"] }
   ],
   "vars": {
-    // Pages autorisées à demander des accès au relais (le jeu publié, et les essais en local).
-    "ALLOWED_ORIGINS": "https://benjam67.github.io,http://localhost:4173,http://127.0.0.1:4173,http://localhost:5173,http://127.0.0.1:5173"
+    // Pages autorisées à demander des accès au relais (le jeu publié sur son domaine et sur workers.dev, l'ancienne adresse GitHub Pages, et les essais en local).
+    "ALLOWED_ORIGINS": "https://france-bagarre.fr,https://www.france-bagarre.fr,https://france-bagarre-site.ben-aub.workers.dev,https://benjam67.github.io,http://localhost:4173,http://127.0.0.1:4173,http://localhost:5173,http://127.0.0.1:5173"
   }
 }
