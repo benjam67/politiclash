@@ -43,6 +43,7 @@ jobs:
       - name: Vérifier la version en ligne sur Cloudflare
         if: env.HAS_CF == 'true'
         run: |
+          set -x
           URL="${{ steps.cf.outputs.deployment-url }}"
           echo "Adresse : $URL"
           for i in $(seq 1 30); do
