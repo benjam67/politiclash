@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>France Bagarre · Vie privée et mentions légales</title>
+    <meta name="description" content="Ce que France Bagarre garde, ce qu’il ne garde pas, et qui contacter." />
+    <link rel="icon" href="favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+    <style>
+      :root { --blue: #002654; --red: #ce1126; --ink: #14161c; --muted: #555b6b; --line: #e3e5ea; --bg: #f6f7f9; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 system-ui, -apple-system, 'Segoe UI', sans-serif; }
+      header { background: var(--blue); color: #fff; padding: 20px 20px 16px; border-bottom: 6px solid var(--red); box-shadow: inset 0 -12px 0 -6px #fff; }
+      header .wrap { display: flex; align-items: center; gap: 16px; justify-content: space-between; }
+      header h1 { margin: 0; font-size: 24px; }
+      header p { margin: 4px 0 0; opacity: 0.85; font-size: 14px; }
+      .back { display: inline-block; color: #fff; text-decoration: none; border: 2px solid #fff; border-radius: 999px; padding: 6px 14px; font-weight: 700; white-space: nowrap; }
+      .wrap { max-width: 780px; margin: 0 auto; }
+      main { padding: 16px 20px 40px; }
+      section { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px 20px; margin: 0 0 14px; }
+      h2 { font-size: 19px; margin: 0 0 8px; color: var(--blue); }
+      h3 { font-size: 16px; margin: 14px 0 4px; }
+      p, ul { margin: 6px 0; }
+      ul { padding-left: 20px; }
+      li { margin: 3px 0; }
+      .short { font-size: 17px; }
+      .short li { margin: 6px 0; }
+      .muted { color: var(--muted); font-size: 14px; }
+      a { color: var(--blue); }
+      table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 8px 0; }
+      th, td { text-align: left; vertical-align: top; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+      th { color: var(--muted); font-weight: 600; }
+      .cookie { display: flex; align-items: center; gap: 16px; }
+      .cookie button { border: 0; background: none; padding: 0; cursor: pointer; font-size: 64px; line-height: 1; touch-action: manipulation; }
+      .cookie button.paf { animation: paf 0.35s ease-out; }
+      @keyframes paf { 0% { transform: rotate(0) scale(1); } 30% { transform: rotate(-35deg) scale(0.8) translateX(-14px); } 100% { transform: rotate(0) scale(1); } }
+      .bubble { font-weight: 800; color: var(--red); min-height: 1.4em; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="wrap">
+        <div>
+          <h1>Vie privée et mentions légales</h1>
+          <p>Mise à jour le 9 novembre 2026</p>
+        </div>
+        <a class="back" href="./">Retour au jeu</a>
+      </div>
+    </header>
+    <main class="wrap">
+      <section class="cookie" aria-label="Le cookie">
+        <button id="cookie" type="button" aria-label="Gifler le cookie">🍪</button>
+        <div>
+          <strong>Ici, pas de bandeau de cookies : le jeu n’en dépose aucun.</strong>
+          <div class="bubble" id="bubble">Celui-là, tu peux le gifler si tu veux.</div>
+        </div>
+      </section>
+
+      <section>
+        <h2>En bref</h2>
+        <ul class="short">
+          <li><strong>Pas de compte, pas de publicité, pas de revente</strong> de quoi que ce soit.</li>
+          <li><strong>Aucun cookie.</strong> Ta progression est gardée dans ton navigateur, sur ton téléphone.</li>
+          <li><strong>Pas de discussion libre en ligne</strong> : seulement des réactions toutes prêtes.</li>
+          <li>Le jeu compte des <strong>statistiques anonymes</strong> (persos joués, coups, durée des matchs) et la <strong>fréquentation du site</strong>, sans savoir qui tu es.</li>
+          <li>En <strong>Primaire ouverte</strong>, ton adversaire ne voit jamais ton adresse IP.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Qui est responsable</h2>
+        <p>France Bagarre est un jeu gratuit, fait par un particulier, sans but commercial. Pour toute question, demande ou signalement : <a href="mailto:contact@france-bagarre.fr">contact@france-bagarre.fr</a>.</p>
+        <p><strong>Hébergement</strong> : Cloudflare, Inc., 101 Townsend Street, San Francisco, CA 94107, États-Unis, +1 (650) 319-8930, <a href="https://www.cloudflare.com" rel="noopener">cloudflare.com</a>. Le site, le serveur du jeu en ligne, le relais et la mesure de fréquentation sont chez Cloudflare.</p>
+        <p class="muted">L’éditeur, personne physique non professionnelle, a choisi de ne pas publier son nom ; ses coordonnées sont connues de l’hébergeur (article 6 de la loi pour la confiance dans l’économie numérique).</p>
+      </section>
+
+      <section>
+        <h2>Ce qui reste sur ton téléphone</h2>
+        <p>Le jeu enregistre dans le stockage de ton navigateur (pas des cookies) ce qu’il faut pour jouer :</p>
+        <ul>
+          <li>ta progression : tutoriel vu, campagne en cours, palmarès, victoires et défaites, derniers choix (candidat, difficulté, lieu) ;</li>
+          <li>le son coupé ou non ;</li>
+          <li>pour le jeu en ligne : ton pseudo, et un identifiant de classement tiré au hasard (une suite de chiffres et de lettres, qui ne dit rien de toi).</li>
+        </ul>
+        <p>Rien de tout ça ne sert à te suivre. Pour tout effacer : supprime les données du site dans les réglages de ton navigateur. Attention, ta progression part avec.</p>
+      </section>
+
+      <section>
+        <h2>Le jeu en ligne</h2>
+        <h3>Entre amis</h3>
+        <p>Les deux téléphones se connectent directement l’un à l’autre quand c’est possible. Dans ce cas, chacun peut voir l’adresse IP de l’autre, comme pour un appel vidéo : ne joue ainsi qu’avec des gens que tu connais. Sinon, la connexion passe par le relais (voir plus bas). La mise en relation utilise le service public de PeerJS, qui voit passer le code du salon et l’adresse IP des deux téléphones.</p>
+        <h3>Primaire ouverte</h3>
+        <p>Pour jouer contre des inconnus, la connexion passe <strong>toujours</strong> par le relais de Cloudflare : ton adversaire ne voit jamais ton adresse IP. Le serveur voit passer ton adresse le temps de la connexion. Il ne l’enregistre pas : il en garde seulement une empreinte en mémoire, pour limiter les abus (par exemple un robot qui se connecterait en boucle), et l’oublie ensuite. Il utilise aussi ton continent, pour te trouver un adversaire proche.</p>
+        <p>Ton adversaire voit seulement ton pseudo (tiré au hasard dans une liste du jeu) et tes réactions toutes prêtes. Tu peux couper les siennes.</p>
+        <h3>Le classement</h3>
+        <p>Si tu joues en Primaire ouverte, le serveur garde, sous ton identifiant tiré au hasard (avec une clé secrète, elle aussi tirée au hasard, qui prouve que c’est bien toi) : le nom que tu as choisi pour le classement s’il y en a un, tes victoires, et les signalements de noms. <strong>Ce nom est affiché publiquement</strong> dans le classement : ne mets pas ton vrai nom. Un nom signalé par plusieurs joueurs est masqué.</p>
+      </section>
+
+      <section>
+        <h2>Statistiques et fréquentation</h2>
+        <h3>Statistiques de jeu</h3>
+        <p>À la fin de chaque match, le jeu envoie une fiche anonyme : le mode, les deux candidats, qui a gagné, le lieu, le niveau de l’IA, la durée, les dégâts de chaque coup ; pour un match en ligne, la qualité de la connexion. Le serveur n’en garde que des totaux par jour. La fiche ne contient ni pseudo, ni identifiant, ni adresse IP. Elles servent à équilibrer les candidats et à repérer les problèmes.</p>
+        <h3>Fréquentation du site</h3>
+        <p>Le jeu utilise Cloudflare Web Analytics pour compter les visites : pages vues, pays, type d’appareil, navigateur, site d’où l’on vient. Cet outil ne dépose rien sur ton téléphone et ne te suit pas d’un site à l’autre ; nous ne voyons que des totaux. Pour le faire, Cloudflare traite ton adresse IP (voir sa <a href="https://www.cloudflare.com/fr-fr/privacypolicy/" rel="noopener">politique de confidentialité</a>).</p>
+        <p class="muted">Cloudflare est une entreprise américaine. Les transferts de données vers les États-Unis s’appuient sur le cadre de protection des données UE–États-Unis (Data Privacy Framework), auquel Cloudflare adhère, et sur les clauses contractuelles types de la Commission européenne.</p>
+      </section>
+
+      <section>
+        <h2>Durées de conservation</h2>
+        <table>
+          <tr><th>Quoi</th><th>Combien de temps</th></tr>
+          <tr><td>Progression, réglages, pseudo, identifiant de classement</td><td>Sur ton téléphone, jusqu’à ce que tu les effaces</td></tr>
+          <tr><td>Adresse IP (connexion, relais, limites d’abus)</td><td>Le temps de la connexion ; jamais enregistrée par le jeu</td></tr>
+          <tr><td>Classement (identifiant, nom, victoires, signalements)</td><td>Tant que le classement existe, ou jusqu’à ta demande d’effacement</td></tr>
+          <tr><td>Statistiques de jeu</td><td>Totaux par jour, anonymes</td></tr>
+          <tr><td>Fréquentation (Cloudflare Web Analytics)</td><td>Totaux, selon les règles de Cloudflare</td></tr>
+        </table>
+      </section>
+
+      <section>
+        <h2>Tes droits</h2>
+        <p>Tu peux demander à voir, corriger ou effacer ce qui te concerne, par exemple ton nom et tes victoires au classement. Écris à <a href="mailto:contact@france-bagarre.fr">contact@france-bagarre.fr</a> en donnant le nom affiché au classement. Le jeu ne sait pas qui tu es : sans ce nom, il ne peut pas retrouver tes données.</p>
+        <p>Si tu estimes que tes droits ne sont pas respectés, tu peux t’adresser à la CNIL : <a href="https://www.cnil.fr/fr/plaintes" rel="noopener">cnil.fr/fr/plaintes</a>.</p>
+        <p class="muted">Les bases de ces traitements : le service que tu demandes en jouant (progression, jeu en ligne, classement) et l’intérêt du jeu à fonctionner correctement, sans abus (limites d’usage, statistiques anonymes, fréquentation).</p>
+      </section>
+
+      <section>
+        <h2>Les plus jeunes</h2>
+        <p>Pas de discussion libre, pas de publicité, pas d’achat : le jeu est fait pour qu’on puisse y jouer sans rien dévoiler de soi. En Primaire ouverte, le pseudo vu par l’adversaire est tiré au hasard. Le seul texte libre montré aux autres est le nom du classement, s’il est choisi : il est filtré, et chacun peut le signaler.</p>
+      </section>
+
+      <section>
+        <h2>Caricature</h2>
+        <p>France Bagarre est une œuvre de caricature et de parodie, dans la tradition française du dessin satirique. Les personnages sont des caricatures de personnalités politiques de tous les bords ; leurs noms, coups et répliques sont inventés pour faire rire et ne prétendent rapporter aucun fait réel.</p>
+      </section>
+    </main>
+    <script>
+      // Le cookie : on le gifle (petite animation et un mot), rien n'est enregistré.
+      (function () {
+        var c = document.getElementById('cookie');
+        var b = document.getElementById('bubble');
+        var lines = ['PAF !', 'CLAC !', 'Et une gifle pour le cookie !', 'Il n’avait rien fait, pourtant.', 'Toujours pas de cookie enregistré.', 'PAF ! PAF !'];
+        var n = 0;
+        c.addEventListener('click', function () {
+          c.classList.remove('paf');
+          void c.offsetWidth;
+          c.classList.add('paf');
+          b.textContent = lines[n++ % lines.length];
+        });
+      })();
+    </script>
+  </body>
+</html>

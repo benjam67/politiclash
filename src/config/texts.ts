@@ -212,6 +212,9 @@ export type CommentKind = keyof typeof COMMENTS;
  * Tutoriel du premier lancement. Pour chaque exercice : un titre, puis la consigne au doigt (téléphone)
  * et au clavier (ordinateur).
  */
+/** Lien de l'accueil vers la page vie privée et mentions légales (vie-privee.html). */
+export const PRIVACY_LINK = 'Vie privée';
+
 export const TUTORIAL = {
   heading: 'MEDIA TRAINING',
   steps: {

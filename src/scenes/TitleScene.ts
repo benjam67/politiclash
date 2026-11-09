@@ -7,7 +7,7 @@ import { COLORS, CSS, FONT_TITLE, FONT_UI, FLAG, FLAG_CSS, flagBand } from '../u
 import { fighterKey } from '../config/poses';
 import { needsInstallHint, safeInsets } from '../ui/safe';
 import { PLAYABLE_IDS, spriteOf } from '../config/roster';
-import { CAMPAIGN_TEXTS, GAME, ONLINE, SCREENS, TUTORIAL } from '../config/texts';
+import { CAMPAIGN_TEXTS, GAME, ONLINE, PRIVACY_LINK, SCREENS, TUTORIAL } from '../config/texts';
 import { openLobby } from '../net/lobby';
 import { normalizeCode } from '../net/room';
 import { loadSave, totalWins } from '../logic/save';
@@ -177,6 +177,19 @@ export class TitleScene extends Phaser.Scene {
         })
         .setOrigin(0.5, 1)
         .setDepth(3),
+    );
+
+    // Lien discret vers la page vie privée et mentions légales, en bas à gauche.
+    add(
+      this.add
+        .text(16 + Math.max(safe.left, safe.right), height - 14 - safe.bottom, PRIVACY_LINK, { fontFamily: FONT_UI, fontStyle: '800', fontSize: '15px', color: CSS.cream, stroke: CSS.ink, strokeThickness: 4 })
+        .setOrigin(0, 1)
+        .setDepth(5)
+        .setName('link-privacy')
+        .setInteractive({ useHandCursor: true })
+        .on('pointerup', () => {
+          location.href = 'vie-privee.html';
+        }),
     );
 
     const snd = add(
