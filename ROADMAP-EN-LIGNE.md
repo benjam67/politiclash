@@ -66,7 +66,7 @@ Le combat est déjà prêt pour le jeu en ligne : la simulation est déterminist
 
 ### Phase 7c · Serveur et relais ✔
 
-**Faite et validée le 8 novembre 2026.** Choix du propriétaire : **Cloudflare** (Workers + relais TURN), sur son compte existant. Serveur en ligne : `https://france-bagarre.ben-aub.workers.dev` (dossier `server/`, déployé par GitHub Actions, vérifié après chaque déploiement). Le mode Entre amis l'utilise : connexion directe si possible, relais sinon ; le salon affiche « directe » ou « par le relais ». Validé par le propriétaire : match en 5G (connexion directe) et match avec le relais forcé (`?relay=1`). Corrigés en route : un toucher dans le menu en ligne qui lançait la campagne sous le menu, et « Salon introuvable » quand l'hôte partageait le lien. Reste : seuil de l'alerte de facturation à fixer par le propriétaire. La file d'attente (Durable Object) sera ajoutée au même serveur en phase 7d.
+**Faite et validée le 8 novembre 2026.** Choix du propriétaire : **Cloudflare** (Workers + relais TURN), sur son compte existant. Serveur en ligne : `https://france-bagarre.ben-aub.workers.dev` (dossier `server/`, déployé par GitHub Actions, vérifié après chaque déploiement). Le mode Entre amis l'utilise : connexion directe si possible, relais sinon ; le salon affiche « directe » ou « par le relais ». Validé par le propriétaire : match en 5G (connexion directe) et match avec le relais forcé (`?relay=1`). Corrigés en route : un toucher dans le menu en ligne qui lançait la campagne sous le menu, et « Salon introuvable » quand l'hôte partageait le lien. Alerte de facturation (9 novembre) : alerte de budget Cloudflare à **5 $** sur tout le compte (Billing → Billable Usage), le compte ne dépensant rien d'autre (R2 d'un autre projet à 0 $) ; seconde alerte à 20 $ en option. L'alerte prévient par mail, elle ne coupe rien. Estimation : environ 1 Mo par match par le relais, soit de l'ordre d'un million de matchs par mois avant de sortir des 1 000 Go gratuits. La file d'attente (Durable Object) sera ajoutée au même serveur en phase 7d.
 
 La Partie rapide a besoin de deux choses que GitHub Pages ne fournit pas, car il ne sert que des fichiers :
 
@@ -134,7 +134,7 @@ Sans comptes utilisateurs (hors périmètre), pas de vrai classement. On peut ga
 | --- | --- |
 | Trop peu de joueurs : la file reste vide | Compteur de joueurs en ligne, proposition de match contre l'IA, et le mode Entre amis pour recruter |
 | Réseau mobile trop lent | Retour en arrière, relais, et avertissement « connexion faible » avant le match si la latence dépasse 150 ms |
-| Coût du serveur et du relais si le jeu marche bien | Suivi de l'usage ; seuil d'alerte fixé avec le propriétaire en phase 7c |
+| Coût du serveur et du relais si le jeu marche bien | Suivi de l'usage ; alerte de budget Cloudflare à 5 $ (phase 7c) |
 | Mise à jour du jeu pendant que des gens jouent | Contrôle de version (phase 7e) |
 
 ## 6. Jalons et décisions du propriétaire
