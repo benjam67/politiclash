@@ -64,7 +64,7 @@ jobs:
           curl -fsSI "https://france-bagarre.fr/share.jpg" | grep -qi "content-type: image/jpeg"
           curl -fsS "https://france-bagarre.fr/" | grep -q 'og:image" content="https://france-bagarre.fr/share.jpg"'
           curl -fsSI "https://france-bagarre.fr/favicon.ico" | grep -qi "^HTTP/.* 200"
-          curl -fsS "https://france-bagarre.fr/vie-privee.html" | grep -q "contact@france-bagarre.fr"
+          curl -fsS "https://france-bagarre.fr/vie-privee.html" | grep -q "baffe@france-bagarre.fr"
           # Mesure d'audience (Cloudflare Web Analytics, code dans index.html) : toujours dans la page ?
           if curl -fsS -A "Mozilla/5.0 (verification deploiement)" "https://france-bagarre.fr/" | grep -q "cloudflareinsights"; then
             echo "Mesure d'audience : présente." | tee -a "$GITHUB_STEP_SUMMARY"

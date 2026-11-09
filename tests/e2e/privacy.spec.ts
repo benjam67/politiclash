@@ -14,7 +14,7 @@ test('accueil → vie privée → retour au jeu ; aucun cookie déposé', async 
   for (const h of ['En bref', 'Qui est responsable', 'Le jeu en ligne', 'Statistiques et fréquentation', 'Tes droits']) {
     await expect(page.getByRole('heading', { name: h })).toBeVisible();
   }
-  await expect(page.getByRole('link', { name: 'contact@france-bagarre.fr' }).first()).toHaveAttribute('href', 'mailto:contact@france-bagarre.fr');
+  await expect(page.getByRole('link', { name: 'baffe@france-bagarre.fr' }).first()).toHaveAttribute('href', 'mailto:baffe@france-bagarre.fr');
   await page.getByRole('button', { name: 'Gifler le cookie' }).click();
   await expect(page.locator('#bubble')).toHaveText('PAF !');
   await page.screenshot({ path: `${SHOTS}/vie-privee.png`, fullPage: true });

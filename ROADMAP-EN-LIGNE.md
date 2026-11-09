@@ -115,7 +115,7 @@ Claude prépare une comparaison chiffrée à jour au début de cette phase. **Le
 ### Phase 7f · Ouverture au public ⚠ choix du propriétaire
 
 - **Avis juridique avant l'ouverture de la Partie rapide** : la roadmap le prévoyait avant une diffusion large, et c'est ce mode qui rend la diffusion large. Points à faire relire : l'exception de caricature, et les données des joueurs (même sans comptes, le serveur voit passer des adresses IP ; une courte page d'information sur la vie privée sera nécessaire).
-- **Page vie privée et mentions légales** : *faite le 9 novembre 2026* (`vie-privee.html`, lien « Vie privée » en bas de l'accueil ; contact `contact@france-bagarre.fr`). Pas de bandeau de cookies : le jeu n'en dépose aucun (stockage local strictement nécessaire, mesure d'audience sans stockage). Un bandeau deviendrait nécessaire avec de la publicité ciblée.
+- **Page vie privée et mentions légales** : *faite le 9 novembre 2026* (`vie-privee.html`, lien « Vie privée » en bas de l'accueil ; contact `baffe@france-bagarre.fr`). Pas de bandeau de cookies : le jeu n'en dépose aucun (stockage local strictement nécessaire, mesure d'audience sans stockage). Un bandeau deviendrait nécessaire avec de la publicité ciblée.
 - Bouton **« Signaler »** sur l'écran de fin de match, qui enregistre seulement le pseudo tiré et l'heure.
 - Ouverture progressive : d'abord un lien partagé à un petit cercle, puis public.
 - *Validé quand* : le propriétaire a donné son accord pour l'ouverture.

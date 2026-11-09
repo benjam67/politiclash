@@ -869,3 +869,4 @@ Choix du propriétaire : le jeu quitte GitHub Pages pour Cloudflare (déjà hôt
 - Pas de bandeau de cookies, choix argumenté avec le propriétaire : aucun cookie, stockage local strictement nécessaire au jeu, mesure d'audience sans stockage sur le téléphone. À la place, un cookie à gifler en haut de la page (rien n'est enregistré). Un bandeau de consentement deviendrait nécessaire avec de la publicité ciblée.
 - Test navigateur : lien depuis l'accueil, sections, adresse de contact, cookie giflé, aucun cookie déposé, retour au jeu. Le déploiement vérifie que la page est servie.
 - À faire par le propriétaire : créer l'adresse `contact@france-bagarre.fr` (Cloudflare Email Routing) ; faire relire la page dans le cadre de l'avis juridique.
+- Adresse de contact définitive (choix du propriétaire) : `baffe@france-bagarre.fr`, renvoyée par Cloudflare Email Routing vers la boîte du jeu. Elle remplace `contact@` dans la page, le test et la vérification du déploiement.
