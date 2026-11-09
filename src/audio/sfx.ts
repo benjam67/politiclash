@@ -303,6 +303,16 @@ export class Sfx {
         this.tone(t + 0.55, 0.55, { type: 'sawtooth', freq: 95, freqEnd: 55, gain: 0.3, attack: 0.02, vibrato: [26, 20] });
         this.noiseBurst(t + 0.55, 0.5, { type: 'lowpass', freq: 400, gain: 0.25, attack: 0.02 });
         break;
+      case 'judo':
+        // Kiai : cri bref, puis frottement du kimono qu'on agrippe.
+        this.tone(t + 0.35, 0.35, { type: 'sawtooth', freq: 260, freqEnd: 190, gain: 0.18, attack: 0.02, vibrato: [7, 10] });
+        for (let i = 0; i < 3; i++) this.noiseBurst(t + 0.5 + i * 0.12, 0.09, { type: 'bandpass', freq: 2200, q: 1.5, gain: 0.22, attack: 0.01 });
+        break;
+      case 'flag':
+        // Drapeau qui claque au vent, puis fanfare de trois notes.
+        for (let i = 0; i < 4; i++) this.noiseBurst(t + 0.1 + i * 0.11, 0.08, { type: 'bandpass', freq: 900, q: 2, gain: 0.25, attack: 0.01 });
+        [523, 659, 784].forEach((f, i) => this.tone(t + 0.55 + i * 0.12, 0.25, { type: 'square', freq: f, gain: 0.06, attack: 0.01 }));
+        break;
     }
   }
 
@@ -317,6 +327,8 @@ export class Sfx {
     if (effect === 'beer') for (let i = 0; i < 6; i++) this.tone(t + i * 0.03, 0.2, { type: 'triangle', freq: 2500 + Math.random() * 2500, gain: 0.08 });
     if (effect === 'throw') this.tone(t, 0.4, { type: 'triangle', freq: 1240, gain: 0.15 });
     if (effect === 'wind') this.noiseBurst(t, 0.25, { type: 'bandpass', freq: 300, q: 2, gain: 0.4 });
+    if (effect === 'judo') this.tone(t, 0.5, { type: 'sine', freq: 70, freqEnd: 30, gain: 0.6 * g });
+    if (effect === 'flag') this.noiseBurst(t, 0.3, { type: 'bandpass', freq: 700, q: 1.5, gain: 0.35 });
     if (effect === 'glitter') [2093, 2637, 3136].forEach((f, i) => this.tone(t + 0.05 + i * 0.05, 0.6, { type: 'sine', freq: f, gain: 0.06 }));
   }
 

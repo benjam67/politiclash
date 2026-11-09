@@ -162,6 +162,16 @@ export const FIGHTER_TEXTS: Record<FighterId, FighterTexts> = {
     name: 'Jordan Le Mytho', short: 'Jordan Le Mytho', katakana: 'ジョルダン・ル・ミト', special: 'Le Secret de Tolbiac', elected: 'ÉLU',
     specialLines: ['C’était donc vrai !', 'Le secret de Tolbiac est enfin révélé… et ça sent mauvais !'],
   },
+  // Teddy et Raph le Stagiaire (9 novembre) : noms et coups spéciaux du propriétaire.
+  // Répliques PROVISOIRES (le nom du coup crié), en attendant celles du propriétaire.
+  kimono: {
+    name: 'Teddy', short: 'Teddy', katakana: 'テディ', special: 'Judoooo', elected: 'ÉLU',
+    specialLines: ['Judoooo !'],
+  },
+  rose: {
+    name: 'Raph le Stagiaire', short: 'Raph', katakana: 'ラフ', special: 'საქართველო', elected: 'ÉLU',
+    specialLines: ['საქართველო !'],
+  },
 };
 
 /** Barre Buzz et coup spécial. */

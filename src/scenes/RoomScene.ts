@@ -137,16 +137,17 @@ export class RoomScene extends Phaser.Scene {
       }
     }
 
-    // Grille des combattants, 3 × 2, plus petite que celle du solo.
+    // Grille des combattants, 4 × 2, plus petite que celle du solo.
     const cx = width / 2;
-    const cw = 128;
-    const ch = 140;
+    const cols = 4;
     const gap = 14;
+    const cw = Math.min(128, Math.floor((width * 0.5 - (cols - 1) * gap) / cols));
+    const ch = Math.round((cw * 140) / 128);
     const top = 100 + ch / 2;
     for (let i = 0; i < ROSTER_SLOTS; i++) {
       const id = PLAYABLE_IDS[i];
-      const x = cx + ((i % 3) - 1) * (cw + gap);
-      const y = top + Math.floor(i / 3) * (ch + gap);
+      const x = cx + ((i % cols) - (cols - 1) / 2) * (cw + gap);
+      const y = top + Math.floor(i / cols) * (ch + gap);
       if (id) add(makeCard(this, x, y, `card-${id}`, { w: cw, h: ch, label: FIGHTER_TEXTS[id].short.toUpperCase(), image: portraitOf(id), selected: r.me.fighter === id, onClick: () => this.pick(id) }));
       else add(makeCard(this, x, y, `card-soon-${i}`, { w: cw, h: ch, label: SCREENS.soon, locked: true }));
     }

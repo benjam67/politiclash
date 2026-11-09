@@ -32,6 +32,8 @@ export const ROSTER = {
   barbe: { special: 'lancer', voice: 'grave', body: BODY },
   doyen: { special: 'hurlement', voice: 'grave', body: BODY },
   binocle: { special: 'vent', voice: 'grave', body: BODY },
+  kimono: { special: 'judo', voice: 'grave', body: BODY },
+  rose: { special: 'drapeau', voice: 'grave', body: BODY },
 } satisfies Record<string, FighterDef>;
 
 export type FighterId = keyof typeof ROSTER;
@@ -39,8 +41,8 @@ export const FIGHTER_IDS = Object.keys(ROSTER) as FighterId[];
 /** Combattants proposés au joueur (écran de sélection, écran titre, adversaire au hasard). */
 export const PLAYABLE_IDS: FighterId[] = [...FIGHTER_IDS];
 
-/** L'écran de sélection prévoit 6 cases ; les cases vides affichent « Bientôt ». */
-export const ROSTER_SLOTS = 6;
+/** L'écran de sélection prévoit 8 cases (4 par ligne) ; les cases vides affichent « Bientôt ». */
+export const ROSTER_SLOTS = 8;
 
 /** Mesures des images (écrites par `npm run assets`). */
 export const spriteOf = (id: FighterId) => assets.fighters[id];

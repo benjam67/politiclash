@@ -50,10 +50,12 @@ export function sanitizeCampaign(raw: unknown, ids: FighterId[] = PLAYABLE_IDS):
   const r = raw as Record<string, unknown>;
   const fighter = r.fighter as FighterId;
   if (!ids.includes(fighter) || !Array.isArray(r.order)) return null;
-  const order = r.order as FighterId[];
-  // Exactement les autres candidats, chacun une fois (un candidat ajouté ou retiré depuis : on repart de zéro).
   const others = ids.filter((id) => id !== fighter);
-  if (order.length !== others.length || new Set(order).size !== order.length || !order.every((id) => others.includes(id))) return null;
+  // Les autres candidats, chacun une fois. Un candidat retiré depuis : on repart de zéro.
+  // Des candidats ajoutés depuis (campagne commencée avant leur arrivée) : ils viennent s'ajouter à la fin du parcours.
+  const saved = r.order as FighterId[];
+  if (new Set(saved).size !== saved.length || !saved.every((id) => others.includes(id))) return null;
+  const order = [...saved, ...others.filter((id) => !saved.includes(id))];
   const int = (n: unknown, max: number) => (typeof n === 'number' && Number.isFinite(n) && n >= 0 ? Math.min(max, Math.floor(n)) : 0);
   const beaten = int(r.beaten, order.length);
   // Une campagne finie n'est plus « en cours ».

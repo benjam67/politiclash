@@ -6,7 +6,7 @@
 // Règles communes (dégâts, garde au bon moment, rapprochement) : `SPECIAL` dans `balance.ts`.
 
 /** Effets tracés par le jeu pendant la cinématique (voir `fx/SpecialFx.ts`). */
-export type SpecialEffect = 'glitter' | 'dance' | 'beer' | 'shout' | 'throw' | 'wind';
+export type SpecialEffect = 'glitter' | 'dance' | 'beer' | 'shout' | 'throw' | 'wind' | 'judo' | 'flag';
 
 /** Accessoires dessinés par le propriétaire (`raw/props/<nom>.png`). En attendant, le jeu en dessine un provisoire. */
 export const PROP_FILES = ['caca', 'faucille-marteau'] as const;
@@ -45,6 +45,10 @@ export const SPECIALS = {
   lancer: { range: 'far', poses: [30, 60], launch: 32, signal: 54, impact: 62, end: 104, effect: 'throw', prop: 'faucille-marteau', spin: true },
   /** Se retourne, dos à l'adversaire, tir par les fesses avec un petit nuage, puis se redresse. */
   vent: { range: 'far', poses: [22, 64], launch: 34, signal: 52, impact: 60, end: 104, effect: 'wind', prop: 'caca', spin: true },
+  /** Garde de judo, saisie du kimono, puis projection : l'adversaire est envoyé au tapis (onde au sol, poussière, étoiles). */
+  judo: { range: 'near', poses: [24, 50], signal: 52, impact: 60, end: 104, effect: 'judo' },
+  /** Brandit un drapeau, puis l'envoie en avant d'un grand coup : confettis rouges et blancs. */
+  drapeau: { range: 'near', poses: [28, 54], signal: 56, impact: 64, end: 104, effect: 'flag' },
 } satisfies Record<string, SpecialDef>;
 
 export type SpecialId = keyof typeof SPECIALS;

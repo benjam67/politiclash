@@ -63,11 +63,21 @@ describe('campagne présidentielle', () => {
     expect(parseSave(JSON.stringify(s))).toEqual(s);
   });
 
+  it('nouveaux candidats : une campagne commencée avant leur arrivée les ajoute en fin de parcours', () => {
+    const c = campaignWin(startCampaign(me, createRng(9)));
+    const old = c.order.slice(0, -2);
+    const added = c.order.slice(-2);
+    const r = sanitizeCampaign({ ...c, order: old });
+    expect(r?.order.slice(0, old.length)).toEqual(old);
+    expect([...(r?.order.slice(old.length) ?? [])].sort()).toEqual([...added].sort());
+    expect(r).toMatchObject({ fighter: me, beaten: 1 });
+  });
+
   it('sauvegarde abîmée : la campagne est oubliée sans planter', () => {
     const c = startCampaign(me, createRng(9));
     expect(sanitizeCampaign({ ...c, fighter: 'bernard' })).toBeNull();
     expect(sanitizeCampaign({ ...c, order: [...c.order, me] })).toBeNull();
-    expect(sanitizeCampaign({ ...c, order: c.order.slice(1) })).toBeNull();
+    expect(sanitizeCampaign({ ...c, order: [...c.order, 'bernard'] })).toBeNull();
     expect(sanitizeCampaign({ ...c, order: [c.order[0], ...c.order.slice(0, -1)] })).toBeNull();
     expect(sanitizeCampaign({ ...c, beaten: c.order.length })).toBeNull();
     expect(sanitizeCampaign({ ...c, beaten: -3, retries: 'x' })).toMatchObject({ beaten: 0, retries: 0 });

@@ -87,7 +87,8 @@ export function bakeAll(scene: Phaser.Scene) {
   bakeText(scene, 'ann_double_ko', ANNOUNCE.doubleKo, title(120, CSS.yellow, 17));
   for (const id of FIGHTER_IDS) {
     const name = FIGHTER_TEXTS[id].short.toUpperCase();
-    const special = FIGHTER_TEXTS[id].special.toUpperCase();
+    // Majuscules, sauf l'alphabet géorgien (ses majuscules sont rares dans les polices des téléphones).
+    const special = FIGHTER_TEXTS[id].special.replace(/[^\u10A0-\u10FF\u1C90-\u1CBF]+/g, (m) => m.toUpperCase());
     bakeText(scene, `ann_roundfor_${id}`, ANNOUNCE.roundFor(name), title(40, CSS.cream, 8));
     bakeText(scene, `ann_special_${id}`, `${special} !`, title(66, CSS.pink, 12));
     bakeText(scene, `lbl_ready_${id}`, `${special} PRÊT !`, {

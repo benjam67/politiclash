@@ -159,11 +159,11 @@ export class CharacterSelectScene extends Phaser.Scene {
       });
     } else {
       const palmares = loadSave().palmares;
-      // Grille de 6 cases, 3 par ligne.
-      const cols = 3;
-      const cw = 168;
-      const ch = 196;
-      const gap = 20;
+      // Grille de 8 cases, 4 par ligne, rétrécie sur les écrans étroits pour laisser voir les deux combattants.
+      const cols = 4;
+      const gap = 18;
+      const cw = Math.min(168, Math.floor((width * 0.54 - (cols - 1) * gap) / cols));
+      const ch = Math.round((cw * 196) / 168);
       const top = 128 + ch / 2;
       for (let i = 0; i < ROSTER_SLOTS; i++) {
         const id = PLAYABLE_IDS[i];

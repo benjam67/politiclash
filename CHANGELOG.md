@@ -1,5 +1,18 @@
 # Changelog
 
+## Teddy et Raph le Stagiaire — 2026-11-09
+
+Deux nouveaux combattants, à la demande du propriétaire : **Teddy** (`kimono`) et **Raph le Stagiaire** (`rose`). Noms et noms des coups spéciaux du propriétaire ; les répliques de l'éditorialiste sont **provisoires** (le nom du coup crié), en attendant les siennes.
+
+- **Dessins** : planches générées par le propriétaire (`generated/teddy`, `generated/stagiaire`), découpées en 21 poses communes et 3 poses de spécial, halo et fond vert retirés, recalées à l'échelle des autres (pose d'attente ~603 px). Deux poses en trop sur la planche 2 (saut avec gifle, projeté en l'air) sont gardées hors du jeu. Le style est plus réaliste que celui des six autres, et les poses du spécial plus dessinées que les poses communes : à refaire si le propriétaire le souhaite.
+- **Coups spéciaux** (`specials.ts`), tous deux de près : *Judoooo* (garde, saisie, projection ; onde au sol, poussière, étoiles) et *საქართველო* (drapeau brandi puis envoyé en avant ; confettis rouges et blancs). Un son pour chacun.
+- **Nom géorgien** : affiché tel quel, sans passer en majuscules (les majuscules géorgiennes manquent souvent sur les téléphones).
+- **Grilles** de sélection et du salon en ligne : 4 par ligne, 8 cases, rétrécies sur écran étroit.
+- **Campagne** : 7 adversaires (Facile, Normal ×3, Difficile ×3, réparti automatiquement). Une campagne commencée avant cette version n'est plus effacée : les nouveaux venus s'ajoutent à la fin du parcours.
+- **Repère du visage** (`npm run assets`) : mesuré dans une bande plus haute (6–15 % au lieu de 6–22 %), qui prenait l'épaule sur Teddy, Raph et Tête d'Ampoule. Les traces de main de Tête d'Ampoule remontent sur la joue.
+- **Statistiques** du serveur : les deux nouveaux identifiants sont acceptés.
+- **Équilibre** (200 matchs par paire, IA Difficile) : aucun combattant au-dessus de 58 % ; 1,3 spécial par round.
+
 ## Phase 0 · Mise en place — 2026-10-11
 
 PolitiClash part d'une copie du premier jeu (`soufflet`, gifles au tour par tour). Cette phase le vide de son combat au tour par tour et pose les fondations du jeu de combat en temps réel.

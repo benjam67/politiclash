@@ -28,6 +28,7 @@ export class SpecialFx {
   private foam: Phaser.GameObjects.Particles.ParticleEmitter;
   private shards: Phaser.GameObjects.Particles.ParticleEmitter;
   private splat: Phaser.GameObjects.Particles.ParticleEmitter;
+  private confetti: Phaser.GameObjects.Particles.ParticleEmitter;
   private projectile: Phaser.GameObjects.Image | null = null;
   /** Dernier pas de cinématique traité (les effets répétés partent une fois par pas). */
   private lastT = -1;
@@ -52,6 +53,7 @@ export class SpecialFx {
     this.foam = mk('fx_foam', { speed: { min: 80, max: 380 }, lifespan: 700, scale: { start: 1, end: 0.4 }, gravityY: 900, alpha: { start: 1, end: 0.2 } });
     this.shards = mk('fx_shard', { speed: { min: 300, max: 820 }, lifespan: 900, rotate: { min: -180, max: 180 }, gravityY: 1300, scale: { min: 0.7, max: 1.3 } });
     this.splat = mk('fx_foam', { speed: { min: 150, max: 560 }, lifespan: 650, scale: { start: 1.1, end: 0.3 }, gravityY: 1000, tint: 0x7a4a22 });
+    this.confetti = mk('fx_glitter', { speed: { min: 140, max: 480 }, lifespan: { min: 700, max: 1300 }, scale: { start: 1.3, end: 0.6 }, rotate: { min: 0, max: 360 }, gravityY: 420, tint: [0xe30a17, 0xffffff, 0xe30a17, 0xffffff] });
   }
 
   /** `k` : px de l'écran par px logique, zoom de la caméra compris. */
@@ -139,6 +141,14 @@ export class SpecialFx {
         break;
       case 'throw':
         break;
+      case 'judo':
+        // Saisie du kimono : un peu de poussière sous les pieds pendant qu'il tire.
+        if (t >= sp.poses[0] && t < sp.poses[1] && t % 8 === 0) this.cloud(at(lx + dir * 20, 8), 0.5);
+        break;
+      case 'flag':
+        // Le drapeau brandi lâche quelques confettis.
+        if (t >= sp.poses[0] && t < sp.impact && t % 4 === 0) this.emit(this.confetti, at(lx - dir * 30, h * 1.2), 2);
+        break;
     }
   }
 
@@ -189,6 +199,21 @@ export class SpecialFx {
         this.emit(this.splat, p, Math.round(18 * n));
         this.cloud({ x: p.x + dir * 20, y: p.y }, 1.6);
         break;
+      case 'judo': {
+        // Projection : onde aplatie au sol, poussière, étoiles.
+        const wave = this.scene.add.image(p.x, p.y + 60 * this.k, 'fx_ring').setDepth(47).setScale(0.4, 0.14);
+        this.scene.tweens.add({ targets: wave, scaleX: 3.4 * n + 0.6, scaleY: 0.9 * n + 0.2, alpha: 0, duration: 520, ease: 'Cubic.Out', onComplete: () => wave.destroy() });
+        this.cloud({ x: p.x - dir * 30, y: p.y + 50 * this.k }, 1.3 * n + 0.3);
+        this.cloud({ x: p.x + dir * 30, y: p.y + 50 * this.k }, 1.3 * n + 0.3);
+        this.emit(this.stars, p, Math.round(10 * n));
+        break;
+      }
+      case 'flag': {
+        this.emit(this.confetti, p, Math.round(60 * n));
+        const ring = this.scene.add.image(p.x, p.y, 'fx_ring').setDepth(47).setTint(0xe30a17).setScale(0.3);
+        this.scene.tweens.add({ targets: ring, scale: 2.6 * n + 0.6, alpha: 0, duration: 480, ease: 'Cubic.Out', onComplete: () => ring.destroy() });
+        break;
+      }
     }
   }
 

@@ -173,8 +173,8 @@
         "right": 141
       },
       "face": {
-        "x": 72,
-        "y": 347
+        "x": 67,
+        "y": 407
       },
       "reach": {
         "x": 293,
@@ -269,6 +269,96 @@
       "reach": {
         "x": 297,
         "y": 418
+      }
+    },
+    "kimono": {
+      "poses": [
+        "idle",
+        "walk1",
+        "walk2",
+        "jump",
+        "crouch",
+        "guard",
+        "guard_low",
+        "quick",
+        "air_slap",
+        "kick",
+        "crouch_kick",
+        "windup",
+        "swing",
+        "slap",
+        "special2",
+        "selfslap",
+        "hit",
+        "hit_heavy",
+        "down",
+        "getup",
+        "dazed",
+        "victory",
+        "special1",
+        "special3"
+      ],
+      "width": 676,
+      "height": 477,
+      "originX": 0.4660831509846827,
+      "originY": 0.984472049689441,
+      "idle": {
+        "height": 445,
+        "left": -117,
+        "right": 113
+      },
+      "face": {
+        "x": 45,
+        "y": 417
+      },
+      "reach": {
+        "x": 334,
+        "y": 372
+      }
+    },
+    "rose": {
+      "poses": [
+        "idle",
+        "walk1",
+        "walk2",
+        "jump",
+        "crouch",
+        "guard",
+        "guard_low",
+        "quick",
+        "air_slap",
+        "kick",
+        "crouch_kick",
+        "windup",
+        "swing",
+        "slap",
+        "special2",
+        "selfslap",
+        "hit",
+        "hit_heavy",
+        "down",
+        "getup",
+        "dazed",
+        "victory",
+        "special1",
+        "special3"
+      ],
+      "width": 934,
+      "height": 488,
+      "originX": 0.3613312202852615,
+      "originY": 0.9848254931714719,
+      "idle": {
+        "height": 446,
+        "left": -104,
+        "right": 119
+      },
+      "face": {
+        "x": 42,
+        "y": 413
+      },
+      "reach": {
+        "x": 311,
+        "y": 394
       }
     }
   },

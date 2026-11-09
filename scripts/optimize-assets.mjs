@@ -19,7 +19,7 @@ const POSES_OPTIONAL = ['walk3', 'walk4', 'special1', 'special3'];
 // Facteur de réduction commun à tous les combattants : même rapport de taille entre eux.
 // Canevas de 1300 × 820 (perso debout ~590 px), réduit à ~440 px de haut pour garder le chargement initial sous 4 Mo.
 const FIGHTER_SCALE = 0.74;
-const FIGHTERS = ['aviateur', 'tailleur', 'cadet', 'barbe', 'doyen', 'binocle'];
+const FIGHTERS = ['aviateur', 'tailleur', 'cadet', 'barbe', 'doyen', 'binocle', 'kimono', 'rose'];
 // Accessoires des coups spéciaux (raw/props/<nom>.png), facultatifs : sans eux, le jeu dessine un projectile provisoire.
 const SPECIAL_PROPS = ['caca', 'faucille-marteau'];
 const PROP_HEIGHT = 220;
@@ -99,7 +99,7 @@ for (const name of FIGHTERS) {
   const idle = await alphaBox(path.join(dir, 'idle.png'));
   const fig = H - FEET_OFFSET - idle.y0;
   // Avant du visage en idle (max x dans la bande 6–22 % sous le haut de la silhouette).
-  const face = await rowsMaxX(path.join(dir, 'idle.png'), idle.y0 + fig * 0.06, idle.y0 + fig * 0.22);
+  const face = await rowsMaxX(path.join(dir, 'idle.png'), idle.y0 + fig * 0.06, idle.y0 + fig * 0.15);
   // Portée de la main en pose slap (point le plus à droite) et sa hauteur.
   const reach = await rowsMaxX(path.join(dir, 'slap.png'), 0, H);
   manifest.fighters[name] = {
