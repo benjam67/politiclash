@@ -65,7 +65,10 @@ jobs:
           curl -fsSI "https://france-bagarre.fr/share.jpg" | grep -qi "content-type: image/jpeg"
           curl -fsS "https://france-bagarre.fr/" | grep -q 'og:image" content="https://france-bagarre.fr/share.jpg"'
           curl -fsSI "https://france-bagarre.fr/favicon.ico" | grep -qi "^HTTP/.* 200"
-          curl -fsS "https://france-bagarre.fr/vie-privee.html" | grep -q "baffe@france-bagarre.fr"
+          # Page vie privée : Cloudflare masque les adresses mail aux robots (Email Address Obfuscation) ;
+          # le navigateur les réaffiche. On accepte l'adresse en clair ou masquée.
+          curl -fsS "https://france-bagarre.fr/vie-privee.html" | grep -q -e "baffe@france-bagarre.fr" -e "email-protection"
+          curl -fsS "https://france-bagarre.fr/vie-privee.html" | grep -q "Vie privée et mentions légales"
           # Mesure d'audience (Cloudflare Web Analytics, code dans index.html) : toujours dans la page ?
           if curl -fsS -A "Mozilla/5.0 (verification deploiement)" "https://france-bagarre.fr/" | grep -q "cloudflareinsights"; then
             echo "Mesure d'audience : présente." | tee -a "$GITHUB_STEP_SUMMARY"
