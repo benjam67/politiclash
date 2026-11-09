@@ -784,6 +784,14 @@ function stepCine(s: FightState, n: FightState, in0: InputFrame, in1: InputFrame
   if (c.t === sp.impact) {
     const parried = c.parry === 1;
     const dmg = (parried ? SPECIAL.parriedDamage : SPECIAL.damage) * HP;
+    if (sp.swap) {
+      // Échange des places : chacun se retrouve de l'autre côté, et ils se font toujours face.
+      const x = L.x;
+      L.x = V.x;
+      V.x = x;
+      L.facing = L.facing === 1 ? -1 : 1;
+      V.facing = V.facing === 1 ? -1 : 1;
+    }
     const r = { v: n.rng };
     V.hp = Math.max(0, V.hp - dmg);
     V.mode = 'down';

@@ -1,5 +1,14 @@
 # Changelog
 
+## Eric l'Olivier et Marine Verte — 2026-11-09
+
+Deux combattants de plus, à la demande du propriétaire : **Eric l'Olivier** (`manteau`) et **Marine Verte** (`baskets`). Noms et noms des coups spéciaux du propriétaire ; répliques **provisoires** (le nom du coup crié).
+
+- **Dessins** : planches du propriétaire (`generated/eric`, `generated/tondelier`) découpées comme celles de Teddy et Raph. Fond vert retiré par distance à la couleur du fond (et non plus par « verdeur »), pour garder les lianes vertes de Marine Verte. Les planches de spécial n'ont pas de pose d'attente : l'échelle est prise sur la 3e pose (debout). Eric est dessiné ; les poses communes de Marine Verte sont réalistes, son spécial dessiné.
+- **Coups spéciaux**, de près tous les deux : *Grand Remplacement* (s'enroule dans son manteau, roule en boule ; à l'impact, **les deux combattants échangent leurs places** : nouveau réglage `swap` dans `specials.ts`, joué par la simulation) et *Gaïa* (jambe levée, coup de talon, lianes ; feuilles, terre, onde verte au sol). Un son pour chacun.
+- **Grilles** : 5 par ligne, 10 cases. **Campagne** : 9 adversaires (Facile, Normal ×4, Difficile ×4).
+- **Équilibre** (200 matchs par paire, IA Difficile) : aucun combattant au-dessus de 58 %.
+
 ## Teddy et Raph le Stagiaire — 2026-11-09
 
 Deux nouveaux combattants, à la demande du propriétaire : **Teddy** (`kimono`) et **Raph le Stagiaire** (`rose`). Noms et noms des coups spéciaux du propriétaire ; les répliques de l'éditorialiste sont **provisoires** (le nom du coup crié), en attendant les siennes.

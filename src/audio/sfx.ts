@@ -308,6 +308,17 @@ export class Sfx {
         this.tone(t + 0.35, 0.35, { type: 'sawtooth', freq: 260, freqEnd: 190, gain: 0.18, attack: 0.02, vibrato: [7, 10] });
         for (let i = 0; i < 3; i++) this.noiseBurst(t + 0.5 + i * 0.12, 0.09, { type: 'bandpass', freq: 2200, q: 1.5, gain: 0.22, attack: 0.01 });
         break;
+      case 'swap':
+        // Froissement du manteau, puis la boule qui roule.
+        this.noiseBurst(t + 0.1, 0.3, { type: 'bandpass', freq: 1200, q: 1.2, gain: 0.2, attack: 0.05 });
+        for (let i = 0; i < 5; i++) this.tone(t + 0.45 + i * 0.09, 0.08, { type: 'sine', freq: 110 + i * 12, gain: 0.22 });
+        break;
+      case 'gaia':
+        // Coup de talon, grondement, puis les lianes qui poussent (glissando).
+        this.tone(t + 0.45, 0.4, { type: 'sine', freq: 90, freqEnd: 40, gain: 0.4 });
+        this.noiseBurst(t + 0.45, 0.5, { type: 'lowpass', freq: 500, gain: 0.3, attack: 0.02 });
+        this.tone(t + 0.6, 0.5, { type: 'triangle', freq: 300, freqEnd: 900, gain: 0.08, attack: 0.05 });
+        break;
       case 'flag':
         // Drapeau qui claque au vent, puis fanfare de trois notes.
         for (let i = 0; i < 4; i++) this.noiseBurst(t + 0.1 + i * 0.11, 0.08, { type: 'bandpass', freq: 900, q: 2, gain: 0.25, attack: 0.01 });
@@ -327,6 +338,8 @@ export class Sfx {
     if (effect === 'beer') for (let i = 0; i < 6; i++) this.tone(t + i * 0.03, 0.2, { type: 'triangle', freq: 2500 + Math.random() * 2500, gain: 0.08 });
     if (effect === 'throw') this.tone(t, 0.4, { type: 'triangle', freq: 1240, gain: 0.15 });
     if (effect === 'wind') this.noiseBurst(t, 0.25, { type: 'bandpass', freq: 300, q: 2, gain: 0.4 });
+    if (effect === 'swap') this.tone(t, 0.25, { type: 'square', freq: 660, freqEnd: 330, gain: 0.08 });
+    if (effect === 'gaia') this.noiseBurst(t, 0.4, { type: 'lowpass', freq: 600, gain: 0.4 });
     if (effect === 'judo') this.tone(t, 0.5, { type: 'sine', freq: 70, freqEnd: 30, gain: 0.6 * g });
     if (effect === 'flag') this.noiseBurst(t, 0.3, { type: 'bandpass', freq: 700, q: 1.5, gain: 0.35 });
     if (effect === 'glitter') [2093, 2637, 3136].forEach((f, i) => this.tone(t + 0.05 + i * 0.05, 0.6, { type: 'sine', freq: f, gain: 0.06 }));

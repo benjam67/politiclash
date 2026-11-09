@@ -5,7 +5,7 @@
 // que des totaux par jour (« compteurs ») : ni pseudo, ni identifiant, ni adresse IP, ni appareil.
 
 /** Mêmes listes que le jeu (src/config/roster.ts, stages.ts, ai/ai.ts) ; un test vérifie qu'elles restent égales. */
-export const FIGHTERS = ['aviateur', 'tailleur', 'cadet', 'barbe', 'doyen', 'binocle', 'kimono', 'rose'] as const;
+export const FIGHTERS = ['aviateur', 'tailleur', 'cadet', 'barbe', 'doyen', 'binocle', 'kimono', 'rose', 'manteau', 'baskets'] as const;
 export const STAGES = ['bar', 'elysee', 'republique', 'assemblee', 'bastille'] as const;
 export const LEVELS = ['easy', 'normal', 'hard'] as const;
 /** Coups, dans l'ordre de `DEALT_MOVES` (src/logic/fight.ts). */

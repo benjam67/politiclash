@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { BUZZ, DIZZY, MATCH, MOVES, ROUND, SIM, SPECIAL } from '../../src/config/balance';
 import { FIGHTER_IDS, ROSTER, type FighterId } from '../../src/config/roster';
-import { SPECIALS } from '../../src/config/specials';
+import { SPECIALS, specialDef } from '../../src/config/specials';
 import {
   actionIn,
   BUZZ_STEPS,
@@ -429,5 +429,24 @@ describe('déterminisme avec coups spéciaux', () => {
 
   it('une gifle rapide reste plus rapide que le cercle : on peut toujours le couper', () => {
     expect(MOVES.quick.startupMs).toBeLessThan(BUZZ.holdMs);
+  });
+});
+
+describe('échange des places (coup spécial avec `swap`)', () => {
+  const swapper = FIGHTER_IDS.find((id) => specialDef(ROSTER[id].special).swap);
+  it('à l’impact, le lanceur passe de l’autre côté de la victime, et ils se font toujours face', () => {
+    expect(swapper).toBeDefined();
+    const id = swapper as FighterId;
+    const r = launch(full(id, 'doyen', 200));
+    expect(r.s.f[0].x).toBeLessThan(r.s.f[1].x);
+    const { s } = playCine(r.s);
+    expect(s.f[0].x).toBeGreaterThan(s.f[1].x);
+    expect(s.f[0].facing).toBe(-1);
+    expect(s.f[1].facing).toBe(1);
+    expect(s.f[1].hp).toBeLessThan(r.s.f[1].hp);
+  });
+  it('les coups sans `swap` ne changent pas les côtés', () => {
+    const { s } = playCine(launch(full('aviateur', 'doyen', 200)).s);
+    expect(s.f[0].x).toBeLessThan(s.f[1].x);
   });
 });

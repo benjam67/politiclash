@@ -172,6 +172,16 @@ export const FIGHTER_TEXTS: Record<FighterId, FighterTexts> = {
     name: 'Raph le Stagiaire', short: 'Raph', katakana: 'ラフ', special: 'საქართველო', elected: 'ÉLU',
     specialLines: ['საქართველო !'],
   },
+  // Eric l'Olivier et Marine Verte (9 novembre) : noms et coups spéciaux du propriétaire.
+  // Répliques PROVISOIRES (le nom du coup crié), en attendant celles du propriétaire.
+  manteau: {
+    name: 'Eric l’Olivier', short: 'Eric', katakana: 'エリック', special: 'Grand Remplacement', elected: 'ÉLU',
+    specialLines: ['Grand Remplacement !'],
+  },
+  baskets: {
+    name: 'Marine Verte', short: 'Marine', katakana: 'マリーヌ', special: 'Gaïa', elected: 'ÉLUE',
+    specialLines: ['Gaïa !'],
+  },
 };
 
 /** Barre Buzz et coup spécial. */

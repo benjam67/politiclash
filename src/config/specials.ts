@@ -6,7 +6,7 @@
 // Règles communes (dégâts, garde au bon moment, rapprochement) : `SPECIAL` dans `balance.ts`.
 
 /** Effets tracés par le jeu pendant la cinématique (voir `fx/SpecialFx.ts`). */
-export type SpecialEffect = 'glitter' | 'dance' | 'beer' | 'shout' | 'throw' | 'wind' | 'judo' | 'flag';
+export type SpecialEffect = 'glitter' | 'dance' | 'beer' | 'shout' | 'throw' | 'wind' | 'judo' | 'flag' | 'swap' | 'gaia';
 
 /** Accessoires dessinés par le propriétaire (`raw/props/<nom>.png`). En attendant, le jeu en dessine un provisoire. */
 export const PROP_FILES = ['caca', 'faucille-marteau'] as const;
@@ -30,6 +30,8 @@ export interface SpecialDef {
   prop?: PropFile;
   /** Le projectile tournoie en vol. */
   spin?: boolean;
+  /** À l'impact, le lanceur et la victime échangent leurs places. */
+  swap?: boolean;
 }
 
 export const SPECIALS = {
@@ -49,6 +51,10 @@ export const SPECIALS = {
   judo: { range: 'near', poses: [24, 50], signal: 52, impact: 60, end: 104, effect: 'judo' },
   /** Brandit un drapeau, puis l'envoie en avant d'un grand coup : confettis rouges et blancs. */
   drapeau: { range: 'near', poses: [28, 54], signal: 56, impact: 64, end: 104, effect: 'flag' },
+  /** S'enroule dans son manteau, roule en boule sur l'adversaire et prend sa place : les deux échangent leurs positions. */
+  remplacement: { range: 'near', poses: [22, 66], signal: 54, impact: 62, end: 104, effect: 'swap', swap: true },
+  /** Lève la jambe, frappe le sol : des lianes jaillissent sous l'adversaire (feuilles, terre). */
+  gaia: { range: 'near', poses: [26, 58], signal: 52, impact: 60, end: 104, effect: 'gaia' },
 } satisfies Record<string, SpecialDef>;
 
 export type SpecialId = keyof typeof SPECIALS;

@@ -19,7 +19,7 @@ const POSES_OPTIONAL = ['walk3', 'walk4', 'special1', 'special3'];
 // Facteur de réduction commun à tous les combattants : même rapport de taille entre eux.
 // Canevas de 1300 × 820 (perso debout ~590 px), réduit à ~440 px de haut pour garder le chargement initial sous 4 Mo.
 const FIGHTER_SCALE = 0.74;
-const FIGHTERS = ['aviateur', 'tailleur', 'cadet', 'barbe', 'doyen', 'binocle', 'kimono', 'rose'];
+const FIGHTERS = ['aviateur', 'tailleur', 'cadet', 'barbe', 'doyen', 'binocle', 'kimono', 'rose', 'manteau', 'baskets'];
 // Accessoires des coups spéciaux (raw/props/<nom>.png), facultatifs : sans eux, le jeu dessine un projectile provisoire.
 const SPECIAL_PROPS = ['caca', 'faucille-marteau'];
 const PROP_HEIGHT = 220;

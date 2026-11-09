@@ -3,7 +3,7 @@ import { gzipSync } from 'node:zlib';
 import { collectErrors, cssPoint, expectNoErrors, freezeWhen, resume, SHOTS, waitReady, waitState } from './helpers';
 
 // Phase 5 : barre Buzz, bouton « Buzz » et son cercle, les six cinématiques, garde au bon moment.
-const FIGHTERS = ['aviateur', 'tailleur', 'cadet', 'barbe', 'doyen', 'binocle', 'kimono', 'rose'] as const;
+const FIGHTERS = ['aviateur', 'tailleur', 'cadet', 'barbe', 'doyen', 'binocle', 'kimono', 'rose', 'manteau', 'baskets'] as const;
 
 interface P5 {
   specials: number;

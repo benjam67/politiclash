@@ -360,6 +360,96 @@
         "x": 311,
         "y": 394
       }
+    },
+    "manteau": {
+      "poses": [
+        "idle",
+        "walk1",
+        "walk2",
+        "jump",
+        "crouch",
+        "guard",
+        "guard_low",
+        "quick",
+        "air_slap",
+        "kick",
+        "crouch_kick",
+        "windup",
+        "swing",
+        "slap",
+        "special2",
+        "selfslap",
+        "hit",
+        "hit_heavy",
+        "down",
+        "getup",
+        "dazed",
+        "victory",
+        "special1",
+        "special3"
+      ],
+      "width": 666,
+      "height": 478,
+      "originX": 0.5155555555555555,
+      "originY": 0.9845201238390093,
+      "idle": {
+        "height": 446,
+        "left": -123,
+        "right": 130
+      },
+      "face": {
+        "x": 63,
+        "y": 397
+      },
+      "reach": {
+        "x": 311,
+        "y": 388
+      }
+    },
+    "baskets": {
+      "poses": [
+        "idle",
+        "walk1",
+        "walk2",
+        "jump",
+        "crouch",
+        "guard",
+        "guard_low",
+        "quick",
+        "air_slap",
+        "kick",
+        "crouch_kick",
+        "windup",
+        "swing",
+        "slap",
+        "special2",
+        "selfslap",
+        "hit",
+        "hit_heavy",
+        "down",
+        "getup",
+        "dazed",
+        "victory",
+        "special1",
+        "special3"
+      ],
+      "width": 921,
+      "height": 471,
+      "originX": 0.3641479099678457,
+      "originY": 0.9843014128728415,
+      "idle": {
+        "height": 446,
+        "left": -109,
+        "right": 122
+      },
+      "face": {
+        "x": 53,
+        "y": 412
+      },
+      "reach": {
+        "x": 284,
+        "y": 361
+      }
     }
   },
   "props": {

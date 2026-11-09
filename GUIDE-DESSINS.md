@@ -68,11 +68,12 @@ Chaque personnage a son propre coup spécial, joué comme une courte cinématiqu
 
 Le jeu dessine lui-même le reste : paillettes, explosion, onde de choc, mousse, éclats de verre.
 
-### Où en sont les huit combattants
+### Où en sont les dix combattants
 
 - **Poses communes** : les six ont leurs 21 poses. Nouvelles tenues pour Manu Macs, Narine le Zen, Jordan et JLM (13 octobre).
 - **Poses du spécial** : fournies pour les six, avec les deux accessoires (13 octobre).
 - **Teddy et Raph le Stagiaire** (9 novembre) : 21 poses et 3 poses du spécial. Rendu plus réaliste que les six autres, à regénérer dans le même style si possible (planches 2:1, 3840 × 1920, image de style jointe).
+- **Eric l'Olivier et Marine Verte** (9 novembre) : 21 poses et 3 poses du spécial. Poses communes de Marine Verte réalistes, à regénérer si possible. Penser à mettre la pose d'attente dans la 4e case de la planche du spécial.
 - **Découpe** : `python3 scripts/decoupe-planches.py` pour les deux planches communes, puis `python3 scripts/decoupe-speciaux.py perso <planche> raw/fighters/<identifiant> <aperçu.jpg>` pour la planche du spécial, et `npm run assets`.
 
 ## 3. Règles pour les images d'un personnage

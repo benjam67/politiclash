@@ -22,7 +22,7 @@ async function finish(page: Page, winner: 0 | 1) {
 }
 
 test.describe('campagne présidentielle', () => {
-  test('battre les 7 rivaux à la suite, avec un recomptage, une reprise après fermeture et la scène finale', async ({ page }) => {
+  test('battre les 9 rivaux à la suite, avec un recomptage, une reprise après fermeture et la scène finale', async ({ page }) => {
     test.setTimeout(240_000);
     const errors = collectErrors(page);
     await skipTutorial(page);
@@ -41,7 +41,7 @@ test.describe('campagne présidentielle', () => {
     await waitScene(page, 'Campaign');
     let c = await st<CampaignInfo>(page);
     expect(c).toMatchObject({ fighter: 'tailleur', beaten: 0, retries: 0, level: 'easy' });
-    expect(c.order).toHaveLength(7);
+    expect(c.order).toHaveLength(9);
     expect(c.order).not.toContain('tailleur');
     const order = c.order;
     await page.waitForTimeout(300);
@@ -50,7 +50,7 @@ test.describe('campagne présidentielle', () => {
     // Match 1, joué pour de vrai : l'adversaire ne bouge pas, le joueur gifle jusqu'au K.O.
     await tapNamed(page, 'Campaign', 'btn-go');
     await waitScene(page, 'Fight');
-    expect(await st(page)).toMatchObject({ ids: { left: 'tailleur', right: order[0] }, level: 'easy', campaign: { i: 1, n: 7 } });
+    expect(await st(page)).toMatchObject({ ids: { left: 'tailleur', right: order[0] }, level: 'easy', campaign: { i: 1, n: 9 } });
     await page.evaluate(() => {
       type F = { x: number };
       window.__slap!.inputs = {
@@ -98,11 +98,11 @@ test.describe('campagne présidentielle', () => {
     c = await st<CampaignInfo>(page);
     expect(c).toMatchObject({ order, beaten: 2, retries: 1, foe: order[2], level: 'normal' });
 
-    // Matchs 3 à 7 : Normal, Normal, puis Difficile, Difficile, Difficile.
-    for (const [i, level] of [[2, 'normal'], [3, 'normal'], [4, 'hard'], [5, 'hard'], [6, 'hard']] as const) {
+    // Matchs 3 à 9 : Normal ×3, puis Difficile ×4.
+    for (const [i, level] of [[2, 'normal'], [3, 'normal'], [4, 'normal'], [5, 'hard'], [6, 'hard'], [7, 'hard'], [8, 'hard']] as const) {
       await waitScene(page, 'Campaign');
       expect(await st(page)).toMatchObject({ beaten: i, foe: order[i], level });
-      if (i === 6) {
+      if (i === 8) {
         await page.waitForTimeout(300);
         await page.screenshot({ path: `${SHOTS}/campagne-dernier-adversaire.png` });
       }
@@ -110,7 +110,7 @@ test.describe('campagne présidentielle', () => {
       await waitScene(page, 'Fight');
       expect(await st(page)).toMatchObject({ ids: { right: order[i] }, level });
       await finish(page, 0);
-      if (i < 6) {
+      if (i < 8) {
         await waitScene(page, 'Result');
         await tapNamed(page, 'Result', 'btn-next');
       }
