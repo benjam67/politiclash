@@ -1,5 +1,14 @@
 # Changelog
 
+## Nat — 2026-11-10
+
+Onzième combattante, à la demande du propriétaire : **Nat** (`bonnet`), coup spécial *Marianne* (nom du propriétaire ; réplique **provisoire**).
+
+- **Dessins** : planches `generated/nat` découpées (fond transparent à halo pour les poses communes, fond vert pour le spécial, dont la 1re pose est laissée de côté et la 3e sert d'échelle). Rendu réaliste, comme Teddy et Marine Verte.
+- **Coup spécial**, de près : enfile un bonnet phrygien, plonge tête la première, puis pose fièrement ; confettis bleu, blanc, rouge, clairon de trois notes.
+- **Grilles** : 6 par ligne, 12 cases (une case « Bientôt »). **Campagne** : 10 adversaires (Facile ×2, Normal ×4, Difficile ×4).
+- **Équilibre** (200 matchs par paire, IA Difficile) : aucun combattant au-dessus de 58 %.
+
 ## Eric l'Olivier et Marine Verte — 2026-11-09
 
 Deux combattants de plus, à la demande du propriétaire : **Eric l'Olivier** (`manteau`) et **Marine Verte** (`baskets`). Noms et noms des coups spéciaux du propriétaire ; répliques **provisoires** (le nom du coup crié).

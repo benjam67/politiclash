@@ -40,12 +40,12 @@ test.describe('phase 4 : choix du personnage et du niveau', () => {
     await tapNamed(page, 'Title', 'btn-free');
     await waitScene(page, 'CharacterSelect');
     expect(await st(page)).toMatchObject({ step: 'p1', left: null });
-    // 10 cases, toutes occupées : plus de case « Bientôt ».
+    // 12 cases : 11 combattants et une case « Bientôt ».
     const names = await namesIn(page, 'CharacterSelect');
-    expect(names.filter((n) => n.startsWith('card-'))).toHaveLength(10);
+    expect(names.filter((n) => n.startsWith('card-'))).toHaveLength(12);
     expect(names).toContain('card-aviateur');
     expect(names).toContain('card-tailleur');
-    expect(names.filter((n) => n.startsWith('card-soon-'))).toHaveLength(0);
+    expect(names.filter((n) => n.startsWith('card-soon-'))).toHaveLength(1);
     await page.waitForTimeout(200);
     await page.screenshot({ path: `${SHOTS}/phase4-choix-perso.png` });
 

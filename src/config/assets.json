@@ -450,6 +450,51 @@
         "x": 284,
         "y": 361
       }
+    },
+    "bonnet": {
+      "poses": [
+        "idle",
+        "walk1",
+        "walk2",
+        "jump",
+        "crouch",
+        "guard",
+        "guard_low",
+        "quick",
+        "air_slap",
+        "kick",
+        "crouch_kick",
+        "windup",
+        "swing",
+        "slap",
+        "special2",
+        "selfslap",
+        "hit",
+        "hit_heavy",
+        "down",
+        "getup",
+        "dazed",
+        "victory",
+        "special1",
+        "special3"
+      ],
+      "width": 650,
+      "height": 486,
+      "originX": 0.4760820045558087,
+      "originY": 0.984779299847793,
+      "idle": {
+        "height": 446,
+        "left": -105,
+        "right": 108
+      },
+      "face": {
+        "x": 31,
+        "y": 420
+      },
+      "reach": {
+        "x": 248,
+        "y": 389
+      }
     }
   },
   "props": {

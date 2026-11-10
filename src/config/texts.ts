@@ -182,6 +182,11 @@ export const FIGHTER_TEXTS: Record<FighterId, FighterTexts> = {
     name: 'Marine Verte', short: 'Marine', katakana: 'マリーヌ', special: 'Gaïa', elected: 'ÉLUE',
     specialLines: ['Gaïa !'],
   },
+  // Nat (10 novembre) : nom et coup spécial du propriétaire. Réplique PROVISOIRE (le nom du coup crié).
+  bonnet: {
+    name: 'Nat', short: 'Nat', katakana: 'ナット', special: 'Marianne', elected: 'ÉLUE',
+    specialLines: ['Marianne !'],
+  },
 };
 
 /** Barre Buzz et coup spécial. */

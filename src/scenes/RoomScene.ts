@@ -137,9 +137,9 @@ export class RoomScene extends Phaser.Scene {
       }
     }
 
-    // Grille des combattants, 5 × 2, plus petite que celle du solo.
+    // Grille des combattants, 6 × 2, plus petite que celle du solo.
     const cx = width / 2;
-    const cols = 5;
+    const cols = 6;
     const gap = 14;
     const cw = Math.min(128, Math.floor((width * 0.5 - (cols - 1) * gap) / cols));
     const ch = Math.round((cw * 140) / 128);

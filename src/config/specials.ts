@@ -6,7 +6,7 @@
 // Règles communes (dégâts, garde au bon moment, rapprochement) : `SPECIAL` dans `balance.ts`.
 
 /** Effets tracés par le jeu pendant la cinématique (voir `fx/SpecialFx.ts`). */
-export type SpecialEffect = 'glitter' | 'dance' | 'beer' | 'shout' | 'throw' | 'wind' | 'judo' | 'flag' | 'swap' | 'gaia';
+export type SpecialEffect = 'glitter' | 'dance' | 'beer' | 'shout' | 'throw' | 'wind' | 'judo' | 'flag' | 'swap' | 'gaia' | 'bonnet';
 
 /** Accessoires dessinés par le propriétaire (`raw/props/<nom>.png`). En attendant, le jeu en dessine un provisoire. */
 export const PROP_FILES = ['caca', 'faucille-marteau'] as const;
@@ -55,6 +55,8 @@ export const SPECIALS = {
   remplacement: { range: 'near', poses: [22, 66], signal: 54, impact: 62, end: 104, effect: 'swap', swap: true },
   /** Lève la jambe, frappe le sol : des lianes jaillissent sous l'adversaire (feuilles, terre). */
   gaia: { range: 'near', poses: [26, 58], signal: 52, impact: 60, end: 104, effect: 'gaia' },
+  /** Enfile un bonnet phrygien, plonge tête la première sur l'adversaire, puis pose fièrement : confettis bleu, blanc, rouge. */
+  phrygien: { range: 'near', poses: [26, 58], signal: 50, impact: 58, end: 104, effect: 'bonnet' },
 } satisfies Record<string, SpecialDef>;
 
 export type SpecialId = keyof typeof SPECIALS;

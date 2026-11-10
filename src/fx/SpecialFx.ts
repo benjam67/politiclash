@@ -30,6 +30,7 @@ export class SpecialFx {
   private splat: Phaser.GameObjects.Particles.ParticleEmitter;
   private confetti: Phaser.GameObjects.Particles.ParticleEmitter;
   private leaves: Phaser.GameObjects.Particles.ParticleEmitter;
+  private tricolore: Phaser.GameObjects.Particles.ParticleEmitter;
   private projectile: Phaser.GameObjects.Image | null = null;
   /** Dernier pas de cinématique traité (les effets répétés partent une fois par pas). */
   private lastT = -1;
@@ -55,6 +56,7 @@ export class SpecialFx {
     this.shards = mk('fx_shard', { speed: { min: 300, max: 820 }, lifespan: 900, rotate: { min: -180, max: 180 }, gravityY: 1300, scale: { min: 0.7, max: 1.3 } });
     this.splat = mk('fx_foam', { speed: { min: 150, max: 560 }, lifespan: 650, scale: { start: 1.1, end: 0.3 }, gravityY: 1000, tint: 0x7a4a22 });
     this.leaves = mk('fx_glitter', { speed: { min: 120, max: 420 }, lifespan: { min: 800, max: 1400 }, scale: { start: 1.6, end: 0.8 }, rotate: { min: 0, max: 360 }, gravityY: 260, tint: [0x3e8e2f, 0x6cc04a, 0x2f6b22, 0x9ad66b] });
+    this.tricolore = mk('fx_glitter', { speed: { min: 140, max: 500 }, lifespan: { min: 700, max: 1300 }, scale: { start: 1.3, end: 0.6 }, rotate: { min: 0, max: 360 }, gravityY: 420, tint: [0x002654, 0xffffff, 0xce1126] });
     this.confetti = mk('fx_glitter', { speed: { min: 140, max: 480 }, lifespan: { min: 700, max: 1300 }, scale: { start: 1.3, end: 0.6 }, rotate: { min: 0, max: 360 }, gravityY: 420, tint: [0xe30a17, 0xffffff, 0xe30a17, 0xffffff] });
   }
 
@@ -151,6 +153,10 @@ export class SpecialFx {
         // La boule roule : petits nuages de poussière derrière elle.
         if (t >= sp.poses[0] && t < sp.impact && t % 5 === 0) this.cloud(at(lx - dir * 30, 10), 0.45);
         break;
+      case 'bonnet':
+        // Le plongeon : traînée de poussière derrière elle.
+        if (t >= sp.poses[0] && t < sp.impact && t % 4 === 0) this.cloud(at(lx - dir * 60, h * 0.5), 0.5);
+        break;
       case 'gaia':
         // Jambe levée : quelques feuilles tournoient ; au coup de talon, la terre tremble.
         if (t < sp.poses[0] && t % 6 === 0) this.emit(this.leaves, at(lx, h * 0.9), 1);
@@ -224,6 +230,13 @@ export class SpecialFx {
         this.cloud({ x: p.x, y: p.y }, 1.6);
         this.cloud({ x: p.x - dir * 140 * this.k, y: p.y }, 1.2);
         this.emit(this.stars, p, Math.round(8 * n));
+        break;
+      }
+      case 'bonnet': {
+        this.emit(this.tricolore, p, Math.round(60 * n));
+        this.emit(this.stars, p, Math.round(8 * n));
+        const ring = this.scene.add.image(p.x, p.y, 'fx_ring').setDepth(47).setTint(0xce1126).setScale(0.3);
+        this.scene.tweens.add({ targets: ring, scale: 2.6 * n + 0.6, alpha: 0, duration: 480, ease: 'Cubic.Out', onComplete: () => ring.destroy() });
         break;
       }
       case 'gaia': {

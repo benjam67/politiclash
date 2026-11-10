@@ -313,6 +313,11 @@ export class Sfx {
         this.noiseBurst(t + 0.1, 0.3, { type: 'bandpass', freq: 1200, q: 1.2, gain: 0.2, attack: 0.05 });
         for (let i = 0; i < 5; i++) this.tone(t + 0.45 + i * 0.09, 0.08, { type: 'sine', freq: 110 + i * 12, gain: 0.22 });
         break;
+      case 'bonnet':
+        // Clairon de trois notes, puis le sifflement du plongeon.
+        [392, 523, 659].forEach((f, i) => this.tone(t + 0.1 + i * 0.13, 0.2, { type: 'square', freq: f, gain: 0.07, attack: 0.01 }));
+        this.tone(t + 0.55, 0.35, { type: 'sine', freq: 900, freqEnd: 300, gain: 0.12 });
+        break;
       case 'gaia':
         // Coup de talon, grondement, puis les lianes qui poussent (glissando).
         this.tone(t + 0.45, 0.4, { type: 'sine', freq: 90, freqEnd: 40, gain: 0.4 });
@@ -339,6 +344,7 @@ export class Sfx {
     if (effect === 'throw') this.tone(t, 0.4, { type: 'triangle', freq: 1240, gain: 0.15 });
     if (effect === 'wind') this.noiseBurst(t, 0.25, { type: 'bandpass', freq: 300, q: 2, gain: 0.4 });
     if (effect === 'swap') this.tone(t, 0.25, { type: 'square', freq: 660, freqEnd: 330, gain: 0.08 });
+    if (effect === 'bonnet') this.tone(t, 0.3, { type: 'sine', freq: 80, freqEnd: 40, gain: 0.5 * g });
     if (effect === 'gaia') this.noiseBurst(t, 0.4, { type: 'lowpass', freq: 600, gain: 0.4 });
     if (effect === 'judo') this.tone(t, 0.5, { type: 'sine', freq: 70, freqEnd: 30, gain: 0.6 * g });
     if (effect === 'flag') this.noiseBurst(t, 0.3, { type: 'bandpass', freq: 700, q: 1.5, gain: 0.35 });

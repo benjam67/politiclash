@@ -57,6 +57,7 @@ Les personnalités, les idées de coups, les noms et les répliques viennent du 
 | Raph le Stagiaire (9 novembre) | `rose` | საქართველო : drapeau brandi puis envoyé en avant |
 | Eric l'Olivier (9 novembre) | `manteau` | Grand Remplacement : roulé en boule dans son manteau, il prend la place de l'adversaire (les deux échangent leurs positions) |
 | Marine Verte (9 novembre) | `baskets` | Gaïa : coup de talon, des lianes jaillissent du sol |
+| Nat (10 novembre) | `bonnet` | Marianne : enfile un bonnet phrygien et plonge tête la première |
 
 Noms, coups spéciaux, répliques de l'éditorialiste et réactions en ligne sont définitifs (14 octobre) et vivent dans `src/config/texts.ts`. Tous les textes affichés y sont, y compris les annonces, les mots sur les coups et les boutons des écrans.
 
@@ -324,7 +325,7 @@ Quand une vraie pose arrive : déposer le PNG dans `raw/fighters/<perso>/`, l'aj
 2. **Les textes** : une entrée dans `src/config/texts.ts` (nom, nom court, nom du coup spécial, répliques).
 3. **Le coup spécial** : son déroulé, décrit par le propriétaire, programmé dans `specials.ts`.
 
-La grille de sélection a 10 cases (5 par ligne), toutes occupées depuis le 9 novembre. Un onzième combattant demandera une grille plus grande (3 lignes). Le chargement n'est plus une limite : depuis la phase 6, seules les poses d'attente sont chargées au démarrage (0,7 Mo), les autres au lancement du combat.
+La grille de sélection a 12 cases (6 par ligne), dont 11 occupées depuis le 10 novembre. Au-delà de 12, il faudra une 3e ligne. Le chargement n'est plus une limite : depuis la phase 6, seules les poses d'attente sont chargées au démarrage (0,7 Mo), les autres au lancement du combat.
 
 Deux précautions, qui relèvent du propriétaire : taper sur tous les bords, comme le veut la tradition ; et, avant une diffusion large, demander un avis juridique (l'exception de caricature existe en droit français, mais elle a des limites).
 
